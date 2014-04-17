@@ -15,14 +15,15 @@ echo Using JAVA_HOME : %_JAVA_HOME%
 set _CLASSPATH="%CLASSPATH%"
 echo Using CLASSPATH : %_CLASSPATH%
 
-set _JAVA=%_JAVA_HOME%\bin\java
+set _JAVA=%_JAVA_HOME%\bin\javaw
 
+set APP_MAIN_CLASS=pull.Server
+set TITLE="Pull-Server"
 set APP_PATH="%~dp0."
 set APP_CLASSPATH=%APP_PATH%\classes
 set APP_LIBPATH=%APP_PATH%\lib
-set APP_MAIN_CLASS=pull.Server
 set JVM_OPS=-server
 
 @ECHO ON
 
-%_JAVA% %JVM_OPS% -Duser.dir=%APP_PATH% -Djava.ext.dirs=%APP_LIBPATH% -cp %APP_CLASSPATH%;%_CLASSPATH% %APP_MAIN_CLASS% %*
+start %TITLE% /B %_JAVA% %JVM_OPS% -Duser.dir=%APP_PATH% -Djava.ext.dirs=%APP_LIBPATH% -cp %APP_CLASSPATH%;%_CLASSPATH% %APP_MAIN_CLASS% %*
