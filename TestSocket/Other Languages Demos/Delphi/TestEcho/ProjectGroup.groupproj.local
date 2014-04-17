@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<BorlandProject>
-	<Transactions>
-    <Transaction>2014/03/28 14:40:41.000.833,F:\Documents\RAD Studio\Projects\ProjectGroup1.groupproj=F:\Documents\RAD Studio\Projects\DelphiEcho-4C\ProjectGroup.groupproj</Transaction>
-  </Transactions>
-	<Default.Personality>
-		<Projects ActiveProject="F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Client\TCPClientProject.dproj"/>
-	</Default.Personality>
-</BorlandProject>
