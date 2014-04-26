@@ -11,17 +11,17 @@ using System.Runtime.InteropServices;
 
 namespace TcpClient
 {
-    public enum EnAppState
+    public enum AppState
     {
-        ST_STARTING, ST_STARTED, ST_STOPING, ST_STOPED, ST_ERROR
+        Starting, Started, Stoping, Stoped, Error
     }
 
     public partial class frmClient : Form
     {
-        private EnAppState enAppState = EnAppState.ST_STOPED;
+        private AppState appState = AppState.Stoped;
 
         private delegate void ConnectUpdateUiDelegate();
-        private delegate void SetAppStateDelegate(EnAppState state);
+        private delegate void SetAppStateDelegate(AppState state);
         private delegate void ShowMsg(string msg);
         private ShowMsg AddMsgDelegate;
         HPSocketCS.TcpClient client = new HPSocketCS.TcpClient();
@@ -43,11 +43,11 @@ namespace TcpClient
                 client.SetCallback(OnPrepareConnect, OnConnect, OnSend, OnReceive, OnClose, OnError);
 
 
-                SetAppState(EnAppState.ST_STOPED);
+                SetAppState(AppState.Stoped);
             }
             catch (Exception ex)
             {
-                SetAppState(EnAppState.ST_ERROR);
+                SetAppState(AppState.Error);
                 AddMsg(ex.Message);
             }
         }
@@ -60,7 +60,7 @@ namespace TcpClient
                 ushort port = ushort.Parse(this.txtPort.Text.Trim());
 
                 // 写在这个位置是上面可能会异常
-                SetAppState(EnAppState.ST_STARTING);
+                SetAppState(AppState.Starting);
 
                 AddMsg(string.Format("$Client Starting ... -> ({0}:{1})", ip, port));
 
@@ -68,12 +68,14 @@ namespace TcpClient
                 {
                     if (cbxAsyncConn.Checked == false)
                     {
-                        SetAppState(EnAppState.ST_STARTED);
+                        SetAppState(AppState.Started);
                     }
+
+                    AddMsg(string.Format("$Client Start OK -> ({0}:{1})", ip, port));
                 }
                 else
                 {
-                    SetAppState(EnAppState.ST_STOPED);
+                    SetAppState(AppState.Stoped);
                     throw new Exception(string.Format("$Client Start Error -> {0}({1})", client.GetLastErrorDesc(), client.GetlastError()));
                 }
             }
@@ -90,7 +92,7 @@ namespace TcpClient
             AddMsg("$Server Stop");
             if (client.Stop())
             {
-                SetAppState(EnAppState.ST_STOPED);
+                SetAppState(AppState.Stoped);
             }
             else
             {
@@ -112,7 +114,7 @@ namespace TcpClient
                 uint dwConnId = client.GetConnectionId();
 
                 // 发送
-                if (client.Send(dwConnId, bytes, bytes.Length))
+                if (client.Send(bytes, bytes.Length))
                 {
                     AddMsg(string.Format("$ ({0}) Send OK --> {1}", dwConnId, send));
                 }
@@ -143,16 +145,16 @@ namespace TcpClient
         {
             if (this.cbxAsyncConn.Checked == true)
             {
-                SetAppState(EnAppState.ST_STARTED);
+                SetAppState(AppState.Started);
             }
         }
 
-        En_HP_HandleResult OnPrepareConnect(uint dwConnID, uint socket)
+        HandleResult OnPrepareConnect(uint dwConnID, uint socket)
         {
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
-        En_HP_HandleResult OnConnect(uint dwConnID)
+        HandleResult OnConnect(uint dwConnID)
         {
             // 已连接 到达一次
             // 如果是异步联接,更新界面状态
@@ -161,38 +163,38 @@ namespace TcpClient
 
             AddMsg(string.Format(" > [{0},OnConnect]", dwConnID));
 
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
-        En_HP_HandleResult OnSend(uint dwConnID, IntPtr pData, int iLength)
+        HandleResult OnSend(uint dwConnID, IntPtr pData, int iLength)
         {
             // 客户端发数据了
             AddMsg(string.Format(" > [{0},OnSend] -> ({1} bytes)", dwConnID, iLength));
 
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
-        En_HP_HandleResult OnReceive(uint dwConnID, IntPtr pData, int iLength)
+        HandleResult OnReceive(uint dwConnID, IntPtr pData, int iLength)
         {
             // 数据到达了
 
             AddMsg(string.Format(" > [{0},OnReceive] -> ({1} bytes)", dwConnID, iLength));
 
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
-        En_HP_HandleResult OnClose(uint dwConnID)
+        HandleResult OnClose(uint dwConnID)
         {
             // 连接关闭了
 
             AddMsg(string.Format(" > [{0},OnClose]", dwConnID));
 
             // 通知界面
-            this.Invoke(new SetAppStateDelegate(SetAppState), EnAppState.ST_STOPED);
-            return En_HP_HandleResult.HP_HR_OK;
+            this.Invoke(new SetAppStateDelegate(SetAppState), AppState.Stoped);
+            return HandleResult.Ok;
         }
 
-        En_HP_HandleResult OnError(uint dwConnID, En_HP_SocketOperation enOperation, int iErrorCode)
+        HandleResult OnError(uint dwConnID, SocketOperation enOperation, int iErrorCode)
         {
             // 出错了
 
@@ -200,24 +202,24 @@ namespace TcpClient
  
             // 通知界面,只处理了连接错误,也没进行是不是连接错误的判断,所以有错误就会设置界面
             // 生产环境请自己控制
-            this.Invoke(new SetAppStateDelegate(SetAppState), EnAppState.ST_STOPED);
+            this.Invoke(new SetAppStateDelegate(SetAppState), AppState.Stoped);
 
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
        
         /// <summary>
         /// 设置程序状态
         /// </summary>
         /// <param name="state"></param>
-        void SetAppState(EnAppState state)
+        void SetAppState(AppState state)
         {
-            enAppState = state;
-            this.btnStart.Enabled = (enAppState == EnAppState.ST_STOPED);
-            this.btnStop.Enabled = (enAppState == EnAppState.ST_STARTED);
-            this.txtIpAddress.Enabled = (enAppState == EnAppState.ST_STOPED);
-            this.txtPort.Enabled = (enAppState == EnAppState.ST_STOPED);
-            this.cbxAsyncConn.Enabled = (enAppState == EnAppState.ST_STOPED);
-            this.btnSend.Enabled = (enAppState == EnAppState.ST_STARTED);
+            appState = state;
+            this.btnStart.Enabled = (appState == AppState.Stoped);
+            this.btnStop.Enabled = (appState == AppState.Started);
+            this.txtIpAddress.Enabled = (appState == AppState.Stoped);
+            this.txtPort.Enabled = (appState == AppState.Stoped);
+            this.cbxAsyncConn.Enabled = (appState == AppState.Stoped);
+            this.btnSend.Enabled = (appState == AppState.Started);
         }
 
         /// <summary>

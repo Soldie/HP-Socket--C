@@ -131,7 +131,7 @@
             // btnSend
             // 
             this.btnSend.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSend.Location = new System.Drawing.Point(429, 322);
+            this.btnSend.Location = new System.Drawing.Point(429, 321);
             this.btnSend.Name = "btnSend";
             this.btnSend.Size = new System.Drawing.Size(47, 26);
             this.btnSend.TabIndex = 13;

@@ -9,14 +9,14 @@ using System.Windows.Forms;
 
 namespace TcpProxyServer
 {
-    public enum EnAppState
+    public enum AppState
     {
-        ST_STARTING, ST_STARTED, ST_STOPING, ST_STOPED, ST_ERROR
+        Starting, Started, Stoping, Stoped, Error
     }
 
     public partial class frmProxyServer : Form
     {
-        private EnAppState enAppState = EnAppState.ST_STOPED;
+        private AppState appState = AppState.Stoped;
 
         private delegate void ShowMsg(string msg);
         private ShowMsg AddMsgDelegate;
@@ -40,11 +40,11 @@ namespace TcpProxyServer
 
                 proxyServer.AddMsgDelegate = new ProxyServer.ShowMsg(AddMsg);
 
-                SetAppState(EnAppState.ST_STOPED);
+                SetAppState(AppState.Stoped);
             }
             catch (Exception ex)
             {
-                SetAppState(EnAppState.ST_ERROR);
+                SetAppState(AppState.Error);
                 AddMsg(ex.Message);
             }
         }
@@ -76,23 +76,23 @@ namespace TcpProxyServer
         /// 设置程序状态
         /// </summary>
         /// <param name="state"></param>
-        void SetAppState(EnAppState state)
+        void SetAppState(AppState state)
         {
-            enAppState = state;
-            this.btnStart.Enabled = (enAppState == EnAppState.ST_STOPED);
-            this.btnStop.Enabled = (enAppState == EnAppState.ST_STARTED);
-            this.txtBindAddr.Enabled = (enAppState == EnAppState.ST_STOPED);
-            this.txtBindPort.Enabled = (enAppState == EnAppState.ST_STOPED);
-            this.txtTargetAddr.Enabled = (enAppState == EnAppState.ST_STOPED);
-            this.txtTargetPort.Enabled = (enAppState == EnAppState.ST_STOPED);
-            this.txtDisConn.Enabled = (enAppState == EnAppState.ST_STARTED);
-            this.btnDisconn.Enabled = (enAppState == EnAppState.ST_STARTED && this.txtDisConn.Text.Length > 0);
+            appState = state;
+            this.btnStart.Enabled = (appState == AppState.Stoped);
+            this.btnStop.Enabled = (appState == AppState.Started);
+            this.txtBindAddr.Enabled = (appState == AppState.Stoped);
+            this.txtBindPort.Enabled = (appState == AppState.Stoped);
+            this.txtTargetAddr.Enabled = (appState == AppState.Stoped);
+            this.txtTargetPort.Enabled = (appState == AppState.Stoped);
+            this.txtDisConn.Enabled = (appState == AppState.Started);
+            this.btnDisconn.Enabled = (appState == AppState.Started && this.txtDisConn.Text.Length > 0);
         }
 
         private void txtDisConn_TextChanged(object sender, EventArgs e)
         {
             // CONNID框被改变事件
-            this.btnDisconn.Enabled = (enAppState == EnAppState.ST_STARTED && this.txtDisConn.Text.Length > 0);
+            this.btnDisconn.Enabled = (appState == AppState.Started && this.txtDisConn.Text.Length > 0);
         }
 
         private void lbxMsg_KeyPress(object sender, KeyPressEventArgs e)
@@ -114,19 +114,19 @@ namespace TcpProxyServer
                 proxyServer.TargetPort = ushort.Parse(this.txtTargetPort.Text.Trim());
 
                 // 写在这个位置是上面可能会异常
-                SetAppState(EnAppState.ST_STARTING);
+                SetAppState(AppState.Starting);
 
                 // 启动服务
                 if (proxyServer.Start())
                 {
-                    SetAppState(EnAppState.ST_STARTED);
+                    SetAppState(AppState.Started);
                     throw new Exception(string.Format("$Server Start OK -> ({0}:{1}->{2}:{3})", 
                                             proxyServer.BindAddr, proxyServer.BindPort,
                                             proxyServer.TargetAddr, proxyServer.TargetPort));
                 }
                 else
                 {
-                    SetAppState(EnAppState.ST_STOPED);
+                    SetAppState(AppState.Stoped);
                 }
             }
             catch (Exception ex)
@@ -158,13 +158,13 @@ namespace TcpProxyServer
         }
         private void btnStop_Click(object sender, EventArgs e)
         {
-            SetAppState(EnAppState.ST_STOPING);
+            SetAppState(AppState.Stoping);
 
             // 停止服务
             AddMsg("$Server Stop");
             if (proxyServer.Stop())
             {
-                SetAppState(EnAppState.ST_STOPED);
+                SetAppState(AppState.Stoped);
             }
             else
             {

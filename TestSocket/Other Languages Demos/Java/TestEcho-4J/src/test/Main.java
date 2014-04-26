@@ -19,29 +19,28 @@ import org.jessma.hpsocket.unicode.TcpAgent;
 
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
-import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.NativeLongByReference;
-import com.sun.jna.ptr.PointerByReference;
 
 public class Main
 {
+	// 1. 创建 HPSocket 组件对象
 	static TcpAgent agent = TcpAgent.create(Mode.PUSH);
 	
 	public static void main(String[] args) throws IOException, InterruptedException
 	{
-		//System.out.println( System.getProperty("os.name"));
-		//System.out.println( System.getProperty("os.version"));
-		//System.out.println( System.getProperty("os.arch"));
-		
+		// 2. 注册回调函数对象
 		agent.setCallBackOnPrepareConnect(new OnPrepareConnectImpl());
 		agent.setCallBackOnConnect(new OnConnectImpl());
+		/* Push 模型数据到达事件回调函数对象 */
 		agent.setCallBackOnReceive(new OnReceiveImpl());
+		/* Pull 模型数据到达事件回调函数对象 */
 		agent.setCallBackOnPullReceive(new OnPullReceiveImpl());
 		agent.setCallBackOnSend(new OnSendImpl());
 		agent.setCallBackOnClose(new OnCloseImpl());
 		agent.setCallBackOnError(new OnErrorImpl());
 		agent.setCallBackOnAgentShutdown(new OnAgentShutdownImpl());
 		
+		// 3. 启动组件
 		if(agent.start("127.0.0.1", false))
 		{
 		}
@@ -55,6 +54,7 @@ public class Main
 		
 		NativeLongByReference pdwConnID = new NativeLongByReference();
 
+		// 4. 连接服务器
 		if(agent.connect("localhost", (short)5555, pdwConnID))
 		{
 			NativeLong dwConnID = pdwConnID.getValue();
@@ -64,6 +64,7 @@ public class Main
 				String text = "伤神小怪兽 - " + i;
 				byte[] data = text.getBytes();
 				
+				// 5. 发送数据
 				if(!agent.send(dwConnID, data, data.length))
 				{
 					System.err.println("Send Fail -> " + TcpAgent.getNativeLastError() + ", " + TcpAgent.getSocketErrorDesc(SocketError.SE_DATA_SEND));
@@ -76,7 +77,10 @@ public class Main
 			System.err.println("Connect Fail -> " + TcpAgent.getNativeLastError() + ", " + TcpAgent.getSocketErrorDesc(SocketError.SE_CONNECT_SERVER));
 		}
 		
-		//System.in.read();
+		/*
+		// 暂停主线程
+		// System.in.read();
+		*/
 		
 		for(int i = 1; i <=10; i++)
 		{
@@ -84,7 +88,10 @@ public class Main
 			Thread.yield();
 		}
 		
-		//agent.stop();
+		// 6. 关闭组件
+		agent.stop();
+		
+		// 7. 销毁组件对象
 		TcpAgent.destroy(agent);
 		
 		for(int i = 1; i <=10; i++)
@@ -92,8 +99,6 @@ public class Main
 			Thread.sleep(100);
 			Thread.yield();
 		}
-		
-		//System.in.read();
 		
 		System.exit(0);
 	}
@@ -116,11 +121,7 @@ public class Main
 		{
 			System.out.println("OnConnect: " + dwConnID);
 			
-			LongByReference ref = new LongByReference(123);
-			Pointer pExt = ref.getPointer();
-			agent.setConnectionExtra(dwConnID, pExt);
-
-			SocketAddress local = agent.getLocalAddress(dwConnID);
+			//SocketAddress local = agent.getLocalAddress(dwConnID);
 			SocketAddress remote = agent.getRemoteAddress(dwConnID);
 
 			System.out.printf("\t-> %s:%d\n", remote.getAddress(), remote.getPort());
@@ -148,11 +149,6 @@ public class Main
 		@Override
 		public int invoke(NativeLong dwConnID, int iLength)
 		{
-			PointerByReference ppExt = new PointerByReference();
-			agent.getConnectionExtra(dwConnID, ppExt);
-			Pointer pExt = ppExt.getValue();
-			long v = pExt.getLong(0);
-
 			byte[] pBuffer = new byte[iLength];
 			int fr = agent.fetch(dwConnID, pBuffer, iLength);
 			
@@ -161,7 +157,6 @@ public class Main
 				System.out.println("OnPullReceive: " + dwConnID + ", " + iLength);
 				System.out.println("\t-> " + new String(pBuffer));
 			}
-			
 			
 			return HandleResult.HR_OK;
 		}
@@ -187,6 +182,7 @@ public class Main
 		public int invoke(NativeLong dwConnID)
 		{
 			System.out.println("OnClose: " + dwConnID);
+			
 			return HandleResult.HR_OK;
 		}
 	}

@@ -3,44 +3,43 @@ unit ServerUnit;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, HPSocketSDKUnit;
+    Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+    Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, HPSocketSDKUnit;
 
 type
 
-  TForm1 = class(TForm)
-    lstMsg: TListBox;
-    edtIpAddress: TEdit;
-    edtConnId: TEdit;
-    lbl1: TLabel;
-    btnDisConn: TButton;
-    btnStart: TButton;
-    btnStop: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure btnStartClick(Sender: TObject);
-    procedure btnStopClick(Sender: TObject);
-    procedure btnDisConnClick(Sender: TObject);
-    procedure edtConnIdChange(Sender: TObject);
-    procedure lstMsgKeyPress(Sender: TObject; var Key: Char);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
-  private
-    { Private declarations }
-    procedure AddMsg(msg: string);
-    procedure SetAppState(state: EnAppState);
-  public
-    { Public declarations }
-  end;
+    TForm1 = class(TForm)
+        lstMsg: TListBox;
+        edtIpAddress: TEdit;
+        edtConnId: TEdit;
+        lbl1: TLabel;
+        btnDisConn: TButton;
+        btnStart: TButton;
+        btnStop: TButton;
+        procedure FormCreate(Sender: TObject);
+        procedure btnStartClick(Sender: TObject);
+        procedure btnStopClick(Sender: TObject);
+        procedure btnDisConnClick(Sender: TObject);
+        procedure edtConnIdChange(Sender: TObject);
+        procedure lstMsgKeyPress(Sender: TObject; var Key: Char);
+        procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    private
+        { Private declarations }
+        procedure AddMsg(msg: string);
+        procedure SetAppState(state: EnAppState);
+    public
+        { Public declarations }
+    end;
 
 var
-  Form1: TForm1;
-  appState : EnAppState;
-  pServer : Pointer;
-  pListener : Pointer;
+    Form1: TForm1;
+    appState: EnAppState;
+    pServer: Pointer;
+    pListener: Pointer;
+
 implementation
 
-
 {$R *.dfm}
-
 
 procedure TForm1.SetAppState(state: EnAppState);
 begin
@@ -49,7 +48,7 @@ begin
     btnStop.Enabled := (appState = EnAppState.ST_STARTED);
     edtIpAddress.Enabled := (appState = EnAppState.ST_STOPED);
     edtConnId.Enabled := (appState = EnAppState.ST_STARTED);
-    btnDisconn.Enabled := ((appState = EnAppState.ST_STARTED) and (Length(edtConnId.Text) > 0));
+    btnDisConn.Enabled := ((appState = EnAppState.ST_STARTED) and (Length(edtConnId.Text) > 0));
 end;
 
 procedure TForm1.AddMsg(msg: string);
@@ -61,49 +60,74 @@ begin
     lstMsg.Items.Add(msg);
 end;
 
-function OnPrepareListen(soListen : Pointer) : En_HP_HandleResult; stdcall;
+function SendString(dwConnId: DWORD; str: string): Boolean;
+var
+    sendBuffer: array of byte;
+    sendStr: AnsiString;
+    sendLength: Integer;
+begin
+    sendStr := AnsiString(str);
+    // 获取ansi字符串的长度
+    sendLength := Length(sendStr);
+    // 设置buf数组的长度
+    SetLength(sendBuffer, sendLength);
+    // 复制数据到buf数组
+    Move(sendStr[1], sendBuffer[1], sendLength);
+
+    Result := HP_Server_Send(pServer, dwConnId, sendBuffer, sendLength);
+end;
+
+function OnPrepareListen(soListen: Pointer): En_HP_HandleResult; stdcall;
 begin
 
     Result := HP_HR_OK;
 end;
 
-function OnAccept(dwConnID: DWORD; pClient: Pointer) : En_HP_HandleResult; stdcall;
+function OnAccept(dwConnId: DWORD; pClient: Pointer): En_HP_HandleResult; stdcall;
 var
-    ip : array[0..40] of WideChar;
-    ipLength : Integer;
+    ip: array [0 .. 40] of WideChar;
+    ipLength: Integer;
     port: USHORT;
 begin
     ipLength := 40;
-    if HP_Server_GetRemoteAddress(pServer,dwConnID, ip, @ipLength, @port) then
+    if HP_Server_GetRemoteAddress(pServer, dwConnId, ip, @ipLength, @port) then
     begin
-        Form1.AddMsg(Format(' > [%d,OnAccept] -> PASS(%s:%d)', [dwConnID, string(ip), port]));
+        Form1.AddMsg(Format(' > [%d,OnAccept] -> PASS(%s:%d)', [dwConnId, string(ip), port]));
     end
     else
     begin
-        Form1.AddMsg(Format(' > [[%d,OnAccept] -> HP_Server_GetClientAddress() Error', [dwConnID]));
+        Form1.AddMsg(Format(' > [[%d,OnAccept] -> HP_Server_GetClientAddress() Error', [dwConnId]));
     end;
 
     Result := HP_HR_OK;
 end;
 
-function OnServerShutdown() : En_HP_HandleResult; stdcall;
+function OnServerShutdown(): En_HP_HandleResult; stdcall;
 begin
 
     Form1.AddMsg(' > [OnServerShutdown]');
     Result := HP_HR_OK;
 end;
 
-function OnSend(dwConnID: DWORD; const pData: Pointer; iLength: Integer): En_HP_HandleResult; stdcall;
+function OnSend(dwConnId: DWORD; const pData: Pointer; iLength: Integer): En_HP_HandleResult; stdcall;
 begin
-    Form1.AddMsg(Format(' > [%d,OnSend] -> (%d bytes)', [dwConnID, iLength]));
+    Form1.AddMsg(Format(' > [%d,OnSend] -> (%d bytes)', [dwConnId, iLength]));
     Result := HP_HR_OK;
 end;
 
-function OnReceive(dwConnID: DWORD; const pData: Pointer; iLength: Integer): En_HP_HandleResult; stdcall;
+function OnReceive(dwConnId: DWORD; const pData: Pointer; iLength: Integer): En_HP_HandleResult; stdcall;
+var
+    testString: AnsiString;
 begin
-    Form1.AddMsg(Format(' > [%d,OnReceive] -> (%d bytes)', [dwConnID, iLength]));
+    Form1.AddMsg(Format(' > [%d,OnReceive] -> (%d bytes)', [dwConnId, iLength]));
 
-    if HP_Server_Send(pServer, dwConnID, pData, iLength) then
+    {// 以下是一个pData转字符串的演示
+    SetLength(testString, iLength);
+    Move(pData^, testString[1],  iLength);
+    Form1.AddMsg(Format(' > [%d,OnReceive] -> say:%s', [dwConnId, testString]));
+    }
+
+    if HP_Server_Send(pServer, dwConnId, pData, iLength) then
     begin
         Result := HP_HR_OK;
     end
@@ -114,23 +138,23 @@ begin
 
 end;
 
-function OnCloseConn(dwConnID: DWORD): En_HP_HandleResult; stdcall;
+function OnCloseConn(dwConnId: DWORD): En_HP_HandleResult; stdcall;
 begin
 
-    Form1.AddMsg(Format(' > [%d,OnCloseConn]', [dwConnID]));
+    Form1.AddMsg(Format(' > [%d,OnCloseConn]', [dwConnId]));
     Result := HP_HR_OK;
 end;
 
-function OnError(dwConnID: DWORD; enOperation: En_HP_SocketOperation; iErrorCode:Integer): En_HP_HandleResult; stdcall;
+function OnError(dwConnId: DWORD; enOperation: En_HP_SocketOperation; iErrorCode: Integer): En_HP_HandleResult; stdcall;
 begin
 
-    Form1.AddMsg(Format('> [%d,OnError] -> OP:%d,CODE:%d', [dwConnID, Integer(enOperation), iErrorCode]));
+    Form1.AddMsg(Format('> [%d,OnError] -> OP:%d,CODE:%d', [dwConnId, Integer(enOperation), iErrorCode]));
     Result := HP_HR_OK;
 end;
 
 procedure TForm1.btnDisConnClick(Sender: TObject);
 var
-    dwConnId : DWORD;
+    dwConnId: DWORD;
 begin
     dwConnId := StrToInt(edtConnId.Text);
     if HP_Server_Disconnect(pServer, dwConnId, 1) then
@@ -142,7 +166,7 @@ end;
 
 procedure TForm1.btnStartClick(Sender: TObject);
 var
-    ip : PWideChar;
+    ip: PWideChar;
     port: USHORT;
     errorId: Integer;
     errorMsg: PWideChar;
@@ -153,7 +177,7 @@ begin
     if HP_Server_Start(pServer, ip, port) then
     begin
         AddMsg(Format('$Server Start OK -> (%s:%d)', [ip, port]));
-		SetAppState(ST_STARTED);
+        SetAppState(ST_STARTED);
     end
     else
     begin
@@ -170,11 +194,11 @@ var
     errorMsg: PWideChar;
 begin
 
-	SetAppState(ST_STOPING);
+    SetAppState(ST_STOPING);
     AddMsg('$Server Stop');
     if HP_Server_Stop(pServer) then
     begin
-		SetAppState(ST_STOPED);
+        SetAppState(ST_STOPED);
     end
     else
     begin
@@ -193,9 +217,9 @@ end;
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
     // 销毁 Socket 对象
-	Destroy_HP_TcpServer(pServer);
-	// 销毁监听器对象
-	Destroy_HP_TcpServerListener(pListener);
+    Destroy_HP_TcpServer(pServer);
+    // 销毁监听器对象
+    Destroy_HP_TcpServerListener(pListener);
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
@@ -215,7 +239,7 @@ begin
     HP_Set_FN_Server_OnError(pListener, OnError);
     HP_Set_FN_Server_OnServerShutdown(pListener, OnServerShutdown);
 
-	SetAppState(ST_STOPED);
+    SetAppState(ST_STOPED);
 end;
 
 procedure TForm1.lstMsgKeyPress(Sender: TObject; var Key: Char);

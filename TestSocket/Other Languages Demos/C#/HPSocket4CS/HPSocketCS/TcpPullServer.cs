@@ -10,7 +10,7 @@ namespace HPSocketCS
     public class TcpPullServer : TcpServer
     {
 
-        protected HPSocketSdk.HP_FN_OnPullReceive OnPullReceiveCallback;
+        protected HPSocketSdk.OnPullReceive OnPullReceiveCallback;
 
         public TcpPullServer()
         {
@@ -22,7 +22,7 @@ namespace HPSocketCS
         /// </summary>
         /// <param name="isUseDefaultCallback">是否使用tcppullserver类默认回调函数</param>
         /// <returns></returns>
-        public override bool CreateListener()
+        protected override bool CreateListener()
         {
             if (IsCreate == true || pListener != IntPtr.Zero || pServer != IntPtr.Zero)
             {
@@ -54,7 +54,7 @@ namespace HPSocketCS
         /// <param name="pBuffer"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        public En_HP_FetchResult Fetch(uint connId, IntPtr pBuffer, int size)
+        public FetchResult Fetch(uint connId, IntPtr pBuffer, int size)
         {
             return HPSocketSdk.HP_TcpPullServer_Fetch(pServer, connId, pBuffer, size);
         }
@@ -69,14 +69,14 @@ namespace HPSocketCS
         /// <param name="close"></param>
         /// <param name="error"></param>
         /// <param name="shutdown"></param>
-        public virtual void SetCallback(HPSocketSdk.HP_FN_OnPrepareListen prepareListen,
-            HPSocketSdk.HP_FN_OnAccept accept, HPSocketSdk.HP_FN_OnSend send,
-            HPSocketSdk.HP_FN_OnPullReceive recv, HPSocketSdk.HP_FN_OnClose close,
-            HPSocketSdk.HP_FN_OnError error, HPSocketSdk.HP_FN_OnServerShutdown shutdown)
+        public virtual void SetCallback(HPSocketSdk.OnPrepareListen prepareListen,
+            HPSocketSdk.OnAccept accept, HPSocketSdk.OnSend send,
+            HPSocketSdk.OnPullReceive recv, HPSocketSdk.OnClose close,
+            HPSocketSdk.OnError error, HPSocketSdk.OnServerShutdown shutdown)
         {
 
             // 设置 Socket 监听器回调函数
-            OnPullReceiveCallback = new HPSocketSdk.HP_FN_OnPullReceive(recv);
+            OnPullReceiveCallback = new HPSocketSdk.OnPullReceive(recv);
 
             // 设置 Socket 监听器回调函数
             HPSocketSdk.HP_Set_FN_Server_OnPullReceive(pListener, OnPullReceiveCallback);
@@ -84,9 +84,9 @@ namespace HPSocketCS
             base.SetCallback(prepareListen, accept, send, OnReceive, close, error, shutdown);
         }
 
-        public virtual void SetOnPullReceiveCallback(HPSocketSdk.HP_FN_OnPullReceive recv)
+        public virtual void SetOnPullReceiveCallback(HPSocketSdk.OnPullReceive recv)
         {
-            OnPullReceiveCallback = new HPSocketSdk.HP_FN_OnPullReceive(recv);
+            OnPullReceiveCallback = new HPSocketSdk.OnPullReceive(recv);
             HPSocketSdk.HP_Set_FN_Server_OnPullReceive(pListener, OnPullReceiveCallback);
         }
 
@@ -116,9 +116,9 @@ namespace HPSocketCS
         /// <param name="dwConnID"></param>
         /// <param name="iLength"></param>
         /// <returns></returns>
-        protected virtual En_HP_HandleResult OnPullReceive(uint dwConnID, int iLength)
+        protected virtual HandleResult OnPullReceive(uint dwConnID, int iLength)
         {
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
     }
 }

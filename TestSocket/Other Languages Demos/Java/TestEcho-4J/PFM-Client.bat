@@ -17,7 +17,7 @@ echo Using CLASSPATH : %_CLASSPATH%
 
 set _JAVA=%_JAVA_HOME%\bin\javaw
 
-set APP_MAIN_CLASS=pfm.Client
+set APP_MAIN_CLASS=pfm.ClientApp
 set TITLE="PFM-Client"
 set APP_PATH="%~dp0."
 set APP_CLASSPATH=%APP_PATH%\classes

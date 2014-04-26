@@ -32,13 +32,13 @@ namespace HPSocketCS
 
         protected IntPtr pListener = IntPtr.Zero;
 
-        protected HPSocketSdk.HP_FN_OnConnect OnConnectCallback;
-        protected HPSocketSdk.HP_FN_OnSend OnSendCallback;
-        protected HPSocketSdk.HP_FN_OnPrepareConnect OnPrepareConnectCallback;
-        protected HPSocketSdk.HP_FN_OnReceive OnReceiveCallback;
-        protected HPSocketSdk.HP_FN_OnClose OnCloseCallback;
-        protected HPSocketSdk.HP_FN_OnError OnErrorCallback;
-        protected HPSocketSdk.HP_FN_OnAgentShutdown OnAgentShutdownCallback;
+        protected HPSocketSdk.OnConnect OnConnectCallback;
+        protected HPSocketSdk.OnSend OnSendCallback;
+        protected HPSocketSdk.OnPrepareConnect OnPrepareConnectCallback;
+        protected HPSocketSdk.OnReceive OnReceiveCallback;
+        protected HPSocketSdk.OnClose OnCloseCallback;
+        protected HPSocketSdk.OnError OnErrorCallback;
+        protected HPSocketSdk.OnAgentShutdown OnAgentShutdownCallback;
 
         protected bool IsSetCallback = false;
         protected bool IsCreate = false;
@@ -63,7 +63,7 @@ namespace HPSocketCS
         /// </summary>
         /// <param name="isUseDefaultCallback">是否使用tcpAgent类默认回调函数</param>
         /// <returns></returns>
-        public virtual bool CreateListener()
+        protected virtual bool CreateListener()
         {
             if (IsCreate == true || pListener != IntPtr.Zero || pAgent != IntPtr.Zero)
             {
@@ -115,8 +115,13 @@ namespace HPSocketCS
         /// <param name="address"></param>
         /// <param name="async">是否异步</param>
         /// <returns></returns>
-        public bool Start(string address, bool async = true)
+        public bool Start(string address, bool async = false)
         {
+            if (string.IsNullOrEmpty(address) == true)
+            {
+                throw new Exception("address is null");
+            }
+
             if (IsSetCallback == false)
             {
                // throw new Exception("请在调用Start方法前先调用SetCallback()方法");
@@ -181,6 +186,32 @@ namespace HPSocketCS
         }
 
         /// <summary>
+        /// 发送数据
+        /// </summary>
+        /// <param name="connId"></param>
+        /// <param name="bytes"></param>
+        /// <param name="offset">针对bytes的偏移</param>
+        /// <param name="size">发多大</param>
+        /// <returns></returns>
+        public bool Send(uint connId, byte[] bytes, int offset, int size)
+        {
+            return HPSocketSdk.HP_Agent_SendPart(pAgent, connId, bytes, size, offset);
+        }
+
+        /// <summary>
+        /// 发送数据
+        /// </summary>
+        /// <param name="connId"></param>
+        /// <param name="bufferPtr"></param>
+        /// <param name="offset">针对bufferPtr的偏移</param>
+        /// <param name="size">发多大</param>
+        /// <returns></returns>
+        public bool Send(uint connId, IntPtr bufferPtr, int offset, int size)
+        {
+            return HPSocketSdk.HP_Agent_SendPart(pAgent, connId, bufferPtr, size, offset);
+        }
+
+        /// <summary>
         /// 断开某个连接
         /// </summary>
         /// <param name="connId"></param>
@@ -237,7 +268,7 @@ namespace HPSocketCS
         /// 获取错误码
         /// </summary>
         /// <returns></returns>
-        public En_HP_SocketError GetlastError()
+        public SocketError GetlastError()
         {
             return HPSocketSdk.HP_Agent_GetLastError(pAgent);
         }
@@ -251,6 +282,17 @@ namespace HPSocketCS
             IntPtr ptr = HPSocketSdk.HP_Agent_GetLastErrorDesc(pAgent);
             string desc = Marshal.PtrToStringUni(ptr);
             return desc;
+        }
+
+        /// <summary>
+        /// 获取连接中未发出数据的长度
+        /// </summary>
+        /// <param name="connId"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public bool GetPendingDataLength(uint connId, ref int length)
+        {
+            return HPSocketSdk.HP_Agent_GetPendingDataLength(pAgent, connId, ref length);
         }
 
         // 是否启动
@@ -267,7 +309,7 @@ namespace HPSocketCS
         /// 获取状态
         /// </summary>
         /// <returns></returns>
-        public En_HP_ServiceState GetState()
+        public ServiceState GetState()
         {
             return HPSocketSdk.HP_Agent_GetState(pAgent);
         }
@@ -315,7 +357,7 @@ namespace HPSocketCS
         /// 置是否启用地址重用机制（默认：不启用）
         /// </summary>
         /// <param name="bReuseAddress"></param>
-        public void HP_TcpAgent_SetReuseAddress(bool reuseAddress)
+        public void TcpAgent_SetReuseAddress(bool reuseAddress)
         {
             HPSocketSdk.HP_TcpAgent_SetReuseAddress(pAgent, reuseAddress);
         }
@@ -324,7 +366,7 @@ namespace HPSocketCS
         /// 检测是否启用地址重用机制
         /// </summary>
         /// <returns></returns>
-        public bool HP_TcpAgent_IsReuseAddress()
+        public bool TcpAgent_IsReuseAddress()
         {
             return HPSocketSdk.HP_TcpAgent_IsReuseAddress(pAgent);
         }
@@ -351,7 +393,7 @@ namespace HPSocketCS
         /// 设置 Socket 缓存对象锁定时间（毫秒，在锁定期间该 Socket 缓存对象不能被获取使用）
         /// </summary>
         /// <param name="val"></param>
-        public void HP_Agent_SetFreeSocketObjLockTime(uint val)
+        public void Agent_SetFreeSocketObjLockTime(uint val)
         {
             HPSocketSdk.HP_Agent_SetFreeSocketObjLockTime(pAgent, val);
         }
@@ -509,6 +551,27 @@ namespace HPSocketCS
             return HPSocketSdk.HP_Agent_GetMaxShutdownWaitTime(pAgent);
         }
 
+        /// <summary>
+        /// 获取系统返回的错误码
+        /// </summary>
+        /// <returns></returns>
+        public int SYSGetLastError()
+        {
+            return HPSocketSdk.SYS_GetLastError();
+        }
+
+        /// <summary>
+        /// 根据错误码返回错误信息
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        public string GetSocketErrorDesc(SocketError code)
+        {
+            IntPtr ptr = HPSocketSdk.HP_GetSocketErrorDesc(code);
+            string desc = Marshal.PtrToStringUni(ptr);
+            return desc;
+        }
+
         ///////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>
@@ -521,9 +584,9 @@ namespace HPSocketCS
         /// <param name="close"></param>
         /// <param name="error"></param>
         /// <param name="agentShutdown"></param>
-        public void SetCallback(HPSocketSdk.HP_FN_OnPrepareConnect prepareConnect, HPSocketSdk.HP_FN_OnConnect connect,
-            HPSocketSdk.HP_FN_OnSend send, HPSocketSdk.HP_FN_OnReceive recv, HPSocketSdk.HP_FN_OnClose close,
-            HPSocketSdk.HP_FN_OnError error, HPSocketSdk.HP_FN_OnAgentShutdown agentShutdown)
+        public void SetCallback(HPSocketSdk.OnPrepareConnect prepareConnect, HPSocketSdk.OnConnect connect,
+            HPSocketSdk.OnSend send, HPSocketSdk.OnReceive recv, HPSocketSdk.OnClose close,
+            HPSocketSdk.OnError error, HPSocketSdk.OnAgentShutdown agentShutdown)
         {
             if (IsSetCallback == true)
             {
@@ -532,13 +595,13 @@ namespace HPSocketCS
 
 
             // 设置 Socket 监听器回调函数
-            OnConnectCallback = new HPSocketSdk.HP_FN_OnConnect(connect);
-            OnSendCallback = new HPSocketSdk.HP_FN_OnSend(send);
-            OnPrepareConnectCallback = new HPSocketSdk.HP_FN_OnPrepareConnect(prepareConnect);
-            OnReceiveCallback = new HPSocketSdk.HP_FN_OnReceive(recv);
-            OnCloseCallback = new HPSocketSdk.HP_FN_OnClose(close);
-            OnErrorCallback = new HPSocketSdk.HP_FN_OnError(error);
-            OnAgentShutdownCallback = new HPSocketSdk.HP_FN_OnAgentShutdown(agentShutdown);
+            OnConnectCallback = new HPSocketSdk.OnConnect(connect);
+            OnSendCallback = new HPSocketSdk.OnSend(send);
+            OnPrepareConnectCallback = new HPSocketSdk.OnPrepareConnect(prepareConnect);
+            OnReceiveCallback = new HPSocketSdk.OnReceive(recv);
+            OnCloseCallback = new HPSocketSdk.OnClose(close);
+            OnErrorCallback = new HPSocketSdk.OnError(error);
+            OnAgentShutdownCallback = new HPSocketSdk.OnAgentShutdown(agentShutdown);
 
             // 设置 Socket 监听器回调函数
             HPSocketSdk.HP_Set_FN_Agent_OnPrepareConnect(pListener, OnPrepareConnectCallback);
@@ -552,45 +615,45 @@ namespace HPSocketCS
             IsSetCallback = true;
         }
 
-        public virtual void SetOnAgentShutdownCallback(HPSocketSdk.HP_FN_OnAgentShutdown agentShutdown)
+        public virtual void SetOnAgentShutdownCallback(HPSocketSdk.OnAgentShutdown agentShutdown)
         {
-            OnAgentShutdownCallback = new HPSocketSdk.HP_FN_OnAgentShutdown(agentShutdown);
+            OnAgentShutdownCallback = new HPSocketSdk.OnAgentShutdown(agentShutdown);
             HPSocketSdk.HP_Set_FN_Agent_OnAgentShutdown(pListener, OnAgentShutdownCallback);
         }
 
-        public virtual void SetOnErrorCallback(HPSocketSdk.HP_FN_OnError error)
+        public virtual void SetOnErrorCallback(HPSocketSdk.OnError error)
         {
-            OnErrorCallback = new HPSocketSdk.HP_FN_OnError(error);
+            OnErrorCallback = new HPSocketSdk.OnError(error);
             HPSocketSdk.HP_Set_FN_Server_OnError(pListener, OnErrorCallback);
         }
 
-        public virtual void SetOnCloseCallback(HPSocketSdk.HP_FN_OnClose close)
+        public virtual void SetOnCloseCallback(HPSocketSdk.OnClose close)
         {
-            OnCloseCallback = new HPSocketSdk.HP_FN_OnClose(close);
+            OnCloseCallback = new HPSocketSdk.OnClose(close);
             HPSocketSdk.HP_Set_FN_Server_OnClose(pListener, OnCloseCallback);
         }
 
-        public virtual void SetOnReceiveCallback(HPSocketSdk.HP_FN_OnReceive recv)
+        public virtual void SetOnReceiveCallback(HPSocketSdk.OnReceive recv)
         {
-            OnReceiveCallback = new HPSocketSdk.HP_FN_OnReceive(recv);
+            OnReceiveCallback = new HPSocketSdk.OnReceive(recv);
             HPSocketSdk.HP_Set_FN_Server_OnReceive(pListener, OnReceiveCallback);
         }
 
-        public virtual void SetOnPrepareConnectCallback(HPSocketSdk.HP_FN_OnPrepareConnect prepareConnect)
+        public virtual void SetOnPrepareConnectCallback(HPSocketSdk.OnPrepareConnect prepareConnect)
         {
-            OnPrepareConnectCallback = new HPSocketSdk.HP_FN_OnPrepareConnect(prepareConnect);
+            OnPrepareConnectCallback = new HPSocketSdk.OnPrepareConnect(prepareConnect);
             HPSocketSdk.HP_Set_FN_Agent_OnPrepareConnect(pListener, OnPrepareConnectCallback);
         }
 
-        public virtual void SetOnConnectCallback(HPSocketSdk.HP_FN_OnConnect connect)
+        public virtual void SetOnConnectCallback(HPSocketSdk.OnConnect connect)
         {
-            OnConnectCallback = new HPSocketSdk.HP_FN_OnConnect(connect);
+            OnConnectCallback = new HPSocketSdk.OnConnect(connect);
             HPSocketSdk.HP_Set_FN_Agent_OnConnect(pListener, OnConnectCallback);
         }
 
-        public virtual void SetOnSendCallback(HPSocketSdk.HP_FN_OnSend send)
+        public virtual void SetOnSendCallback(HPSocketSdk.OnSend send)
         {
-            OnSendCallback = new HPSocketSdk.HP_FN_OnSend(send);
+            OnSendCallback = new HPSocketSdk.OnSend(send);
             HPSocketSdk.HP_Set_FN_Server_OnSend(pListener, OnSendCallback);
         }
 
@@ -602,9 +665,9 @@ namespace HPSocketCS
         /// <param name="dwConnID"></param>
         /// <param name="socket"></param>
         /// <returns></returns>
-        protected virtual En_HP_HandleResult OnPrepareConnect(uint dwConnID, uint socket)
+        protected virtual HandleResult OnPrepareConnect(uint dwConnID, uint socket)
         {
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
         /// <summary>
@@ -612,9 +675,9 @@ namespace HPSocketCS
         /// </summary>
         /// <param name="dwConnID"></param>
         /// <returns></returns>
-        protected virtual En_HP_HandleResult OnConnect(uint dwConnID)
+        protected virtual HandleResult OnConnect(uint dwConnID)
         {
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
         /// <summary>
@@ -624,9 +687,9 @@ namespace HPSocketCS
         /// <param name="pData"></param>
         /// <param name="iLength"></param>
         /// <returns></returns>
-        protected virtual En_HP_HandleResult OnSend(uint dwConnID, IntPtr pData, int iLength)
+        protected virtual HandleResult OnSend(uint dwConnID, IntPtr pData, int iLength)
         {
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
         /// <summary>
@@ -636,9 +699,9 @@ namespace HPSocketCS
         /// <param name="pData"></param>
         /// <param name="iLength"></param>
         /// <returns></returns>
-        protected virtual En_HP_HandleResult OnReceive(uint dwConnID, IntPtr pData, int iLength)
+        protected virtual HandleResult OnReceive(uint dwConnID, IntPtr pData, int iLength)
         {
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
         /// <summary>
@@ -646,9 +709,9 @@ namespace HPSocketCS
         /// </summary>
         /// <param name="dwConnID"></param>
         /// <returns></returns>
-        protected virtual En_HP_HandleResult OnClose(uint dwConnID)
+        protected virtual HandleResult OnClose(uint dwConnID)
         {
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
         /// <summary>
@@ -658,18 +721,18 @@ namespace HPSocketCS
         /// <param name="enOperation"></param>
         /// <param name="iErrorCode"></param>
         /// <returns></returns>
-        protected virtual En_HP_HandleResult OnError(uint dwConnID, En_HP_SocketOperation enOperation, int iErrorCode)
+        protected virtual HandleResult OnError(uint dwConnID, SocketOperation enOperation, int iErrorCode)
         {
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
         /// <summary>
         /// Agent关闭了
         /// </summary>
         /// <returns></returns>
-        protected virtual En_HP_HandleResult OnAgentShutdown()
+        protected virtual HandleResult OnAgentShutdown()
         {
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
     }
 }

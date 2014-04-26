@@ -9,16 +9,16 @@ using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using HPSocketCS;
 
-namespace TcpServer
+namespace TcpServer_PFM
 {
-    public enum EnAppState
+    public enum AppState
     {
-        ST_STARTING, ST_STARTED, ST_STOPING, ST_STOPED, ST_ERROR
+        Starting, Started, Stoping, Stoped, Error
     }
 
     public partial class frmServer : Form
     {
-        private EnAppState enAppState = EnAppState.ST_STOPED;
+        private AppState appState = AppState.Stoped;
 
         private delegate void ShowMsg(string msg);
         private ShowMsg AddMsgDelegate;
@@ -47,11 +47,11 @@ namespace TcpServer
                 // 设置回调函数
                 server.SetCallback(OnPrepareListen, OnAccept, OnSend, OnReceive, OnClose, OnError, OnServerShutdown);
 
-                SetAppState(EnAppState.ST_STOPED);
+                SetAppState(AppState.Stoped);
             }
             catch (Exception ex)
             {
-                SetAppState(EnAppState.ST_ERROR);
+                SetAppState(AppState.Error);
                 AddMsg(ex.Message);
             }
         }
@@ -64,18 +64,18 @@ namespace TcpServer
                 ushort port = ushort.Parse(this.txtPort.Text.Trim());
 
                 // 写在这个位置是上面可能会异常
-                SetAppState(EnAppState.ST_STARTING);
+                SetAppState(AppState.Starting);
 
                 // 启动服务
                 if (server.Start(ip, port))
                 {
                     this.Text = string.Format("{2} - ({0}:{1})", ip, port, title);
-                    SetAppState(EnAppState.ST_STARTED);
+                    SetAppState(AppState.Started);
                     throw new Exception(string.Format("$Server Start OK -> ({0}:{1})", ip, port));
                 }
                 else
                 {
-                    SetAppState(EnAppState.ST_STOPED);
+                    SetAppState(AppState.Stoped);
                     throw new Exception(string.Format("$Server Start Error -> {0}({1})", server.GetLastErrorDesc(), server.GetlastError()));
                 }
             }
@@ -87,14 +87,14 @@ namespace TcpServer
 
         private void btnStop_Click(object sender, EventArgs e)
         {
-            SetAppState(EnAppState.ST_STOPING);
+            SetAppState(AppState.Stoping);
 
             // 停止服务
             AddMsg("$Server Stop");
             if (server.Stop())
             {
                 this.Text = title;
-                SetAppState(EnAppState.ST_STOPED);
+                SetAppState(AppState.Stoped);
             }
             else
             {
@@ -125,14 +125,14 @@ namespace TcpServer
         }
 
 
-        En_HP_HandleResult OnPrepareListen(IntPtr soListen)
+        HandleResult OnPrepareListen(IntPtr soListen)
         {
             // 监听事件到达了,一般没什么用吧?
 
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
-        En_HP_HandleResult OnAccept(uint dwConnID, IntPtr pClient)
+        HandleResult OnAccept(uint dwConnID, IntPtr pClient)
         {
             // 客户进入了
 
@@ -146,7 +146,7 @@ namespace TcpServer
             }
             else
             {
-                AddMsg(string.Format(" > [{0},OnAccept] -> HP_Server_GetClientAddress() Error", dwConnID));
+                AddMsg(string.Format(" > [{0},OnAccept] -> Server_GetClientAddress() Error", dwConnID));
             }
 
 
@@ -160,20 +160,20 @@ namespace TcpServer
                 AddMsg(string.Format(" > [{0},OnAccept] -> SetConnectionExtra fail", dwConnID));
             }
 
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
-        En_HP_HandleResult OnSend(uint dwConnID, IntPtr pData, int iLength)
+        HandleResult OnSend(uint dwConnID, IntPtr pData, int iLength)
         {
             // 服务器发数据了
 
 
             AddMsg(string.Format(" > [{0},OnSend] -> ({1} bytes)", dwConnID, iLength));
 
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
-        En_HP_HandleResult OnReceive(uint dwConnID, IntPtr pData, int iLength)
+        HandleResult OnReceive(uint dwConnID, IntPtr pData, int iLength)
         {
             // 数据到达了
             try
@@ -181,9 +181,9 @@ namespace TcpServer
                 // 从pData中获取字符串
                 // string str = Marshal.PtrToStringAnsi(pData, iLength);
 
-                //intptr转byte[]
-                //byte[] bytes = new byte[iLength];
-                //Marshal.Copy(pData, bytes, 0, iLength);
+                // intptr转byte[]
+                // byte[] bytes = new byte[iLength];
+                // Marshal.Copy(pData, bytes, 0, iLength);
 
 
                 // 获取附加数据
@@ -201,19 +201,19 @@ namespace TcpServer
 
                 if (server.Send(dwConnID, pData, iLength))
                 {
-                    return En_HP_HandleResult.HP_HR_OK;
+                    return HandleResult.Ok;
                 }
 
-                return En_HP_HandleResult.HP_HR_ERROR;
+                return HandleResult.Error;
             }
             catch (Exception)
             {
 
-                return En_HP_HandleResult.HP_HR_IGNORE;
+                return HandleResult.Ignore;
             }
         }
 
-        En_HP_HandleResult OnClose(uint dwConnID)
+        HandleResult OnClose(uint dwConnID)
         {
             // 客户离开了
 
@@ -226,27 +226,27 @@ namespace TcpServer
 
 
             AddMsg(string.Format(" > [{0},OnClose]", dwConnID));
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
-        En_HP_HandleResult OnError(uint dwConnID, En_HP_SocketOperation enOperation, int iErrorCode)
+        HandleResult OnError(uint dwConnID, SocketOperation enOperation, int iErrorCode)
         {
             // 客户出错了
 
             AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", dwConnID, enOperation, iErrorCode));
-            // return HPSocketSdk.En_HP_HandleResult.HP_HR_OK;
+            // return HPSocketSdk.HandleResult.Ok;
 
             // 因为要释放附加数据,所以直接返回OnClose()了
             return OnClose(dwConnID);
         }
 
-        En_HP_HandleResult OnServerShutdown()
+        HandleResult OnServerShutdown()
         {
             // 服务关闭了
 
 
             AddMsg(" > [OnServerShutdown]");
-            return En_HP_HandleResult.HP_HR_OK;
+            return HandleResult.Ok;
         }
 
 
@@ -254,15 +254,15 @@ namespace TcpServer
         /// 设置程序状态
         /// </summary>
         /// <param name="state"></param>
-        void SetAppState(EnAppState state)
+        void SetAppState(AppState state)
         {
-            enAppState = state;
-            this.btnStart.Enabled = (enAppState == EnAppState.ST_STOPED);
-            this.btnStop.Enabled = (enAppState == EnAppState.ST_STARTED);
-            this.txtIpAddress.Enabled = (enAppState == EnAppState.ST_STOPED);
-            this.txtPort.Enabled = (enAppState == EnAppState.ST_STOPED);
-            this.txtDisConn.Enabled = (enAppState == EnAppState.ST_STARTED);
-            this.btnDisconn.Enabled = (enAppState == EnAppState.ST_STARTED && this.txtDisConn.Text.Length > 0);
+            appState = state;
+            this.btnStart.Enabled = (appState == AppState.Stoped);
+            this.btnStop.Enabled = (appState == AppState.Started);
+            this.txtIpAddress.Enabled = (appState == AppState.Stoped);
+            this.txtPort.Enabled = (appState == AppState.Stoped);
+            this.txtDisConn.Enabled = (appState == AppState.Started);
+            this.btnDisconn.Enabled = (appState == AppState.Started && this.txtDisConn.Text.Length > 0);
         }
 
         /// <summary>
@@ -290,7 +290,7 @@ namespace TcpServer
         private void txtDisConn_TextChanged(object sender, EventArgs e)
         {
             // CONNID框被改变事件
-            this.btnDisconn.Enabled = (enAppState == EnAppState.ST_STARTED && this.txtDisConn.Text.Length > 0);
+            this.btnDisconn.Enabled = (appState == AppState.Started && this.txtDisConn.Text.Length > 0);
         }
 
         private void lbxMsg_KeyPress(object sender, KeyPressEventArgs e)
