@@ -124,7 +124,7 @@ namespace HPSocketCS
 
             if (IsSetCallback == false)
             {
-               // throw new Exception("请在调用Start方法前先调用SetCallback()方法");
+                // throw new Exception("请在调用Start方法前先调用SetCallback()方法");
             }
 
             if (HasStarted() == true)
@@ -570,6 +570,26 @@ namespace HPSocketCS
             IntPtr ptr = HPSocketSdk.HP_GetSocketErrorDesc(code);
             string desc = Marshal.PtrToStringUni(ptr);
             return desc;
+        }
+
+
+        /// <summary>
+        /// 设置数据发送策略
+        /// </summary>
+        /// <param name="enSendPolicy"></param>
+        public void SetSendPolicy(SendPolicy policy)
+        {
+            HPSocketSdk.HP_Agent_SetSendPolicy(pAgent, policy);
+        }
+
+        /// <summary>
+        /// 获取数据发送策略
+        /// </summary>
+        /// <param name="pAgent"></param>
+        /// <returns></returns>
+        public SendPolicy GetSendPolicy()
+        {
+            return HPSocketSdk.HP_Agent_GetSendPolicy(pAgent);
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////

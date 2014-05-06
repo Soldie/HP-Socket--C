@@ -620,6 +620,25 @@ namespace HPSocketCS
             return desc;
         }
 
+        /// <summary>
+        /// 设置数据发送策略
+        /// </summary>
+        /// <param name="enSendPolicy"></param>
+        public void SetSendPolicy(SendPolicy policy)
+        {
+            HPSocketSdk.HP_Server_SetSendPolicy(pServer, policy);
+        }
+
+        /// <summary>
+        /// 获取数据发送策略
+        /// </summary>
+        /// <param name="pAgent"></param>
+        /// <returns></returns>
+        public SendPolicy GetSendPolicy()
+        {
+            return HPSocketSdk.HP_Server_GetSendPolicy(pServer);
+        }
+
         ///////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>

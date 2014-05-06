@@ -75,6 +75,16 @@ namespace HPSocketCS
         DataNotFound = 2,   // 找不到 ConnID 对应的数据
     };
 
+    /// <summary>
+    /// 发送策略
+    /// </summary>
+    public enum SendPolicy
+    {
+        Pack = 0,   // 打包模式（默认）
+        Safe = 1,   // 安全模式
+        Direct = 2, // 直接模式
+    };
+
 
     /****************************************************/
     /************** sockaddr结构体,udp服务器时OnAccept最后个参数可转化 **************/
@@ -556,6 +566,22 @@ namespace HPSocketCS.SDK
 
         /******************************************************************************/
         /***************************** Server 属性访问方法 *****************************/
+
+        /// <summary>
+        /// 设置数据发送策略
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="enSendPolicy"></param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void HP_Server_SetSendPolicy(IntPtr pServer, SendPolicy enSendPolicy);
+        
+        /// <summary>
+        /// 获取数据发送策略
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern SendPolicy HP_Server_GetSendPolicy(IntPtr pServer);
 
         /// <summary>
         /// 设置连接的附加数据
@@ -1280,6 +1306,23 @@ namespace HPSocketCS.SDK
 
         /******************************************************************************/
         /***************************** Agent 属性访问方法 *****************************/
+
+        /// <summary>
+        /// 设置数据发送策略
+        /// </summary>
+        /// <param name="pAgent"></param>
+        /// <param name="enSendPolicy"></param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void HP_Agent_SetSendPolicy(IntPtr pAgent, SendPolicy enSendPolicy);
+
+        /// <summary>
+        /// 获取数据发送策略
+        /// </summary>
+        /// <param name="pAgent"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern SendPolicy HP_Agent_GetSendPolicy(IntPtr pAgent);
+
 
         /// <summary>
         /// 设置连接的附加数据

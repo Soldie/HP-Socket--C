@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -24,6 +25,7 @@ import org.jessma.hpsocket.Callback.OnSend;
 import org.jessma.hpsocket.Callback.OnServerShutdown;
 import org.jessma.hpsocket.Constant.HandleResult;
 import org.jessma.hpsocket.HPSocketObjBase.Mode;
+import org.jessma.hpsocket.Helper;
 import org.jessma.hpsocket.SocketAddress;
 import org.jessma.hpsocket.mbcs.TcpServer;
 
@@ -92,20 +94,34 @@ public class ServerApp extends javax.swing.JFrame
 
 		btnStart.setEnabled(state == STOPPED);
 		btnStop.setEnabled(state == STARTED);
+		txtPort.setEnabled(state == STOPPED);
+		lsPolicy.setEnabled(state == STOPPED);
 
 		btnStart.paint(btnStart.getGraphics());
 		btnStop.paint(btnStop.getGraphics());
+		txtPort.paint(txtPort.getGraphics());
+		lsPolicy.paint(lsPolicy.getGraphics());
 	}
 
 	private void btnStartActionPerformed(java.awt.event.ActionEvent evt)
 	{
-		setAppState(STARTING);
+		int policy = lsPolicy.getSelectedIndex();
+		short port = Helper.str2Short_0(txtPort.getText());
 
+		if(port == 0)
+		{
+			JOptionPane.showMessageDialog(this, "Listen Port not valid, pls check !", "Params Error", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		setAppState(STARTING);
 		reset(true);
 
-		if(server.start(DEF_BIND_ADDRESS, DEF_SERVER_PORT))
+		server.setSendPolicy(policy);
+
+		if(server.start(DEF_BIND_ADDRESS, port))
 		{
-			logServerStart(DEF_BIND_ADDRESS, DEF_SERVER_PORT);
+			logServerStart(DEF_BIND_ADDRESS, port);
 			setAppState(STARTED);
 		}
 		else
@@ -282,6 +298,10 @@ public class ServerApp extends javax.swing.JFrame
 		lsInfo = new javax.swing.JList();
 		btnStop = new javax.swing.JButton();
 		btnStart = new javax.swing.JButton();
+		jLabel6 = new javax.swing.JLabel();
+		txtPort = new javax.swing.JTextField();
+		jLabel1 = new javax.swing.JLabel();
+		lsPolicy = new javax.swing.JComboBox();
 
 		setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 		setTitle("PFM Server [ 'C' - clear list box ]");
@@ -326,22 +346,52 @@ public class ServerApp extends javax.swing.JFrame
 			}
 		});
 
+		jLabel6.setFont(new java.awt.Font("新宋体", 0, 12));
+		jLabel6.setText("Listen Port:");
+
+		txtPort.setFont(new java.awt.Font("新宋体", 0, 12));
+		txtPort.setText("5555");
+
+		jLabel1.setText("Policy:");
+
+		lsPolicy.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "PACK", "SAFE", "DIRECT" }));
+
 		javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
 		getContentPane().setLayout(layout);
 		layout.setHorizontalGroup(layout
 			.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
 			.addGroup(
 				javax.swing.GroupLayout.Alignment.TRAILING,
-				layout.createSequentialGroup().addContainerGap(375, Short.MAX_VALUE)
+				layout
+					.createSequentialGroup()
+					.addContainerGap(132, Short.MAX_VALUE)
+					.addComponent(jLabel6)
+					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+					.addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+					.addComponent(jLabel1)
+					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+					.addComponent(lsPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
+						javax.swing.GroupLayout.PREFERRED_SIZE).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
 					.addComponent(btnStart, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE).addGap(18, 18, 18)
 					.addComponent(btnStop, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE).addContainerGap())
 			.addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 537, Short.MAX_VALUE));
 		layout.setVerticalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGroup(
 			javax.swing.GroupLayout.Alignment.TRAILING,
-			layout.createSequentialGroup().addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
+			layout
+				.createSequentialGroup()
+				.addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
 				.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-				.addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE).addComponent(btnStop).addComponent(btnStart))
-				.addContainerGap()));
+				.addGroup(
+					layout
+						.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+						.addComponent(btnStop)
+						.addComponent(btnStart)
+						.addComponent(lsPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
+							javax.swing.GroupLayout.PREFERRED_SIZE)
+						.addComponent(jLabel1)
+						.addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
+							javax.swing.GroupLayout.PREFERRED_SIZE).addComponent(jLabel6)).addContainerGap()));
 
 		pack();
 	}// </editor-fold>
@@ -370,7 +420,11 @@ public class ServerApp extends javax.swing.JFrame
 	// Variables declaration - do not modify
 	private javax.swing.JButton btnStart;
 	private javax.swing.JButton btnStop;
+	private javax.swing.JLabel jLabel1;
+	private javax.swing.JLabel jLabel6;
 	private javax.swing.JScrollPane jScrollPane1;
 	private javax.swing.JList lsInfo;
+	private javax.swing.JComboBox lsPolicy;
+	private javax.swing.JTextField txtPort;
 	// End of variables declaration//GEN-END:variables
 }

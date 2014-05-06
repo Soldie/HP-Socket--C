@@ -36,6 +36,7 @@ namespace TcpClient_PFM
         Int64 TotalSent = 0;
         Int64 ExpectReceived = 0;
 
+        Thread testThread = null;
 
         List<TcpClient> clientList = new List<TcpClient>();
 
@@ -151,49 +152,56 @@ namespace TcpClient_PFM
                 // 延迟3秒
                 int sendDelay = 3;
                 AddMsg(string.Format(" *** willing to send data after {0} seconds ...", sendDelay));
-                Delay2(sendDelay * 1000);
-
-                // 发送的数据包
-                byte[] sendBytes = new byte[DataLength];
+                // Delay2(sendDelay * 1000);
 
                 SetAppState(AppState.Started);
 
-                StopWatch.Restart();
-                bool isTerminated = false;
-                for (int i = 0; i < TestTimes; i++)
+                testThread = new Thread(delegate()
                 {
-                    for (int j = 0; j < ThreadCount; j++)
+                    Thread.Sleep(sendDelay * 1000);
+                    AddMsg(string.Format(" *** begin... ***", sendDelay));
+                    // 发送的数据包
+                    byte[] sendBytes = new byte[DataLength];
+
+
+                    StopWatch.Restart();
+                    bool isTerminated = false;
+                    for (int i = 0; i < TestTimes; i++)
                     {
-                        TcpClient client = clientList[j];
-                        if (client.Send(sendBytes, sendBytes.Length) == false)
+                        for (int j = 0; j < ThreadCount; j++)
                         {
-                            AddMsg(string.Format("$ Client send fail [sock: {0}, seq: {1}] -> {3} ({2})",
-                                                 i + 1,
-                                                 j + 1,
-                                                 client.SYSGetLastError(),
-                                                 client.GetSocketErrorDesc(SocketError.DataSend)));
-                            isTerminated = true;
+                            TcpClient client = clientList[j];
+                            if (client.Send(sendBytes, sendBytes.Length) == false)
+                            {
+                                AddMsg(string.Format("$ Client send fail [sock: {0}, seq: {1}] -> {3} ({2})",
+                                                     i + 1,
+                                                     j + 1,
+                                                     client.SYSGetLastError(),
+                                                     client.GetSocketErrorDesc(SocketError.DataSend)));
+                                isTerminated = true;
+                                break;
+                            }
+
+                            if (ThreadInterv > 0 && j + 1 < ThreadCount)
+                            {
+                                Thread.Sleep(ThreadInterv);
+                                //Delay2(ThreadInterv);
+                            }
+                        }
+
+                        if (isTerminated == true)
+                        {
                             break;
                         }
 
-                        if (ThreadInterv > 0 && j + 1 < ThreadCount)
+                        if (TestInterv > 0 && i + 1 < TestTimes)
                         {
-							Thread.Sleep(ThreadInterv);
-                            //Delay2(ThreadInterv);
+                            Thread.Sleep(TestInterv);
+                            //Delay2(TestInterv);
                         }
                     }
-
-                    if (isTerminated == true)
-                    {
-                        break;
-                    }
-
-                    if (TestInterv > 0 && i + 1 < TestTimes)
-                    {
-						Thread.Sleep(TestInterv);
-						//Delay2(TestInterv);
-					}
-                }
+                });
+                testThread.Start();
             }
             catch (Exception ex)
             {
@@ -212,6 +220,11 @@ namespace TcpClient_PFM
                 {
                     AddMsg(string.Format("$ Client stopping ... --> ({0})", i + 1));
                 }
+            }
+
+            if (testThread.ThreadState == System.Threading.ThreadState.Running)
+            {
+                testThread.Abort();
             }
 
             Delay2(100);
