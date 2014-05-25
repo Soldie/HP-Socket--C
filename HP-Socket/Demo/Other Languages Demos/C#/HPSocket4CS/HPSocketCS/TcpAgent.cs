@@ -156,7 +156,7 @@ namespace HPSocketCS
         /// <param name="port"></param>
         /// <param name="connId"></param>
         /// <returns></returns>
-        public bool Connect(string address, ushort port, ref uint connId)
+        public bool Connect(string address, ushort port, ref IntPtr connId)
         {
             return HPSocketSdk.HP_Agent_Connect(pAgent, address, port, ref connId);
         }
@@ -168,7 +168,7 @@ namespace HPSocketCS
         /// <param name="bytes"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        public bool Send(uint connId, byte[] bytes, int size)
+        public bool Send(IntPtr connId, byte[] bytes, int size)
         {
             return HPSocketSdk.HP_Agent_Send(pAgent, connId, bytes, size);
         }
@@ -180,7 +180,7 @@ namespace HPSocketCS
         /// <param name="bufferPtr"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        public bool Send(uint connId, IntPtr bufferPtr, int size)
+        public bool Send(IntPtr connId, IntPtr bufferPtr, int size)
         {
             return HPSocketSdk.HP_Agent_Send(pAgent, connId, bufferPtr, size);
         }
@@ -193,7 +193,7 @@ namespace HPSocketCS
         /// <param name="offset">针对bytes的偏移</param>
         /// <param name="size">发多大</param>
         /// <returns></returns>
-        public bool Send(uint connId, byte[] bytes, int offset, int size)
+        public bool Send(IntPtr connId, byte[] bytes, int offset, int size)
         {
             return HPSocketSdk.HP_Agent_SendPart(pAgent, connId, bytes, size, offset);
         }
@@ -206,7 +206,7 @@ namespace HPSocketCS
         /// <param name="offset">针对bufferPtr的偏移</param>
         /// <param name="size">发多大</param>
         /// <returns></returns>
-        public bool Send(uint connId, IntPtr bufferPtr, int offset, int size)
+        public bool Send(IntPtr connId, IntPtr bufferPtr, int offset, int size)
         {
             return HPSocketSdk.HP_Agent_SendPart(pAgent, connId, bufferPtr, size, offset);
         }
@@ -217,7 +217,7 @@ namespace HPSocketCS
         /// <param name="connId"></param>
         /// <param name="force">强制</param>
         /// <returns></returns>
-        public bool Disconnect(uint connId, bool force = true)
+        public bool Disconnect(IntPtr connId, bool force = true)
         {
             return HPSocketSdk.HP_Agent_Disconnect(pAgent, connId, force);
         }
@@ -228,7 +228,7 @@ namespace HPSocketCS
         /// <param name="connId"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public bool SetConnectionExtra(uint connId, object obj)
+        public bool SetConnectionExtra(IntPtr connId, object obj)
         {
 
             IntPtr ptr = IntPtr.Zero;
@@ -259,7 +259,7 @@ namespace HPSocketCS
         /// <param name="connId"></param>
         /// <param name="ptr"></param>
         /// <returns></returns>
-        public bool GetConnectionExtra(uint connId, ref IntPtr ptr)
+        public bool GetConnectionExtra(IntPtr connId, ref IntPtr ptr)
         {
             return HPSocketSdk.HP_Agent_GetConnectionExtra(pAgent, connId, ref ptr) && ptr != IntPtr.Zero;
         }
@@ -290,7 +290,7 @@ namespace HPSocketCS
         /// <param name="connId"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public bool GetPendingDataLength(uint connId, ref int length)
+        public bool GetPendingDataLength(IntPtr connId, ref int length)
         {
             return HPSocketSdk.HP_Agent_GetPendingDataLength(pAgent, connId, ref length);
         }
@@ -315,12 +315,51 @@ namespace HPSocketCS
         }
 
         /// <summary>
+        /// 获取连接数
+        /// </summary>
+        /// <returns></returns>
+        public uint GetConnectionCount()
+        {
+            return HPSocketSdk.HP_Agent_GetConnectionCount(pAgent);
+        }
+
+        /// <summary>
+        /// 获取所有连接数,未获取到连接数返回null
+        /// </summary>
+        /// <returns></returns>
+        public IntPtr[] GetAllConnectionIDs()
+        {
+            IntPtr[] arr = null;
+            do
+            {
+                uint count = GetConnectionCount();
+                if (count == 0)
+                {
+                    break;
+                }
+                arr = new IntPtr[count];
+                if (HPSocketSdk.HP_Agent_GetAllConnectionIDs(pAgent, arr, ref count))
+                {
+                    if (arr.Length > count)
+                    {
+                        IntPtr[] newArr = new IntPtr[count];
+                        Array.Copy(arr, newArr, count);
+                        arr = newArr;
+                    }
+                    break;
+                }
+            } while (true);
+
+            return arr;
+        }
+
+        /// <summary>
         /// 获取监听socket的地址信息
         /// </summary>
         /// <param name="ip"></param>
         /// <param name="port"></param>
         /// <returns></returns>
-        public bool GetLocalAddress(uint connId, ref string ip, ref ushort port)
+        public bool GetLocalAddress(IntPtr connId, ref string ip, ref ushort port)
         {
             int ipLength = 40;
 
@@ -338,7 +377,7 @@ namespace HPSocketCS
         /// 获取该组件对象的连接Id
         /// </summary>
         /// <returns></returns>
-        public bool GetRemoteAddress(uint connId, ref string ip, ref ushort port)
+        public bool GetRemoteAddress(IntPtr connId, ref string ip, ref ushort port)
         {
             int ipLength = 40;
 
@@ -393,7 +432,7 @@ namespace HPSocketCS
         /// 设置 Socket 缓存对象锁定时间（毫秒，在锁定期间该 Socket 缓存对象不能被获取使用）
         /// </summary>
         /// <param name="val"></param>
-        public void Agent_SetFreeSocketObjLockTime(uint val)
+        public void SetFreeSocketObjLockTime(uint val)
         {
             HPSocketSdk.HP_Agent_SetFreeSocketObjLockTime(pAgent, val);
         }
@@ -572,7 +611,6 @@ namespace HPSocketCS
             return desc;
         }
 
-
         /// <summary>
         /// 设置数据发送策略
         /// </summary>
@@ -592,6 +630,24 @@ namespace HPSocketCS
             return HPSocketSdk.HP_Agent_GetSendPolicy(pAgent);
         }
 
+        /// <summary>
+        /// 设置数据接收策略
+        /// </summary>
+        /// <param name="enSendPolicy"></param>
+        public void SetRecvPolicy(RecvPolicy policy)
+        {
+            HPSocketSdk.HP_Agent_SetRecvPolicy(pAgent, policy);
+        }
+
+        /// <summary>
+        /// 获取数据接收策略
+        /// </summary>
+        /// <param name="pAgent"></param>
+        /// <returns></returns>
+        public RecvPolicy GetRecvPolicy()
+        {
+            return HPSocketSdk.HP_Agent_GetRecvPolicy(pAgent);
+        }
         ///////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>
@@ -682,10 +738,10 @@ namespace HPSocketCS
         /// <summary>
         /// 准备连接了
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="socket"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnPrepareConnect(uint dwConnID, uint socket)
+        protected virtual HandleResult OnPrepareConnect(IntPtr dwConnId, uint socket)
         {
             return HandleResult.Ok;
         }
@@ -693,9 +749,9 @@ namespace HPSocketCS
         /// <summary>
         /// 已连接
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnConnect(uint dwConnID)
+        protected virtual HandleResult OnConnect(IntPtr dwConnId)
         {
             return HandleResult.Ok;
         }
@@ -703,11 +759,11 @@ namespace HPSocketCS
         /// <summary>
         /// 客户端发数据了
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="pData"></param>
         /// <param name="iLength"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnSend(uint dwConnID, IntPtr pData, int iLength)
+        protected virtual HandleResult OnSend(IntPtr dwConnId, IntPtr pData, int iLength)
         {
             return HandleResult.Ok;
         }
@@ -715,11 +771,11 @@ namespace HPSocketCS
         /// <summary>
         /// 数据到达了
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="pData"></param>
         /// <param name="iLength"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnReceive(uint dwConnID, IntPtr pData, int iLength)
+        protected virtual HandleResult OnReceive(IntPtr dwConnId, IntPtr pData, int iLength)
         {
             return HandleResult.Ok;
         }
@@ -727,9 +783,9 @@ namespace HPSocketCS
         /// <summary>
         /// 连接关闭了
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnClose(uint dwConnID)
+        protected virtual HandleResult OnClose(IntPtr dwConnId)
         {
             return HandleResult.Ok;
         }
@@ -737,11 +793,11 @@ namespace HPSocketCS
         /// <summary>
         /// 出错了
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="enOperation"></param>
         /// <param name="iErrorCode"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnError(uint dwConnID, SocketOperation enOperation, int iErrorCode)
+        protected virtual HandleResult OnError(IntPtr dwConnId, SocketOperation enOperation, int iErrorCode)
         {
             return HandleResult.Ok;
         }

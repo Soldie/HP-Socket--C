@@ -92,6 +92,7 @@ void PostOnAccept2(CONNID dwConnID);
 void PostOnPrepareListen(LPCTSTR lpszAddress, USHORT usPort);
 void PostOnPrepareConnect(CONNID dwConnID);
 void PostOnConnect(CONNID dwConnID, LPCTSTR lpszAddress, USHORT usPort);
+void PostOnConnect2(CONNID dwConnID, LPCTSTR lpszAddress, USHORT usPort);
 void PostOnShutdown();
 void PostServerStatics(const LONGLONG& llTotalSent, const LONGLONG& llTotalReceived);
 void PostTimeConsuming(DWORD dwTickCount);

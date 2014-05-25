@@ -55,6 +55,7 @@ private:
 	CListBox m_Info;
 	CEdit m_Port;
 	CComboBox m_SendPolicy;
+	CComboBox m_RecvPolicy;
 	CButton m_Start;
 	CButton m_Stop;
 	CButton m_Statistics;

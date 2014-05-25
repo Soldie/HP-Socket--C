@@ -95,17 +95,20 @@ public class ServerApp extends javax.swing.JFrame
 		btnStart.setEnabled(state == STOPPED);
 		btnStop.setEnabled(state == STARTED);
 		txtPort.setEnabled(state == STOPPED);
-		lsPolicy.setEnabled(state == STOPPED);
+		lsSendPolicy.setEnabled(state == STOPPED);
+		lsRecvPolicy.setEnabled(state == STOPPED);
 
 		btnStart.paint(btnStart.getGraphics());
 		btnStop.paint(btnStop.getGraphics());
 		txtPort.paint(txtPort.getGraphics());
-		lsPolicy.paint(lsPolicy.getGraphics());
+		lsSendPolicy.paint(lsSendPolicy.getGraphics());
+		lsRecvPolicy.paint(lsRecvPolicy.getGraphics());
 	}
 
 	private void btnStartActionPerformed(java.awt.event.ActionEvent evt)
 	{
-		int policy = lsPolicy.getSelectedIndex();
+		int sendPolicy = lsSendPolicy.getSelectedIndex();
+		int recvPolicy = lsRecvPolicy.getSelectedIndex();
 		short port = Helper.str2Short_0(txtPort.getText());
 
 		if(port == 0)
@@ -117,7 +120,8 @@ public class ServerApp extends javax.swing.JFrame
 		setAppState(STARTING);
 		reset(true);
 
-		server.setSendPolicy(policy);
+		server.setSendPolicy(sendPolicy);
+		server.setRecvPolicy(recvPolicy);
 
 		if(server.start(DEF_BIND_ADDRESS, port))
 		{
@@ -301,7 +305,9 @@ public class ServerApp extends javax.swing.JFrame
 		jLabel6 = new javax.swing.JLabel();
 		txtPort = new javax.swing.JTextField();
 		jLabel1 = new javax.swing.JLabel();
-		lsPolicy = new javax.swing.JComboBox();
+		lsSendPolicy = new javax.swing.JComboBox();
+		jLabel2 = new javax.swing.JLabel();
+		lsRecvPolicy = new javax.swing.JComboBox();
 
 		setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 		setTitle("PFM Server [ 'C' - clear list box ]");
@@ -352,9 +358,13 @@ public class ServerApp extends javax.swing.JFrame
 		txtPort.setFont(new java.awt.Font("新宋体", 0, 12));
 		txtPort.setText("5555");
 
-		jLabel1.setText("Policy:");
+		jLabel1.setText("Send Policy:");
 
-		lsPolicy.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "PACK", "SAFE", "DIRECT" }));
+		lsSendPolicy.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "PACK", "SAFE", "DIRECT" }));
+
+		jLabel2.setText("Recv Policy:");
+
+		lsRecvPolicy.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "SERIAL", "PARALLEL" }));
 
 		javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
 		getContentPane().setLayout(layout);
@@ -362,34 +372,48 @@ public class ServerApp extends javax.swing.JFrame
 			.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
 			.addGroup(
 				javax.swing.GroupLayout.Alignment.TRAILING,
-				layout
-					.createSequentialGroup()
-					.addContainerGap(132, Short.MAX_VALUE)
-					.addComponent(jLabel6)
+				layout.createSequentialGroup().addContainerGap().addComponent(jLabel6)
 					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
 					.addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-					.addComponent(jLabel1)
-					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-					.addComponent(lsPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
-						javax.swing.GroupLayout.PREFERRED_SIZE).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 251, Short.MAX_VALUE)
 					.addComponent(btnStart, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE).addGap(18, 18, 18)
 					.addComponent(btnStop, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE).addContainerGap())
+			.addGroup(
+				javax.swing.GroupLayout.Alignment.TRAILING,
+				layout
+					.createSequentialGroup()
+					.addContainerGap(212, Short.MAX_VALUE)
+					.addComponent(jLabel1)
+					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+					.addComponent(lsSendPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE)
+					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+					.addComponent(jLabel2)
+					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+					.addComponent(lsRecvPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
+						javax.swing.GroupLayout.PREFERRED_SIZE).addContainerGap())
 			.addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 537, Short.MAX_VALUE));
 		layout.setVerticalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGroup(
 			javax.swing.GroupLayout.Alignment.TRAILING,
 			layout
 				.createSequentialGroup()
-				.addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
-				.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+				.addContainerGap()
+				.addGroup(
+					layout
+						.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+						.addComponent(lsRecvPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
+							javax.swing.GroupLayout.PREFERRED_SIZE)
+						.addComponent(jLabel2)
+						.addComponent(jLabel1)
+						.addComponent(lsSendPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
+							javax.swing.GroupLayout.PREFERRED_SIZE))
+				.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+				.addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 240, Short.MAX_VALUE)
+				.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
 				.addGroup(
 					layout
 						.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
 						.addComponent(btnStop)
 						.addComponent(btnStart)
-						.addComponent(lsPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
-							javax.swing.GroupLayout.PREFERRED_SIZE)
-						.addComponent(jLabel1)
 						.addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
 							javax.swing.GroupLayout.PREFERRED_SIZE).addComponent(jLabel6)).addContainerGap()));
 
@@ -421,10 +445,12 @@ public class ServerApp extends javax.swing.JFrame
 	private javax.swing.JButton btnStart;
 	private javax.swing.JButton btnStop;
 	private javax.swing.JLabel jLabel1;
+	private javax.swing.JLabel jLabel2;
 	private javax.swing.JLabel jLabel6;
 	private javax.swing.JScrollPane jScrollPane1;
 	private javax.swing.JList lsInfo;
-	private javax.swing.JComboBox lsPolicy;
+	private javax.swing.JComboBox lsRecvPolicy;
+	private javax.swing.JComboBox lsSendPolicy;
 	private javax.swing.JTextField txtPort;
 	// End of variables declaration//GEN-END:variables
 }

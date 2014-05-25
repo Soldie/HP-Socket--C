@@ -54,7 +54,7 @@ namespace HPSocketCS
         /// <param name="pBuffer"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        public FetchResult Fetch(uint connId, IntPtr pBuffer, int size)
+        public FetchResult Fetch(IntPtr connId, IntPtr pBuffer, int size)
         {
             return HPSocketSdk.HP_TcpPullServer_Fetch(pServer, connId, pBuffer, size);
         }
@@ -113,10 +113,10 @@ namespace HPSocketCS
         /// <summary>
         /// 数据到达
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="iLength"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnPullReceive(uint dwConnID, int iLength)
+        protected virtual HandleResult OnPullReceive(IntPtr dwConnId, int iLength)
         {
             return HandleResult.Ok;
         }

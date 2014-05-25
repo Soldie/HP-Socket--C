@@ -103,7 +103,8 @@ public class ClientApp extends javax.swing.JFrame
 		btnStop.setEnabled(state == STARTED);
 		txtServerAddr.setEnabled(state == STOPPED);
 		txtPort.setEnabled(state == STOPPED);
-		lsPolicy.setEnabled(state == STOPPED);
+		lsSendPolicy.setEnabled(state == STOPPED);
+		lsRecvPolicy.setEnabled(state == STOPPED);
 		lsTimes.setEnabled(state == STOPPED);
 		lsInterval.setEnabled(state == STOPPED);
 		lsSockets.setEnabled(state == STOPPED);
@@ -113,7 +114,8 @@ public class ClientApp extends javax.swing.JFrame
 		btnStop.paint(btnStop.getGraphics());
 		txtServerAddr.paint(txtServerAddr.getGraphics());
 		txtPort.paint(txtPort.getGraphics());
-		lsPolicy.paint(lsPolicy.getGraphics());
+		lsSendPolicy.paint(lsSendPolicy.getGraphics());
+		lsRecvPolicy.paint(lsRecvPolicy.getGraphics());
 		lsTimes.paint(lsTimes.getGraphics());
 		lsInterval.paint(lsInterval.getGraphics());
 		lsSockets.paint(lsSockets.getGraphics());
@@ -143,7 +145,8 @@ public class ClientApp extends javax.swing.JFrame
 	{
 		String serverAddr = Helper.safeTrimString(txtServerAddr.getText());
 		short port = Helper.str2Short_0(txtPort.getText());
-		int policy = lsPolicy.getSelectedIndex();
+		int sendPolicy = lsSendPolicy.getSelectedIndex();
+		int recvPolicy = lsRecvPolicy.getSelectedIndex();
 		int times = Helper.str2Int_0(lsTimes.getSelectedItem().toString());
 		int interval = Helper.str2Int_0(lsInterval.getSelectedItem().toString());
 		int sockets = Helper.str2Int_0(lsSockets.getSelectedItem().toString());
@@ -157,14 +160,15 @@ public class ClientApp extends javax.swing.JFrame
 
 		boolean isOK = false;
 
-		agent.setSendPolicy(policy);
+		agent.setSendPolicy(sendPolicy);
+		agent.setRecvPolicy(recvPolicy);
 
 		if(agent.start(null, false))
 		{
 			for(int i = 0; i < sockets; i++)
 			{
 				NativeLongByReference pdwConnID = new NativeLongByReference();
-				if(agent.connect(DEF_CONN_ADDRESS, DEF_SERVER_PORT, pdwConnID))
+				if(agent.connect(serverAddr, port, pdwConnID))
 				{
 					connIDs.add(pdwConnID.getValue());
 					if(i == sockets - 1)
@@ -399,8 +403,9 @@ public class ClientApp extends javax.swing.JFrame
 		jLabel6 = new javax.swing.JLabel();
 		btnStart = new javax.swing.JButton();
 		txtPort = new javax.swing.JTextField();
-		lsPolicy = new javax.swing.JComboBox();
+		lsSendPolicy = new javax.swing.JComboBox();
 		jLabel7 = new javax.swing.JLabel();
+		lsRecvPolicy = new javax.swing.JComboBox();
 
 		setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 		setTitle("PFM Client [ 'C' - clear list box ]");
@@ -476,10 +481,10 @@ public class ClientApp extends javax.swing.JFrame
 		lsInterval.setSelectedIndex(1);
 
 		jLabel5.setFont(new java.awt.Font("新宋体", 0, 12));
-		jLabel5.setText("Svr Addr:");
+		jLabel5.setText("Svr:");
 
 		jLabel6.setFont(new java.awt.Font("新宋体", 0, 12));
-		jLabel6.setText("Port:");
+		jLabel6.setText(":");
 
 		btnStart.setFont(new java.awt.Font("新宋体", 0, 12));
 		btnStart.setText("Start");
@@ -494,10 +499,12 @@ public class ClientApp extends javax.swing.JFrame
 		txtPort.setFont(new java.awt.Font("新宋体", 0, 12));
 		txtPort.setText("5555");
 
-		lsPolicy.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "PACK", "SAFE", "DIRECT" }));
+		lsSendPolicy.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "PACK", "SAFE", "DIRECT" }));
 
 		jLabel7.setFont(new java.awt.Font("新宋体", 0, 12));
 		jLabel7.setText("Policy:");
+
+		lsRecvPolicy.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "SERIAL", "PARALLEL" }));
 
 		javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
 		getContentPane().setLayout(layout);
@@ -517,20 +524,23 @@ public class ClientApp extends javax.swing.JFrame
 			.addGroup(
 				layout
 					.createSequentialGroup()
-					.addGap(29, 29, 29)
+					.addContainerGap()
 					.addComponent(jLabel5)
 					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
 					.addComponent(txtServerAddr, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-					.addComponent(jLabel6)
 					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+					.addComponent(jLabel6)
+					.addGap(2, 2, 2)
 					.addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
 					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
 					.addComponent(jLabel7)
 					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-					.addComponent(lsPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
-						javax.swing.GroupLayout.PREFERRED_SIZE).addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-					.addComponent(btnStart, javax.swing.GroupLayout.DEFAULT_SIZE, 67, Short.MAX_VALUE).addGap(18, 18, 18)
+					.addComponent(lsSendPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
+					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+					.addComponent(lsRecvPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
+						javax.swing.GroupLayout.PREFERRED_SIZE)
+					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE).addComponent(btnStart)
+					.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
 					.addComponent(btnStop, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE).addContainerGap())
 			.addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 537, Short.MAX_VALUE));
 		layout.setVerticalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGroup(
@@ -555,21 +565,25 @@ public class ClientApp extends javax.swing.JFrame
 								.addComponent(lsInterval, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
 									javax.swing.GroupLayout.PREFERRED_SIZE).addComponent(jLabel4)))
 				.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-				.addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 236, Short.MAX_VALUE)
-				.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+				.addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 240, Short.MAX_VALUE)
+				.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
 				.addGroup(
 					layout
 						.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
 						.addGroup(
+							layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE).addComponent(btnStop)
+								.addComponent(btnStart, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
+						.addGroup(
 							layout
 								.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-								.addComponent(btnStop)
-								.addComponent(jLabel7)
-								.addComponent(lsPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
-									javax.swing.GroupLayout.PREFERRED_SIZE)
+								.addComponent(jLabel6)
 								.addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
-									javax.swing.GroupLayout.PREFERRED_SIZE).addComponent(jLabel6)
-								.addComponent(btnStart, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
+									javax.swing.GroupLayout.PREFERRED_SIZE)
+								.addComponent(jLabel7)
+								.addComponent(lsRecvPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
+									javax.swing.GroupLayout.PREFERRED_SIZE)
+								.addComponent(lsSendPolicy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
+									javax.swing.GroupLayout.PREFERRED_SIZE))
 						.addGroup(
 							layout
 								.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -614,7 +628,8 @@ public class ClientApp extends javax.swing.JFrame
 	private javax.swing.JList lsInfo;
 	private javax.swing.JComboBox lsInterval;
 	private javax.swing.JComboBox lsLength;
-	private javax.swing.JComboBox lsPolicy;
+	private javax.swing.JComboBox lsRecvPolicy;
+	private javax.swing.JComboBox lsSendPolicy;
 	private javax.swing.JComboBox lsSockets;
 	private javax.swing.JComboBox lsTimes;
 	private javax.swing.JTextField txtPort;

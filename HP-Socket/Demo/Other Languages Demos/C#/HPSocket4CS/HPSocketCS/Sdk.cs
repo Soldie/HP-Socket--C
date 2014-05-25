@@ -5,6 +5,7 @@ using System.Text;
 using System.Runtime.InteropServices;
 using HPSocketCS;
 
+
 namespace HPSocketCS
 {
 
@@ -85,6 +86,14 @@ namespace HPSocketCS
         Direct = 2, // 直接模式
     };
 
+    /// <summary>
+    /// 接收策略
+    /// </summary>
+    public enum RecvPolicy
+    {
+        Serial = 0,	    // 串行模式（默认）
+        Parallel = 1,   // 并行模式
+    };
 
     /****************************************************/
     /************** sockaddr结构体,udp服务器时OnAccept最后个参数可转化 **************/
@@ -116,7 +125,6 @@ namespace HPSocketCS
 
 namespace HPSocketCS.SDK
 {
-
     /// <summary>
     /// Unicode版本
     /// </summary>
@@ -136,11 +144,11 @@ namespace HPSocketCS.SDK
         /****************************************************/
         /************** HPSocket4C.dll 回调函数 **************/
         /* 公共回调函数 */
-        public delegate HandleResult OnSend(uint dwConnID, IntPtr pData, int iLength);
-        public delegate HandleResult OnReceive(uint dwConnID, IntPtr pData, int iLength);
-        public delegate HandleResult OnPullReceive(uint dwConnID, int iLength);
-        public delegate HandleResult OnClose(uint dwConnID);
-        public delegate HandleResult OnError(uint dwConnID, SocketOperation enOperation, int iErrorCode);
+        public delegate HandleResult OnSend(IntPtr dwConnId, IntPtr pData, int iLength);
+        public delegate HandleResult OnReceive(IntPtr dwConnId, IntPtr pData, int iLength);
+        public delegate HandleResult OnPullReceive(IntPtr dwConnId, int iLength);
+        public delegate HandleResult OnClose(IntPtr dwConnId);
+        public delegate HandleResult OnError(IntPtr dwConnId, SocketOperation enOperation, int iErrorCode);
 
         /* 服务端回调函数 */
         public delegate HandleResult OnPrepareListen(IntPtr soListen);
@@ -148,15 +156,15 @@ namespace HPSocketCS.SDK
         /// <summary>
         /// OnAccept
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="pClient">如果为 TCP 连接，pClient为 SOCKET 句柄；如果为 UDP 连接，pClient为 sockaddr_in 指针；</param>
         /// <returns></returns>
-        public delegate HandleResult OnAccept(uint dwConnID, IntPtr pClient);
+        public delegate HandleResult OnAccept(IntPtr dwConnId, IntPtr pClient);
         public delegate HandleResult OnServerShutdown();
 
         /* 客户端和 Agent 回调函数 */
-        public delegate HandleResult OnPrepareConnect(uint dwConnID, uint socket);
-        public delegate HandleResult OnConnect(uint dwConnID);
+        public delegate HandleResult OnPrepareConnect(IntPtr dwConnId, uint socket);
+        public delegate HandleResult OnConnect(IntPtr dwConnId);
 
         /* Agent 回调函数 */
         public delegate HandleResult OnAgentShutdown();
@@ -501,58 +509,58 @@ namespace HPSocketCS.SDK
         /// 用户通过该方法向指定客户端发送数据
         /// </summary>
         /// <param name="pServer"></param>
-        /// <param name="dwConnID">连接 ID</param>
+        /// <param name="dwConnId">连接 ID</param>
         /// <param name="pBuffer">发送数据长度</param>
         /// <param name="iLength">发送数据长度</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH, CharSet = CharSet.Ansi, SetLastError = true)]
-        public static extern bool HP_Server_Send(IntPtr pServer, uint dwConnID, byte[] pBuffer, int iLength);
+        public static extern bool HP_Server_Send(IntPtr pServer, IntPtr dwConnId, byte[] pBuffer, int iLength);
 
         /// <summary>
         /// 用户通过该方法向指定客户端发送数据
         /// </summary>
         /// <param name="pServer"></param>
-        /// <param name="dwConnID">连接 ID</param>
+        /// <param name="dwConnId">连接 ID</param>
         /// <param name="pBuffer">发送数据长度</param>
         /// <param name="iLength">发送数据长度</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH, SetLastError = true)]
-        public static extern bool HP_Server_Send(IntPtr pServer, uint dwConnID, IntPtr pBuffer, int iLength);
+        public static extern bool HP_Server_Send(IntPtr pServer, IntPtr dwConnId, IntPtr pBuffer, int iLength);
 
         /// <summary>
         /// 用户通过该方法向指定客户端发送数据
         /// </summary>
         /// <param name="pServer"></param>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="pBuffer"></param>
         /// <param name="iLength"></param>
         /// <param name="iOffset">针对pBuffer的偏移</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH, CharSet = CharSet.Ansi, SetLastError = true)]
-        public static extern bool HP_Server_SendPart(IntPtr pServer, uint dwConnID, byte[] pBuffer, int iLength, int iOffset);
+        public static extern bool HP_Server_SendPart(IntPtr pServer, IntPtr dwConnId, byte[] pBuffer, int iLength, int iOffset);
 
         /// <summary>
         /// 用户通过该方法向指定客户端发送数据
         /// </summary>
         /// <param name="pServer"></param>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="pBuffer"></param>
         /// <param name="iLength"></param>
         /// <param name="iOffset">针对pBuffer的偏移</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH, SetLastError = true)]
-        public static extern bool HP_Server_SendPart(IntPtr pServer, uint dwConnID, IntPtr pBuffer, int iLength, int iOffset);
+        public static extern bool HP_Server_SendPart(IntPtr pServer, IntPtr dwConnId, IntPtr pBuffer, int iLength, int iOffset);
 
 
         /// <summary>
         /// 断开与某个客户端的连接
         /// </summary>
         /// <param name="pServer"></param>
-        /// <param name="dwConnID">连接 ID</param>
+        /// <param name="dwConnId">连接 ID</param>
         /// <param name="bForce">是否强制断开连接</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Server_Disconnect(IntPtr pServer, uint dwConnID, bool bForce);
+        public static extern bool HP_Server_Disconnect(IntPtr pServer, IntPtr dwConnId, bool bForce);
 
         /// <summary>
         /// 断开超过指定时长的连接
@@ -574,7 +582,7 @@ namespace HPSocketCS.SDK
         /// <param name="enSendPolicy"></param>
         [DllImport(SOCKET_DLL_PATH)]
         public static extern void HP_Server_SetSendPolicy(IntPtr pServer, SendPolicy enSendPolicy);
-        
+
         /// <summary>
         /// 获取数据发送策略
         /// </summary>
@@ -584,26 +592,40 @@ namespace HPSocketCS.SDK
         public static extern SendPolicy HP_Server_GetSendPolicy(IntPtr pServer);
 
         /// <summary>
+        /// 设置数据接受策略
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="enSendPolicy"></param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void HP_Server_SetRecvPolicy(IntPtr pServer, RecvPolicy enSendPolicy);
+
+        /// <summary>
+        /// 获取数据接收策略
+        /// </summary>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern RecvPolicy HP_Server_GetRecvPolicy(IntPtr pServer);
+
+        /// <summary>
         /// 设置连接的附加数据
         /// 是否为连接绑定附加数据或者绑定什么样的数据，均由应用程序只身决定
         /// </summary>
         /// <param name="pServer"></param>
-        /// <param name="dwConnID">连接 ID</param>
+        /// <param name="dwConnId">连接 ID</param>
         /// <param name="pExtra"></param>
         /// <returns>若返回 false 失败则为（无效的连接 ID）</returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Server_SetConnectionExtra(IntPtr pServer, uint dwConnID, IntPtr pExtra);
+        public static extern bool HP_Server_SetConnectionExtra(IntPtr pServer, IntPtr dwConnId, IntPtr pExtra);
 
         /// <summary>
         /// 获取连接的附加数据
         /// 是否为连接绑定附加数据或者绑定什么样的数据，均由应用程序只身决定
         /// </summary>
         /// <param name="pServer"></param>
-        /// <param name="dwConnID">连接 ID</param>
+        /// <param name="dwConnId">连接 ID</param>
         /// <param name="pExtra">数据指针</param>
         /// <returns>若返回 false 失败则为（无效的连接 ID）</returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Server_GetConnectionExtra(IntPtr pServer, uint dwConnID, ref IntPtr pExtra);
+        public static extern bool HP_Server_GetConnectionExtra(IntPtr pServer, IntPtr dwConnId, ref IntPtr pExtra);
 
         /// <summary>
         /// 检查通信组件是否已启动
@@ -642,11 +664,11 @@ namespace HPSocketCS.SDK
         /// 获取连接中未发出数据的长度
         /// </summary>
         /// <param name="pServer"></param>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="piPending"></param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Server_GetPendingDataLength(IntPtr pServer, uint dwConnID, ref int piPending);
+        public static extern bool HP_Server_GetPendingDataLength(IntPtr pServer, IntPtr dwConnId, ref int piPending);
 
         /// <summary>
         /// 获取客户端连接数
@@ -657,14 +679,24 @@ namespace HPSocketCS.SDK
         public static extern uint HP_Server_GetConnectionCount(IntPtr pServer);
 
         /// <summary>
+        /// 获取所有连接的 CONNID
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="pIDs"></param>
+        /// <param name="pdwCount"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern bool HP_Server_GetAllConnectionIDs(IntPtr pServer, IntPtr[] pIDs, ref uint pdwCount);
+
+        /// <summary>
         /// 获取某个客户端连接时长（毫秒）
         /// </summary>
         /// <param name="pServer"></param>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="pdwPeriod"></param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Server_GetConnectPeriod(IntPtr pServer, uint dwConnID, ref uint pdwPeriod);
+        public static extern bool HP_Server_GetConnectPeriod(IntPtr pServer, IntPtr dwConnId, ref uint pdwPeriod);
 
         /// <summary>
         /// 获取监听 Socket 的地址信息
@@ -681,13 +713,13 @@ namespace HPSocketCS.SDK
         /// 获取某个客户端连接的地址信息
         /// </summary>
         /// <param name="pServer"></param>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="lpszAddress"></param>
         /// <param name="piAddressLen">传入传出值,大小最好在222.222.222.222的长度以上</param>
         /// <param name="pusPort"></param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Server_GetRemoteAddress(IntPtr pServer, uint dwConnID, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpszAddress, ref int piAddressLen, ref ushort pusPort);
+        public static extern bool HP_Server_GetRemoteAddress(IntPtr pServer, IntPtr dwConnId, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpszAddress, ref int piAddressLen, ref ushort pusPort);
 
 
         /// <summary>
@@ -964,7 +996,7 @@ namespace HPSocketCS.SDK
         /// 用户通过该方法向服务端发送数据
         /// </summary>
         /// <param name="pClient"></param>
-        /// <param name="dwConnID">连接 ID（保留参数，目前该参数并未使用）</param>
+        /// <param name="dwConnId">连接 ID（保留参数，目前该参数并未使用）</param>
         /// <param name="pBuffer">发送数据缓冲区</param>
         /// <param name="iLength">发送数据长度</param>
         /// <returns>失败，可通过 GetLastError() 获取错误代码</returns>
@@ -975,7 +1007,7 @@ namespace HPSocketCS.SDK
         /// 用户通过该方法向服务端发送数据
         /// </summary>
         /// <param name="pClient"></param>
-        /// <param name="dwConnID">连接 ID（保留参数，目前该参数并未使用）</param>
+        /// <param name="dwConnId">连接 ID（保留参数，目前该参数并未使用）</param>
         /// <param name="pBuffer">发送数据缓冲区</param>
         /// <param name="iLength">发送数据长度</param>
         /// <returns>失败，可通过 GetLastError() 获取错误代码</returns>
@@ -1045,7 +1077,7 @@ namespace HPSocketCS.SDK
         /// <param name="pClient"></param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern uint HP_Client_GetConnectionID(IntPtr pClient);
+        public static extern IntPtr HP_Client_GetConnectionID(IntPtr pClient);
 
         /// <summary>
         /// 获取 Client Socket 的地址信息
@@ -1232,67 +1264,67 @@ namespace HPSocketCS.SDK
         /// <param name="pdwConnID">传出连接 ID</param>
         /// <returns>失败，可通过 SYS_GetLastError() 获取 Windows 错误代码</returns>
         [DllImport(SOCKET_DLL_PATH, CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern bool HP_Agent_Connect(IntPtr pAgent, String pszBindAddress, ushort usPort, ref uint pdwConnID);
+        public static extern bool HP_Agent_Connect(IntPtr pAgent, String pszBindAddress, ushort usPort, ref IntPtr pdwConnID);
 
         /// <summary>
         /// 发送数据
         /// 用户通过该方法向指定连接发送数据
         /// </summary>
         /// <param name="pAgent"></param>
-        /// <param name="dwConnID">连接 ID</param>
+        /// <param name="dwConnId">连接 ID</param>
         /// <param name="pBuffer">发送数据缓冲区</param>
         /// <param name="iLength">发送数据长度</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH, CharSet = CharSet.Ansi, SetLastError = true)]
-        public static extern bool HP_Agent_Send(IntPtr pAgent, uint dwConnID, byte[] pBuffer, int iLength);
+        public static extern bool HP_Agent_Send(IntPtr pAgent, IntPtr dwConnId, byte[] pBuffer, int iLength);
 
         /// <summary>
         /// 发送数据
         /// 用户通过该方法向指定连接发送数据
         /// </summary>
         /// <param name="pAgent"></param>
-        /// <param name="dwConnID">连接 ID</param>
+        /// <param name="dwConnId">连接 ID</param>
         /// <param name="pBuffer">发送数据缓冲区</param>
         /// <param name="iLength">发送数据长度</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH, SetLastError = true)]
-        public static extern bool HP_Agent_Send(IntPtr pAgent, uint dwConnID, IntPtr pBuffer, int iLength);
+        public static extern bool HP_Agent_Send(IntPtr pAgent, IntPtr dwConnId, IntPtr pBuffer, int iLength);
 
         /// <summary>
         /// 发送数据
         /// 用户通过该方法向指定连接发送数据
         /// </summary>
         /// <param name="pAgent"></param>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="pBuffer"></param>
         /// <param name="iLength"></param>
         /// <param name="iOffset">针对pBuffer的偏移</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH, SetLastError = true)]
-        public static extern bool HP_Agent_SendPart(IntPtr pAgent, uint dwConnID, byte[] pBuffer, int iLength, int iOffset);
+        public static extern bool HP_Agent_SendPart(IntPtr pAgent, IntPtr dwConnId, byte[] pBuffer, int iLength, int iOffset);
 
         /// <summary>
         /// 发送数据
         /// 用户通过该方法向指定连接发送数据
         /// </summary>
         /// <param name="pAgent"></param>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="pBuffer"></param>
         /// <param name="iLength"></param>
         /// <param name="iOffset">针对pBuffer的偏移</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH, SetLastError = true)]
-        public static extern bool HP_Agent_SendPart(IntPtr pAgent, uint dwConnID, IntPtr pBuffer, int iLength, int iOffset);
+        public static extern bool HP_Agent_SendPart(IntPtr pAgent, IntPtr dwConnId, IntPtr pBuffer, int iLength, int iOffset);
 
         /// <summary>
         /// 断开某个连接
         /// </summary>
         /// <param name="pAgent"></param>
-        /// <param name="dwConnID">连接 ID</param>
+        /// <param name="dwConnId">连接 ID</param>
         /// <param name="bForce">是否强制断开连接</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Agent_Disconnect(IntPtr pAgent, uint dwConnID, bool bForce);
+        public static extern bool HP_Agent_Disconnect(IntPtr pAgent, IntPtr dwConnId, bool bForce);
 
         /// <summary>
         /// 断开超过指定时长的连接
@@ -1323,28 +1355,44 @@ namespace HPSocketCS.SDK
         [DllImport(SOCKET_DLL_PATH)]
         public static extern SendPolicy HP_Agent_GetSendPolicy(IntPtr pAgent);
 
+        /// <summary>
+        /// 获取数据接收策略
+        /// </summary>
+        /// <param name="pAgent"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern RecvPolicy HP_Agent_GetRecvPolicy(IntPtr pAgent);
+
+        /// <summary>
+        /// 设置数据接收策略
+        /// </summary>
+        /// <param name="pAgent"></param>
+        /// <param name="enRecvPolicy"></param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void HP_Agent_SetRecvPolicy(IntPtr pAgent, RecvPolicy enRecvPolicy);
+
 
         /// <summary>
         /// 设置连接的附加数据
         /// 是否为连接绑定附加数据或者绑定什么样的数据，均由应用程序只身决定
         /// </summary>
         /// <param name="pAgent"></param>
-        /// <param name="dwConnID">连接 ID</param>
+        /// <param name="dwConnId">连接 ID</param>
         /// <param name="pExtra">数据</param>
         /// <returns>FALSE    -- 失败（无效的连接 ID）</returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Agent_SetConnectionExtra(IntPtr pAgent, uint dwConnID, IntPtr pExtra);
+        public static extern bool HP_Agent_SetConnectionExtra(IntPtr pAgent, IntPtr dwConnId, IntPtr pExtra);
 
         /// <summary>
         /// 获取连接的附加数据
         /// 是否为连接绑定附加数据或者绑定什么样的数据，均由应用程序只身决定
         /// </summary>
         /// <param name="pAgent"></param>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="pExtra"></param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Agent_GetConnectionExtra(IntPtr pAgent, uint dwConnID, ref IntPtr pExtra);
+        public static extern bool HP_Agent_GetConnectionExtra(IntPtr pAgent, IntPtr dwConnId, ref IntPtr pExtra);
 
         /// <summary>
         /// 检查通信组件是否已启动
@@ -1371,38 +1419,48 @@ namespace HPSocketCS.SDK
         public static extern uint HP_Agent_GetConnectionCount(IntPtr pAgent);
 
         /// <summary>
+        /// 获取所有连接的 CONNID
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="pIDs"></param>
+        /// <param name="pdwCount"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern bool HP_Agent_GetAllConnectionIDs(IntPtr pAgent, IntPtr[] pIDs, ref uint pdwCount);
+
+        /// <summary>
         /// 获取某个连接时长（毫秒）
         /// </summary>
         /// <param name="pAgent"></param>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="pdwPeriod"></param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Agent_GetConnectPeriod(IntPtr pAgent, uint dwConnID, ref uint pdwPeriod);
+        public static extern bool HP_Agent_GetConnectPeriod(IntPtr pAgent, IntPtr dwConnId, ref uint pdwPeriod);
 
         /// <summary>
         /// 获取监听 Socket 的地址信息
         /// </summary>
         /// <param name="pAgent"></param>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="lpszAddress"></param>
         /// <param name="piAddressLen"></param>
         /// <param name="pusPort"></param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Agent_GetLocalAddress(IntPtr pAgent, uint dwConnID, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpszAddress, ref int piAddressLen, ref ushort pusPort);
+        public static extern bool HP_Agent_GetLocalAddress(IntPtr pAgent, IntPtr dwConnId, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpszAddress, ref int piAddressLen, ref ushort pusPort);
 
         /// <summary>
         /// 获取某个连接的地址信息
         /// </summary>
         /// <param name="pAgent"></param>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="lpszAddress"></param>
         /// <param name="piAddressLen"></param>
         /// <param name="pusPort"></param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Agent_GetRemoteAddress(IntPtr pAgent, uint dwConnID, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpszAddress, ref int piAddressLen, ref ushort pusPort);
+        public static extern bool HP_Agent_GetRemoteAddress(IntPtr pAgent, IntPtr dwConnId, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpszAddress, ref int piAddressLen, ref ushort pusPort);
 
         /// <summary>
         /// 获取最近一次失败操作的错误代码
@@ -1424,10 +1482,10 @@ namespace HPSocketCS.SDK
         /// 获取连接中未发出数据的长度
         /// </summary>
         /// <param name="pAgent"></param>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="piPending"></param>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern bool HP_Agent_GetPendingDataLength(IntPtr pAgent, uint dwConnID, ref int piPending);
+        public static extern bool HP_Agent_GetPendingDataLength(IntPtr pAgent, IntPtr dwConnId, ref int piPending);
 
         /// <summary>
         /// 设置 Socket 缓存对象锁定时间（毫秒，在锁定期间该 Socket 缓存对象不能被获取使用）
@@ -1616,12 +1674,12 @@ namespace HPSocketCS.SDK
         /// 用户通过该方法从 Socket 组件中抓取数据
         /// </summary>
         /// <param name="pServer"></param>
-        /// <param name="dwConnID">连接 ID</param>
+        /// <param name="dwConnId">连接 ID</param>
         /// <param name="pBuffer">数据抓取缓冲区</param>
         /// <param name="iLength">抓取数据长度</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern FetchResult HP_TcpPullServer_Fetch(IntPtr pServer, uint dwConnID, IntPtr pBuffer, int iLength);
+        public static extern FetchResult HP_TcpPullServer_Fetch(IntPtr pServer, IntPtr dwConnId, IntPtr pBuffer, int iLength);
 
         /***************************************************************************************/
         /***************************** TCP Pull Server 属性访问方法 *****************************/
@@ -1634,12 +1692,12 @@ namespace HPSocketCS.SDK
         /// 用户通过该方法从 Socket 组件中抓取数据
         /// </summary>
         /// <param name="pClient"></param>
-        /// <param name="dwConnID">连接 ID</param>
+        /// <param name="dwConnId">连接 ID</param>
         /// <param name="pBuffer">数据抓取缓冲区</param>
         /// <param name="iLength">抓取数据长度</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern FetchResult HP_TcpPullClient_Fetch(IntPtr pClient, uint dwConnID, IntPtr pBuffer, int iLength);
+        public static extern FetchResult HP_TcpPullClient_Fetch(IntPtr pClient, IntPtr dwConnId, IntPtr pBuffer, int iLength);
 
         /***************************************************************************************/
         /***************************** TCP Pull Client 属性访问方法 *****************************/
@@ -1652,12 +1710,12 @@ namespace HPSocketCS.SDK
         /// 用户通过该方法从 Socket 组件中抓取数据
         /// </summary>
         /// <param name="pAgent"></param>
-        /// <param name="dwConnID">连接 ID</param>
+        /// <param name="dwConnId">连接 ID</param>
         /// <param name="pBuffer">数据抓取缓冲区</param>
         /// <param name="iLength">抓取数据长度</param>
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern FetchResult HP_TcpPullAgent_Fetch(IntPtr pAgent, uint dwConnID, IntPtr pBuffer, int iLength);
+        public static extern FetchResult HP_TcpPullAgent_Fetch(IntPtr pAgent, IntPtr dwConnId, IntPtr pBuffer, int iLength);
 
         /***************************************************************************************/
         /***************************** TCP Pull Agent 属性访问方法 *****************************/

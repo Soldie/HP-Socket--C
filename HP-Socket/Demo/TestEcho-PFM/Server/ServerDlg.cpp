@@ -42,6 +42,7 @@ void CServerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STOP, m_Stop);
 	DDX_Control(pDX, IDC_PORT, m_Port);
 	DDX_Control(pDX, IDC_SEND_POLICY, m_SendPolicy);
+	DDX_Control(pDX, IDC_RECV_POLICY, m_RecvPolicy);
 }
 
 BEGIN_MESSAGE_MAP(CServerDlg, CDialogEx)
@@ -71,6 +72,7 @@ BOOL CServerDlg::OnInitDialog()
 	CString strTitle;
 	CString strOriginTitle;
 	m_SendPolicy.SetCurSel(0);
+	m_RecvPolicy.SetCurSel(0);
 	m_Port.SetWindowText(DEFAULT_PORT);
 
 	::SetMainWnd(this);
@@ -157,6 +159,7 @@ void CServerDlg::SetAppState(EnAppState state)
 	m_Stop.EnableWindow(m_enState == ST_STARTED);
 	m_Port.EnableWindow(m_enState == ST_STOPED);
 	m_SendPolicy.EnableWindow(m_enState == ST_STOPED);
+	m_RecvPolicy.EnableWindow(m_enState == ST_STOPED);
 }
 
 void CServerDlg::OnBnClickedStart()
@@ -172,7 +175,8 @@ void CServerDlg::OnBnClickedStart()
 		return;
 	}
 
-	EnSendPolicy enPolicy = (EnSendPolicy)m_SendPolicy.GetCurSel();
+	EnSendPolicy enSendPolicy = (EnSendPolicy)m_SendPolicy.GetCurSel();
+	EnRecvPolicy enRecvPolicy = (EnRecvPolicy)m_RecvPolicy.GetCurSel();
 
 	SetAppState(ST_STARTING);
 
@@ -184,7 +188,8 @@ void CServerDlg::OnBnClickedStart()
 	//m_Server->SetFreeBufferObjHold(6000);
 	//m_Server->SetAcceptSocketCount(50);
 
-	m_Server->SetSendPolicy(enPolicy);
+	m_Server->SetSendPolicy(enSendPolicy);
+	m_Server->SetRecvPolicy(enRecvPolicy);
 
 	if(m_Server->Start(DEFAULT_ADDRESS, usPort))
 	{

@@ -257,6 +257,16 @@ void PostOnConnect(CONNID dwConnID, LPCTSTR lpszAddress, USHORT usPort)
 	PostInfoMsg(msg);
 }
 
+void PostOnConnect2(CONNID dwConnID, LPCTSTR lpszAddress, USHORT usPort)
+{
+	LPTSTR lpszContent = new TCHAR[100];
+	wsprintf(lpszContent, _T("remote address: %s:%d"), lpszAddress, usPort);
+	int content_len = lstrlen(lpszContent);
+	info_msg* msg = info_msg::Construct(dwConnID, EVT_ON_CONNECT, content_len, lpszContent);
+
+	PostInfoMsg(msg);
+}
+
 void PostOnShutdown()
 {
 	info_msg* msg = info_msg::Construct(0, EVT_ON_SHUTDOWN, 0, nullptr);

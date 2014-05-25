@@ -56,6 +56,7 @@ private:
 	CComboBox m_ThreadCount;
 	CComboBox m_DataLen;
 	CComboBox m_SendPolicy;
+	CComboBox m_RecvPolicy;
 	CListBox m_Info;
 	CEdit m_Address;
 	CEdit m_Port;

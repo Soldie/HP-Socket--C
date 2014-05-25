@@ -131,7 +131,7 @@ namespace TcpPullClient
                 byte[] sendBytes = GetSendBuffer(headerBytes, bodyBytes);
 
                 // 发送
-                uint dwConnId = client.GetConnectionId();
+                IntPtr dwConnId = client.GetConnectionId();
                 if (client.Send(sendBytes, sendBytes.Length))
                 {
                     AddMsg(string.Format("$ ({0}) Send OK --> {1}", dwConnId, send));
@@ -175,32 +175,32 @@ namespace TcpPullClient
             }
         }
 
-        HandleResult OnPrepareConnect(uint dwConnID, uint socket)
+        HandleResult OnPrepareConnect(IntPtr dwConnId, uint socket)
         {
             return HandleResult.Ok;
         }
 
-        HandleResult OnConnect(uint dwConnID)
+        HandleResult OnConnect(IntPtr dwConnId)
         {
             // 已连接 到达一次
             // 如果是异步联接,更新界面状态
 
             this.Invoke(new ConnectUpdateUiDelegate(ConnectUpdateUi));
 
-            AddMsg(string.Format(" > [{0},OnConnect]", dwConnID));
+            AddMsg(string.Format(" > [{0},OnConnect]", dwConnId));
 
             return HandleResult.Ok;
         }
 
-        HandleResult OnSend(uint dwConnID, IntPtr pData, int iLength)
+        HandleResult OnSend(IntPtr dwConnId, IntPtr pData, int iLength)
         {
             // 客户端发数据了
-            AddMsg(string.Format(" > [{0},OnSend] -> ({1} bytes)", dwConnID, iLength));
+            AddMsg(string.Format(" > [{0},OnSend] -> ({1} bytes)", dwConnId, iLength));
 
             return HandleResult.Ok;
         }
 
-        HandleResult OnReceive(uint dwConnID, int iLength)
+        HandleResult OnReceive(IntPtr dwConnId, int iLength)
         {
             // 数据到达了
 
@@ -218,7 +218,7 @@ namespace TcpPullClient
                 {
                     remain -= required;
                     bufferPtr = Marshal.AllocHGlobal(required); ;
-                    if (client.Fetch(dwConnID, bufferPtr, required) == FetchResult.Ok)
+                    if (client.Fetch(dwConnId, bufferPtr, required) == FetchResult.Ok)
                     {
                         if (pkgInfo.IsHeader == true)
                         {
@@ -238,7 +238,7 @@ namespace TcpPullClient
                             required = pkgHeaderSize;
                         }
 
-                        AddMsg(string.Format(" > [{0},OnReceive] -> ({1} bytes)", dwConnID, pkgInfo.Length));
+                        AddMsg(string.Format(" > [{0},OnReceive] -> ({1} bytes)", dwConnId, pkgInfo.Length));
 
                         pkgInfo.IsHeader = !pkgInfo.IsHeader;
                         pkgInfo.Length = required;
@@ -261,22 +261,22 @@ namespace TcpPullClient
             return HandleResult.Ok;
         }
 
-        HandleResult OnClose(uint dwConnID)
+        HandleResult OnClose(IntPtr dwConnId)
         {
             // 连接关闭了
 
-            AddMsg(string.Format(" > [{0},OnClose]", dwConnID));
+            AddMsg(string.Format(" > [{0},OnClose]", dwConnId));
 
             // 通知界面
             this.Invoke(new SetAppStateDelegate(SetAppState), AppState.Stoped);
             return HandleResult.Ok;
         }
 
-        HandleResult OnError(uint dwConnID, SocketOperation enOperation, int iErrorCode)
+        HandleResult OnError(IntPtr dwConnId, SocketOperation enOperation, int iErrorCode)
         {
             // 出错了
 
-            AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", dwConnID, enOperation, iErrorCode));
+            AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", dwConnId, enOperation, iErrorCode));
 
             // 通知界面,只处理了连接错误,也没进行是不是连接错误的判断,所以有错误就会设置界面
             // 生产环境请自己控制

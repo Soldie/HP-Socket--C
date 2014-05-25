@@ -50,6 +50,7 @@ void CClientDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_DATA_LEN, m_DataLen);
 	DDX_Control(pDX, IDC_TEST_TIMES_INTERV, m_TestInterv);
 	DDX_Control(pDX, IDC_SEND_POLICY, m_SendPolicy);
+	DDX_Control(pDX, IDC_RECV_POLICY, m_RecvPolicy);
 }
 
 BEGIN_MESSAGE_MAP(CClientDlg, CDialogEx)
@@ -82,6 +83,7 @@ BOOL CClientDlg::OnInitDialog()
 	m_ThreadCount.SetCurSel(0);
 	m_DataLen.SetCurSel(5);
 	m_SendPolicy.SetCurSel(0);
+	m_RecvPolicy.SetCurSel(0);
 	m_Address.SetWindowText(DEFAULT_ADDRESS);
 	m_Port.SetWindowText(DEFAULT_PORT);
 
@@ -167,6 +169,7 @@ void CClientDlg::SetAppState(EnAppState state)
 	m_ThreadCount.EnableWindow(m_enState == ST_STOPED);
 	m_DataLen.EnableWindow(m_enState == ST_STOPED);
 	m_SendPolicy.EnableWindow(m_enState == ST_STOPED);
+	m_RecvPolicy.EnableWindow(m_enState == ST_STOPED);
 }
 
 BOOL CClientDlg::CheckParams()
@@ -241,7 +244,8 @@ void CClientDlg::OnBnClickedStart()
 	m_iThreadCount	= _ttoi(strThreadCount);
 	m_iDataLen		= _ttoi(strDataLen);
 
-	EnSendPolicy enPolicy = (EnSendPolicy)m_SendPolicy.GetCurSel();
+	EnSendPolicy enSendPolicy = (EnSendPolicy)m_SendPolicy.GetCurSel();
+	EnRecvPolicy enRecvPolicy = (EnRecvPolicy)m_RecvPolicy.GetCurSel();
 
 	if(!CheckParams())
 		return;
@@ -261,7 +265,8 @@ void CClientDlg::OnBnClickedStart()
 	BOOL isOK = FALSE;
 
 	m_Agent.SetWorkerThreadCount(m_iThreadCount);
-	m_Agent.SetSendPolicy(enPolicy);
+	m_Agent.SetSendPolicy(enSendPolicy);
+	m_Agent.SetRecvPolicy(enRecvPolicy);
 
 	if(m_Agent.Start(LOCAL_ADDRESS, FALSE))
 	{

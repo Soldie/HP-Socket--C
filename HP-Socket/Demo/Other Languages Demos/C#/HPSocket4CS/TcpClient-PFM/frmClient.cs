@@ -244,26 +244,26 @@ namespace TcpClient_PFM
             SetAppState(AppState.Stoped);
         }
 
-        HandleResult OnPrepareConnect(uint dwConnID, uint socket)
+        HandleResult OnPrepareConnect(IntPtr dwConnId, uint socket)
         {
             return HandleResult.Ok;
         }
 
-        HandleResult OnConnect(uint dwConnID)
+        HandleResult OnConnect(IntPtr dwConnId)
         {
             // 已连接 到达一次
-            AddMsg(string.Format(" > [{0}, OnConnect]", dwConnID));
+            AddMsg(string.Format(" > [{0}, OnConnect]", dwConnId));
             return HandleResult.Ok;
         }
 
-        HandleResult OnSend(uint dwConnID, IntPtr pData, int iLength)
+        HandleResult OnSend(IntPtr dwConnId, IntPtr pData, int iLength)
         {
             // 客户端发数据了
             Interlocked.Add(ref TotalSent, iLength);
             return HandleResult.Ok;
         }
 
-        HandleResult OnReceive(uint dwConnID, IntPtr pData, int iLength)
+        HandleResult OnReceive(IntPtr dwConnId, IntPtr pData, int iLength)
         {
             // 数据到达了
 
@@ -278,13 +278,13 @@ namespace TcpClient_PFM
             return HandleResult.Ok;
         }
 
-        HandleResult OnClose(uint dwConnID)
+        HandleResult OnClose(IntPtr dwConnId)
         {
             // 连接关闭了
             return HandleResult.Ok;
         }
 
-        HandleResult OnError(uint dwConnID, SocketOperation enOperation, int iErrorCode)
+        HandleResult OnError(IntPtr dwConnId, SocketOperation enOperation, int iErrorCode)
         {
             // 出错了
             return HandleResult.Ok;

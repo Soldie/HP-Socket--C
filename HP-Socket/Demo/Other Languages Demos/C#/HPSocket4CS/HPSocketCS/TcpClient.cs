@@ -278,7 +278,7 @@ namespace HPSocketCS
         /// 获取该组件对象的连接Id
         /// </summary>
         /// <returns></returns>
-        public uint GetConnectionId()
+        public IntPtr GetConnectionId()
         {
             return HPSocketSdk.HP_Client_GetConnectionID(pClient);
         }
@@ -479,10 +479,10 @@ namespace HPSocketCS
         /// <summary>
         /// 准备连接了 到达一次
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="socket"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnPrepareConnect(uint dwConnID, uint socket)
+        protected virtual HandleResult OnPrepareConnect(IntPtr dwConnId, uint socket)
         {
             return HandleResult.Ok;
         }
@@ -490,9 +490,9 @@ namespace HPSocketCS
         /// <summary>
         /// 已连接 到达一次
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnConnect(uint dwConnID)
+        protected virtual HandleResult OnConnect(IntPtr dwConnId)
         {
             return HandleResult.Ok;
         }
@@ -500,11 +500,11 @@ namespace HPSocketCS
         /// <summary>
         /// 客户端发数据了
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="pData"></param>
         /// <param name="iLength"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnSend(uint dwConnID, IntPtr pData, int iLength)
+        protected virtual HandleResult OnSend(IntPtr dwConnId, IntPtr pData, int iLength)
         {
             return HandleResult.Ok;
         }
@@ -512,11 +512,11 @@ namespace HPSocketCS
         /// <summary>
         /// 数据到达了
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="pData"></param>
         /// <param name="iLength"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnReceive(uint dwConnID, IntPtr pData, int iLength)
+        protected virtual HandleResult OnReceive(IntPtr dwConnId, IntPtr pData, int iLength)
         {
             return HandleResult.Ok;
         }
@@ -524,9 +524,9 @@ namespace HPSocketCS
         /// <summary>
         /// 连接关闭了
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnClose(uint dwConnID)
+        protected virtual HandleResult OnClose(IntPtr dwConnId)
         {
             return HandleResult.Ok;
         }
@@ -534,11 +534,11 @@ namespace HPSocketCS
         /// <summary>
         /// 出错了
         /// </summary>
-        /// <param name="dwConnID"></param>
+        /// <param name="dwConnId"></param>
         /// <param name="enOperation"></param>
         /// <param name="iErrorCode"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnError(uint dwConnID, SocketOperation enOperation, int iErrorCode)
+        protected virtual HandleResult OnError(IntPtr dwConnId, SocketOperation enOperation, int iErrorCode)
         {
             return HandleResult.Ok;
         }

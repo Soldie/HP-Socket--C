@@ -139,7 +139,8 @@ namespace TcpProxyServer
         {
             try
             {
-                uint dwConnId = Convert.ToUInt32(this.txtDisConn.Text.Trim());
+                // 未做64位判断
+                IntPtr dwConnId = (IntPtr)Convert.ToUInt32(this.txtDisConn.Text.Trim());
 
                 // 断开指定客户
                 if (proxyServer.Disconnect(dwConnId))
