@@ -10,7 +10,7 @@
 
 // CServerDlg dialog
 
-const LPCTSTR CServerDlg::ADDRESS	= _T("192.168.1.123");
+const LPCTSTR CServerDlg::ADDRESS	= _T("0.0.0.0");
 const USHORT CServerDlg::PORT		= 5555;
 
 CServerDlg::CServerDlg(CWnd* pParent /*=NULL*/)
