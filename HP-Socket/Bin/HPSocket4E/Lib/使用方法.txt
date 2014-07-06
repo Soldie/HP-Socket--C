@@ -1,4 +1,0 @@
-Hp_Socket.fne 放入易语言Lib目录
-Hp_Socket_static.lib、HPSocket_4C.lib 放入static_Lib目录
-
-本支持库需要易语言vs2010链接器(http://url.cn/NXJPsj)
