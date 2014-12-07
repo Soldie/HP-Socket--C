@@ -80,7 +80,7 @@ BOOL CClientDlg::OnInitDialog()
 
 	::SetMainWnd(this);
 	::SetInfoList(&m_Info);
-	SetAppState(ST_STOPED);
+	SetAppState(ST_STOPPED);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -150,14 +150,14 @@ void CClientDlg::SetAppState(EnAppState state)
 	if(this->GetSafeHwnd() == nullptr)
 		return;
 
-	m_Start.EnableWindow(m_enState == ST_STOPED);
+	m_Start.EnableWindow(m_enState == ST_STOPPED);
 	m_Stop.EnableWindow(m_enState == ST_STARTED);
-	m_Address.EnableWindow(m_enState == ST_STOPED);
-	m_Port.EnableWindow(m_enState == ST_STOPED);
-	m_TestTimes.EnableWindow(m_enState == ST_STOPED);
-	m_TestInterv.EnableWindow(m_enState == ST_STOPED);
-	m_SocketCount.EnableWindow(m_enState == ST_STOPED);
-	m_DataLen.EnableWindow(m_enState == ST_STOPED);
+	m_Address.EnableWindow(m_enState == ST_STOPPED);
+	m_Port.EnableWindow(m_enState == ST_STOPPED);
+	m_TestTimes.EnableWindow(m_enState == ST_STOPPED);
+	m_TestInterv.EnableWindow(m_enState == ST_STOPPED);
+	m_SocketCount.EnableWindow(m_enState == ST_STOPPED);
+	m_DataLen.EnableWindow(m_enState == ST_STOPPED);
 }
 
 BOOL CClientDlg::CheckParams()
@@ -247,7 +247,7 @@ void CClientDlg::OnBnClickedStart()
 		{
 			::LogClientStartFail((*pSocket)->GetLastError(), (*pSocket)->GetLastErrorDesc());
 			m_vtClients.Clear();
-			SetAppState(ST_STOPED);
+			SetAppState(ST_STOPPED);
 			return;
 		}
 	}
@@ -294,7 +294,7 @@ void CClientDlg::OnBnClickedStart()
 
 void CClientDlg::OnBnClickedStop()
 {
-	SetAppState(ST_STOPING);
+	SetAppState(ST_STOPPING);
 
 	for(size_t i = 0; i < m_vtClients.Size(); i++)
 	{
@@ -321,7 +321,7 @@ void CClientDlg::OnBnClickedStop()
 
 	::LogMsg(strMsg);
 
-	SetAppState(ST_STOPED);
+	SetAppState(ST_STOPPED);
 }
 
 int CClientDlg::OnVKeyToItem(UINT nKey, CListBox* pListBox, UINT nIndex)
@@ -341,18 +341,15 @@ LRESULT CClientDlg::OnUserInfoMsg(WPARAM wp, LPARAM lp)
 	return 0;
 }
 
-EnHandleResult CClientDlg::OnPrepareConnect(CONNID dwConnID, SOCKET socket)
+EnHandleResult CClientDlg::OnPrepareConnect(IClient* pClient, SOCKET socket)
 {
-	//VERIFY(::SSO_SendBuffSize(socket, SO_MAX_MSG_SIZE / 4) == 0);
-	//VERIFY(::SSO_RecvBuffSize(socket, SO_MAX_MSG_SIZE * 4) == 0);
-
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnSend(CONNID dwConnID, const BYTE* pData, int iLength)
+EnHandleResult CClientDlg::OnSend(IClient* pClient, const BYTE* pData, int iLength)
 {
 #ifdef _DEBUG2
-	::PostOnSend(dwConnID, pData, iLength);
+	::PostOnSend(pClient->GetConnectionID(), pData, iLength);
 #endif
 
 #if (_WIN32_WINNT <= _WIN32_WINNT_WS03)
@@ -364,10 +361,10 @@ EnHandleResult CClientDlg::OnSend(CONNID dwConnID, const BYTE* pData, int iLengt
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnReceive(CONNID dwConnID, const BYTE* pData, int iLength)
+EnHandleResult CClientDlg::OnReceive(IClient* pClient, const BYTE* pData, int iLength)
 {
 #ifdef _DEBUG2
-	::PostOnReceive(dwConnID, pData, iLength);
+	::PostOnReceive(pClient->GetConnectionID(), pData, iLength);
 #endif
 
 #if (_WIN32_WINNT <= _WIN32_WINNT_WS03)
@@ -386,20 +383,20 @@ EnHandleResult CClientDlg::OnReceive(CONNID dwConnID, const BYTE* pData, int iLe
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnClose(CONNID dwConnID)
+EnHandleResult CClientDlg::OnClose(IClient* pClient)
 {
-	::PostOnClose(dwConnID);
+	::PostOnClose(pClient->GetConnectionID());
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
+EnHandleResult CClientDlg::OnError(IClient* pClient, EnSocketOperation enOperation, int iErrorCode)
 {
-	::PostOnError(dwConnID, enOperation, iErrorCode);
+	::PostOnError(pClient->GetConnectionID(), enOperation, iErrorCode);
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnConnect(CONNID dwConnID)
+EnHandleResult CClientDlg::OnConnect(IClient* pClient)
 {
-	::LogOnConnect2(dwConnID);
+	::LogOnConnect2(pClient->GetConnectionID());
 	return HR_OK;
 }

@@ -51,7 +51,7 @@ CClientDlg::CClientDlg(CWnd* pParent /*=NULL*/)
 	::HP_Set_FN_Agent_OnPullReceive(m_spListener, OnReceive);
 	::HP_Set_FN_Agent_OnClose(m_spListener, OnClose);
 	::HP_Set_FN_Agent_OnError(m_spListener, OnError);
-	::HP_Set_FN_Agent_OnAgentShutdown(m_spListener, OnAgentShutdown);
+	::HP_Set_FN_Agent_OnShutdown(m_spListener, OnShutdown);
 }
 
 CClientDlg::~CClientDlg()
@@ -106,7 +106,7 @@ BOOL CClientDlg::OnInitDialog()
 
 	::SetMainWnd(this);
 	::SetInfoList(&m_Info);
-	SetAppState(ST_STOPED);
+	SetAppState(ST_STOPPED);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -169,12 +169,12 @@ void CClientDlg::SetAppState(EnAppState state)
 
 	m_Connect.SetWindowText(m_enState == ST_CONNECTED ? _T("Dis Connect") : _T("Connect"));
 
-	m_Start.EnableWindow(m_enState == ST_STOPED);
+	m_Start.EnableWindow(m_enState == ST_STOPPED);
 	m_Connect.EnableWindow(m_enState == ST_STARTED || m_enState == ST_CONNECTED);
 	m_Stop.EnableWindow(m_enState == ST_STARTED || m_enState == ST_CONNECTED);
 	m_Send.EnableWindow(m_enState == ST_CONNECTED);
-	m_Address.EnableWindow(m_enState == ST_STOPED);
-	m_Port.EnableWindow(m_enState == ST_STOPED);
+	m_Address.EnableWindow(m_enState == ST_STOPPED);
+	m_Port.EnableWindow(m_enState == ST_STOPPED);
 }
 
 void CClientDlg::OnBnClickedSend()
@@ -220,7 +220,7 @@ void CClientDlg::OnBnClickedStart()
 	else
 	{
 		::LogClientStartFail(::SYS_GetLastError(), ::HP_GetSocketErrorDesc(HP_SE_DATA_SEND));
-		SetAppState(ST_STOPED);
+		SetAppState(ST_STOPPED);
 	}
 }
 
@@ -249,7 +249,7 @@ void CClientDlg::OnBnClickedConnect()
 
 void CClientDlg::OnBnClickedStop()
 {
-	SetAppState(ST_STOPING);
+	SetAppState(ST_STOPPING);
 
 	if(!::HP_Agent_Stop(m_spAgent))
 		ASSERT(FALSE);
@@ -347,10 +347,10 @@ En_HP_HandleResult CClientDlg::OnError(HP_CONNID m_dwConnID, En_HP_SocketOperati
 	return HP_HR_OK;
 }
 
-En_HP_HandleResult CClientDlg::OnAgentShutdown()
+En_HP_HandleResult CClientDlg::OnShutdown()
 {
 	::PostOnShutdown();
-	m_spThis->SetAppState(ST_STOPED);
+	m_spThis->SetAppState(ST_STOPPED);
 
 	return HP_HR_OK;
 }

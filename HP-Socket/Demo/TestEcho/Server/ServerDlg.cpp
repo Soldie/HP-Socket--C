@@ -63,7 +63,7 @@ BOOL CServerDlg::OnInitDialog()
 
 	::SetMainWnd(this);
 	::SetInfoList(&m_Info);
-	SetAppState(ST_STOPED);
+	SetAppState(ST_STOPPED);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -124,9 +124,9 @@ void CServerDlg::SetAppState(EnAppState state)
 	if(this->GetSafeHwnd() == nullptr)
 		return;
 
-	m_Start.EnableWindow(m_enState == ST_STOPED);
+	m_Start.EnableWindow(m_enState == ST_STOPPED);
 	m_Stop.EnableWindow(m_enState == ST_STARTED);
-	m_Address.EnableWindow(m_enState == ST_STOPED);
+	m_Address.EnableWindow(m_enState == ST_STOPPED);
 	m_DisConn.EnableWindow(m_enState == ST_STARTED && m_ConnID.GetWindowTextLength() > 0);
 }
 
@@ -145,18 +145,18 @@ void CServerDlg::OnBnClickedStart()
 	else
 	{
 		::LogServerStartFail(m_Server.GetLastError(), m_Server.GetLastErrorDesc());
-		SetAppState(ST_STOPED);
+		SetAppState(ST_STOPPED);
 	}
 }
 
 void CServerDlg::OnBnClickedStop()
 {
-	SetAppState(ST_STOPING);
+	SetAppState(ST_STOPPING);
 
 	if(m_Server.Stop())
 	{
 		::LogServerStop();
-		SetAppState(ST_STOPED);
+		SetAppState(ST_STOPPED);
 	}
 	else
 	{
@@ -263,7 +263,7 @@ EnHandleResult CServerDlg::OnError(CONNID dwConnID, EnSocketOperation enOperatio
 	return HR_OK;
 }
 
-EnHandleResult CServerDlg::OnServerShutdown()
+EnHandleResult CServerDlg::OnShutdown()
 {
 	::PostOnShutdown();
 	return HR_OK;

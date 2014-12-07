@@ -49,7 +49,7 @@ private:
 	virtual EnHandleResult OnClose(CONNID dwConnID);
 	virtual EnHandleResult OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode);
 	virtual EnHandleResult OnAccept(CONNID dwConnID, const SOCKADDR_IN* pSockAddr);
-	virtual EnHandleResult OnServerShutdown();
+	virtual EnHandleResult OnShutdown();
 
 private:
 	CListBox m_Info;

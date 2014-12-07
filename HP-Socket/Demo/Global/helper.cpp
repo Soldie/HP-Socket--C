@@ -196,6 +196,16 @@ void PostOnReceive(CONNID dwConnID, const BYTE* pData, int iLength)
 	PostInfoMsg(msg);
 }
 
+void PostOnReceiveCast(CONNID dwConnID, LPCTSTR lpszAddress, USHORT usPort, const BYTE* pData, int iLength)
+{
+	LPTSTR lpszContent = new TCHAR[100];
+	wsprintf(lpszContent, _T("<%s:%d> (%d bytes)"), lpszAddress, usPort, iLength);
+	int content_len = lstrlen(lpszContent);
+	info_msg* msg = info_msg::Construct(dwConnID, EVT_ON_RECEIVE, content_len, lpszContent);
+
+	PostInfoMsg(msg);
+}
+
 void PostOnClose(CONNID dwConnID)
 {
 	info_msg* msg = info_msg::Construct(dwConnID, EVT_ON_CLOSE, 0, nullptr);

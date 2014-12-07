@@ -65,7 +65,7 @@ BOOL CClientDlg::OnInitDialog()
 
 	::SetMainWnd(this);
 	::SetInfoList(&m_Info);
-	SetAppState(ST_STOPED);
+	SetAppState(ST_STOPPED);
 
 	m_bAsyncConn = FALSE;
 
@@ -128,12 +128,12 @@ void CClientDlg::SetAppState(EnAppState state)
 	if(this->GetSafeHwnd() == nullptr)
 		return;
 
-	m_Async.EnableWindow(m_enState == ST_STOPED);
-	m_Start.EnableWindow(m_enState == ST_STOPED);
+	m_Async.EnableWindow(m_enState == ST_STOPPED);
+	m_Start.EnableWindow(m_enState == ST_STOPPED);
 	m_Stop.EnableWindow(m_enState == ST_STARTED);
 	m_Send.EnableWindow(m_enState == ST_STARTED);
-	m_Address.EnableWindow(m_enState == ST_STOPED);
-	m_Port.EnableWindow(m_enState == ST_STOPED);
+	m_Address.EnableWindow(m_enState == ST_STOPPED);
+	m_Port.EnableWindow(m_enState == ST_STOPPED);
 }
 
 void CClientDlg::OnBnClickedSend()
@@ -198,14 +198,14 @@ void CClientDlg::OnBnClickedStart()
 	else
 	{
 		::LogClientStartFail(m_Client->GetLastError(), m_Client->GetLastErrorDesc());
-		SetAppState(ST_STOPED);
+		SetAppState(ST_STOPPED);
 	}
 }
 
 
 void CClientDlg::OnBnClickedStop()
 {
-	SetAppState(ST_STOPING);
+	SetAppState(ST_STOPPING);
 
 	if(m_Client->Stop())
 		::LogClientStopping(m_Client->GetConnectionID());
@@ -230,30 +230,27 @@ LRESULT CClientDlg::OnUserInfoMsg(WPARAM wp, LPARAM lp)
 	return 0;
 }
 
-EnHandleResult CClientDlg::OnConnect(CONNID dwConnID)
+EnHandleResult CClientDlg::OnConnect(IClient* pClient)
 {
 	TCHAR szAddress[40];
 	int iAddressLen = sizeof(szAddress) / sizeof(TCHAR);
 	USHORT usPort;
 
-	m_Client->GetLocalAddress(szAddress, iAddressLen, usPort);
+	pClient->GetLocalAddress(szAddress, iAddressLen, usPort);
 
-	::PostOnConnect(dwConnID, szAddress, usPort);
+	::PostOnConnect(pClient->GetConnectionID(), szAddress, usPort);
 	SetAppState(ST_STARTED);
 
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnSend(CONNID dwConnID, const BYTE* pData, int iLength)
+EnHandleResult CClientDlg::OnSend(IClient* pClient, const BYTE* pData, int iLength)
 {
-	//static int t = 0;
-	//if(++t % 3 == 0) return HR_ERROR;
-
-	::PostOnSend(dwConnID, pData, iLength);
+	::PostOnSend(pClient->GetConnectionID(), pData, iLength);
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnReceive(CONNID dwConnID, int iLength)
+EnHandleResult CClientDlg::OnReceive(IClient* pClient, int iLength)
 {
 	int required = m_pkgInfo.length;
 	int remain = iLength;
@@ -263,7 +260,7 @@ EnHandleResult CClientDlg::OnReceive(CONNID dwConnID, int iLength)
 		remain -= required;
 		CBufferPtr buffer(required);
 
-		EnFetchResult result = m_Client->Fetch(dwConnID, buffer, (int)buffer.Size());
+		EnFetchResult result = ITcpPullClient::ToPull(pClient)->Fetch(buffer, (int)buffer.Size());
 		if(result == FR_OK)
 		{
 			if(m_pkgInfo.is_header)
@@ -284,23 +281,23 @@ EnHandleResult CClientDlg::OnReceive(CONNID dwConnID, int iLength)
 			m_pkgInfo.is_header	= !m_pkgInfo.is_header;
 			m_pkgInfo.length	= required;
 
-			::PostOnReceive(dwConnID, buffer, (int)buffer.Size());
+			::PostOnReceive(pClient->GetConnectionID(), buffer, (int)buffer.Size());
 		}
 	}
 
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnClose(CONNID dwConnID)
+EnHandleResult CClientDlg::OnClose(IClient* pClient)
 {
-	::PostOnClose(dwConnID);
-	SetAppState(ST_STOPED);
+	::PostOnClose(pClient->GetConnectionID());
+	SetAppState(ST_STOPPED);
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
+EnHandleResult CClientDlg::OnError(IClient* pClient, EnSocketOperation enOperation, int iErrorCode)
 {
-	::PostOnError(dwConnID, enOperation, iErrorCode);
-	SetAppState(ST_STOPED);
+	::PostOnError(pClient->GetConnectionID(), enOperation, iErrorCode);
+	SetAppState(ST_STOPPED);
 	return HR_OK;
 }

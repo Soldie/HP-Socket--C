@@ -18,7 +18,7 @@
 
 enum EnAppState
 {
-	ST_STARTING, ST_STARTED, ST_CONNECTING, ST_CONNECTED, ST_STOPING, ST_STOPED
+	ST_STARTING, ST_STARTED, ST_CONNECTING, ST_CONNECTED, ST_STOPPING, ST_STOPPED
 };
 
 struct info_msg
@@ -85,6 +85,7 @@ void LogOnConnect2(CONNID dwConnID);
 void LogMsg(const CString& msg);
 void PostOnSend(CONNID dwConnID, const BYTE* pData, int iLength);
 void PostOnReceive(CONNID dwConnID, const BYTE* pData, int iLength);
+void PostOnReceiveCast(CONNID dwConnID, LPCTSTR lpszAddress, USHORT usPort, const BYTE* pData, int iLength);
 void PostOnClose(CONNID dwConnID);
 void PostOnError(CONNID dwConnID, int enOperation, int iErrorCode);
 void PostOnAccept(CONNID dwConnID, LPCTSTR lpszAddress, USHORT usPort, BOOL bPass);

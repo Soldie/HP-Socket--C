@@ -47,7 +47,7 @@ private:
 	static En_HP_HandleResult __stdcall OnReceive(CONNID dwConnID, int iLength);
 	static En_HP_HandleResult __stdcall OnClose(CONNID dwConnID);
 	static En_HP_HandleResult __stdcall OnError(CONNID dwConnID, En_HP_SocketOperation enOperation, int iErrorCode);
-	static En_HP_HandleResult __stdcall OnServerShutdown();
+	static En_HP_HandleResult __stdcall OnShutdown();
 
 private:
 	TPkgInfo* FindPkgInfo(CONNID dwConnID);
@@ -72,6 +72,7 @@ private:
 	static const LPCTSTR ADDRESS;
 
 	static CServerDlg* m_spThis;
-	static HP_TcpPullServer m_spServer;
-	static HP_TcpPullServerListener m_spListener;
+
+	HP_TcpPullServer m_pServer;
+	HP_TcpPullServerListener m_pListener;
 };

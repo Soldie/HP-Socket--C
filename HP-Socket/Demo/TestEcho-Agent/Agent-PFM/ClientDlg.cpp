@@ -90,7 +90,7 @@ BOOL CClientDlg::OnInitDialog()
 
 	::SetMainWnd(this);
 	::SetInfoList(&m_Info);
-	SetAppState(ST_STOPED);
+	SetAppState(ST_STOPPED);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -160,17 +160,17 @@ void CClientDlg::SetAppState(EnAppState state)
 	if(this->GetSafeHwnd() == nullptr)
 		return;
 
-	m_Start.EnableWindow(m_enState == ST_STOPED);
+	m_Start.EnableWindow(m_enState == ST_STOPPED);
 	m_Stop.EnableWindow(m_enState == ST_STARTED);
-	m_Address.EnableWindow(m_enState == ST_STOPED);
-	m_Port.EnableWindow(m_enState == ST_STOPED);
-	m_TestTimes.EnableWindow(m_enState == ST_STOPED);
-	m_TestInterv.EnableWindow(m_enState == ST_STOPED);
-	m_SocketCount.EnableWindow(m_enState == ST_STOPED);
-	m_ThreadCount.EnableWindow(m_enState == ST_STOPED);
-	m_DataLen.EnableWindow(m_enState == ST_STOPED);
-	m_SendPolicy.EnableWindow(m_enState == ST_STOPED);
-	m_RecvPolicy.EnableWindow(m_enState == ST_STOPED);
+	m_Address.EnableWindow(m_enState == ST_STOPPED);
+	m_Port.EnableWindow(m_enState == ST_STOPPED);
+	m_TestTimes.EnableWindow(m_enState == ST_STOPPED);
+	m_TestInterv.EnableWindow(m_enState == ST_STOPPED);
+	m_SocketCount.EnableWindow(m_enState == ST_STOPPED);
+	m_ThreadCount.EnableWindow(m_enState == ST_STOPPED);
+	m_DataLen.EnableWindow(m_enState == ST_STOPPED);
+	m_SendPolicy.EnableWindow(m_enState == ST_STOPPED);
+	m_RecvPolicy.EnableWindow(m_enState == ST_STOPPED);
 }
 
 BOOL CClientDlg::CheckParams()
@@ -291,7 +291,7 @@ void CClientDlg::OnBnClickedStart()
 	if(!isOK)
 	{
 		m_Agent.Stop();
-		SetAppState(ST_STOPED);
+		SetAppState(ST_STOPPED);
 		return;
 	}
 
@@ -310,7 +310,7 @@ void CClientDlg::OnBnClickedStart()
 		if(m_hasError)
 		{
 			m_Agent.Stop();
-			SetAppState(ST_STOPED);
+			SetAppState(ST_STOPPED);
 			return;
 		}
 		else
@@ -354,7 +354,7 @@ void CClientDlg::OnBnClickedStart()
 
 void CClientDlg::OnBnClickedStop()
 {
-	SetAppState(ST_STOPING);
+	SetAppState(ST_STOPPING);
 
 	m_Agent.Stop();
 
@@ -373,7 +373,7 @@ void CClientDlg::OnBnClickedStop()
 
 	::LogMsg(strMsg);
 
-	SetAppState(ST_STOPED);
+	SetAppState(ST_STOPPED);
 }
 
 int CClientDlg::OnVKeyToItem(UINT nKey, CListBox* pListBox, UINT nIndex)
@@ -463,7 +463,7 @@ EnHandleResult CClientDlg::OnConnect(CONNID dwConnID)
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnAgentShutdown()
+EnHandleResult CClientDlg::OnShutdown()
 {
 	m_connIDs.clear();
 

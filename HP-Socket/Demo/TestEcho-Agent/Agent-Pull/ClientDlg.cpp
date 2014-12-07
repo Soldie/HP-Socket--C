@@ -81,7 +81,7 @@ BOOL CClientDlg::OnInitDialog()
 
 	::SetMainWnd(this);
 	::SetInfoList(&m_Info);
-	SetAppState(ST_STOPED);
+	SetAppState(ST_STOPPED);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -144,12 +144,12 @@ void CClientDlg::SetAppState(EnAppState state)
 
 	m_Connect.SetWindowText(m_enState == ST_CONNECTED ? _T("Dis Connect") : _T("Connect"));
 
-	m_Start.EnableWindow(m_enState == ST_STOPED);
+	m_Start.EnableWindow(m_enState == ST_STOPPED);
 	m_Connect.EnableWindow(m_enState == ST_STARTED || m_enState == ST_CONNECTED);
 	m_Stop.EnableWindow(m_enState == ST_STARTED || m_enState == ST_CONNECTED);
 	m_Send.EnableWindow(m_enState == ST_CONNECTED);
-	m_Address.EnableWindow(m_enState == ST_STOPED);
-	m_Port.EnableWindow(m_enState == ST_STOPED);
+	m_Address.EnableWindow(m_enState == ST_STOPPED);
+	m_Port.EnableWindow(m_enState == ST_STOPPED);
 }
 
 void CClientDlg::OnBnClickedSend()
@@ -193,7 +193,7 @@ void CClientDlg::OnBnClickedStart()
 	else
 	{
 		::LogClientStartFail(m_Agent->GetLastError(), m_Agent->GetLastErrorDesc());
-		SetAppState(ST_STOPED);
+		SetAppState(ST_STOPPED);
 	}
 }
 
@@ -222,7 +222,7 @@ void CClientDlg::OnBnClickedConnect()
 
 void CClientDlg::OnBnClickedStop()
 {
-	SetAppState(ST_STOPING);
+	SetAppState(ST_STOPPING);
 
 	if(!m_Agent->Stop())
 		ASSERT(FALSE);
@@ -319,10 +319,10 @@ EnHandleResult CClientDlg::OnError(CONNID dwConnID, EnSocketOperation enOperatio
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnAgentShutdown()
+EnHandleResult CClientDlg::OnShutdown()
 {
 	::PostOnShutdown();
-	SetAppState(ST_STOPED);
+	SetAppState(ST_STOPPED);
 
 	return HR_OK;
 }

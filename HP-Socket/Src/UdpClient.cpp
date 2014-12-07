@@ -1,7 +1,7 @@
 /*
  * Copyright: JessMA Open Source (ldcsaa@gmail.com)
  *
- * Version	: 3.2.3
+ * Version	: 3.3.1
  * Author	: Bruce Liang
  * Website	: http://www.jessma.org
  * Project	: https://github.com/ldcsaa
@@ -42,7 +42,7 @@ BOOL CUdpClient::Start(LPCTSTR pszRemoteAddress, USHORT usPort, BOOL bAsyncConne
 
 	if(CreateClientSocket())
 	{
-		if(FirePrepareConnect(m_dwConnID, m_soClient) != HR_ERROR)
+		if(FirePrepareConnect(this, m_soClient) != HR_ERROR)
 		{
 			if(ConnectToServer(pszRemoteAddress, usPort))
 			{
@@ -91,7 +91,7 @@ BOOL CUdpClient::CheckStarting()
 {
 	CCriSecLock locallock(m_csCheck);
 
-	if(m_enState == SS_STOPED)
+	if(m_enState == SS_STOPPED)
 	{
 		m_enState = SS_STARTING;
 		::_ReadWriteBarrier();
@@ -111,7 +111,7 @@ BOOL CUdpClient::CheckStoping()
 
 	if(m_enState == SS_STARTED || m_enState == SS_STARTING)
 	{
-		m_enState = SS_STOPING;
+		m_enState = SS_STOPPING;
 		::_ReadWriteBarrier();
 	}
 	else
@@ -154,7 +154,10 @@ BOOL CUdpClient::ConnectToServer(LPCTSTR pszRemoteAddress, USHORT usPort)
 
 	SOCKADDR_IN addr;
 	if(!::sockaddr_A_2_IN(AF_INET, szAddress, usPort, addr))
+	{
+		::WSASetLastError(WSAEADDRNOTAVAIL);
 		return FALSE;
+	}
 
 	BOOL isOK = FALSE;
 
@@ -172,7 +175,7 @@ BOOL CUdpClient::ConnectToServer(LPCTSTR pszRemoteAddress, USHORT usPort)
 		{
 			if(::WSAEventSelect(m_soClient, m_evSocket, FD_READ | FD_WRITE | FD_CLOSE) != SOCKET_ERROR)
 			{
-				if(FireConnect(m_dwConnID) != HR_ERROR)
+				if(FireConnect(this) != HR_ERROR)
 				{
 					VERIFY(NeedDetectorThread() || DetectConnection() == NO_ERROR);
 
@@ -273,7 +276,7 @@ BOOL CUdpClient::HandleError()
 	SetLastError(SE_NETWORK, __FUNCTION__, iCode);
 
 	VERIFY(::WSAResetEvent(m_evSocket));
-	FireError(m_dwConnID, SO_UNKNOWN, iCode);
+	FireError(this, SO_UNKNOWN, iCode);
 
 	return FALSE;
 }
@@ -288,7 +291,7 @@ BOOL CUdpClient::HandleRead(WSANETWORKEVENTS& events)
 	else
 	{
 		SetLastError(SE_NETWORK, __FUNCTION__, iCode);
-		FireError(m_dwConnID, SO_RECEIVE, iCode);
+		FireError(this, SO_RECEIVE, iCode);
 		bContinue = FALSE;
 	}
 
@@ -305,7 +308,7 @@ BOOL CUdpClient::HandleWrite(WSANETWORKEVENTS& events)
 	else
 	{
 		SetLastError(SE_NETWORK, __FUNCTION__, iCode);
-		FireError(m_dwConnID, SO_SEND, iCode);
+		FireError(this, SO_SEND, iCode);
 		bContinue = FALSE;
 	}
 
@@ -321,7 +324,7 @@ BOOL CUdpClient::HandleConnect(WSANETWORKEVENTS& events)
 	{
 		if(::WSAEventSelect(m_soClient, m_evSocket, FD_READ | FD_WRITE | FD_CLOSE) != SOCKET_ERROR)
 		{
-			if(FireConnect(m_dwConnID) != HR_ERROR)
+			if(FireConnect(this) != HR_ERROR)
 			{
 				VERIFY(NeedDetectorThread() || DetectConnection() == NO_ERROR);
 
@@ -337,7 +340,7 @@ BOOL CUdpClient::HandleConnect(WSANETWORKEVENTS& events)
 	if(iCode != 0)
 	{
 		SetLastError(SE_NETWORK, __FUNCTION__, iCode);
-		FireError(m_dwConnID, SO_CONNECT, iCode);
+		FireError(this, SO_CONNECT, iCode);
 		bContinue = FALSE;
 	}
 
@@ -349,7 +352,7 @@ BOOL CUdpClient::HandleClosse(WSANETWORKEVENTS& events)
 	int iCode = events.iErrorCode[FD_CLOSE_BIT];
 
 	if(iCode == 0)
-		FireClose(m_dwConnID);
+		FireClose(this);
 	else
 	{
 		EnSocketOperation enOperation = events.lNetworkEvents & FD_READ ? SO_RECEIVE :
@@ -359,7 +362,7 @@ BOOL CUdpClient::HandleClosse(WSANETWORKEVENTS& events)
 											);
 
 		SetLastError(SE_NETWORK, __FUNCTION__, iCode);
-		FireError(m_dwConnID, enOperation, iCode);
+		FireError(this, enOperation, iCode);
 	}
 
 	return FALSE;
@@ -373,12 +376,12 @@ BOOL CUdpClient::ReadData()
 
 		if(rc > 0)
 		{
-			if(FireReceive(m_dwConnID, m_rcBuffer, rc) == HR_ERROR)
+			if(FireReceive(this, m_rcBuffer, rc) == HR_ERROR)
 			{
 				TRACE("<C-CNNID: %Iu> OnReceive() event return 'HR_ERROR', connection will be closed !\n", m_dwConnID);
 
 				SetLastError(SE_DATA_PROC, __FUNCTION__, ERROR_CANCELLED);
-				FireError(m_dwConnID, SO_RECEIVE, ERROR_CANCELLED);
+				FireError(this, SO_RECEIVE, ERROR_CANCELLED);
 
 				return FALSE;
 			}
@@ -392,7 +395,7 @@ BOOL CUdpClient::ReadData()
 			else
 			{
 				SetLastError(SE_NETWORK, __FUNCTION__, code);
-				FireError(m_dwConnID, SO_RECEIVE, code);
+				FireError(this, SO_RECEIVE, code);
 
 				return FALSE;
 			}
@@ -432,7 +435,7 @@ BOOL CUdpClient::SendData()
 			{
 				ASSERT(rc == itPtr->Size());
 
-				if(FireSend(m_dwConnID, itPtr->Ptr(), rc) == HR_ERROR)
+				if(FireSend(this, itPtr->Ptr(), rc) == HR_ERROR)
 				{
 					TRACE("<C-CNNID: %Iu> OnSend() event should not return 'HR_ERROR' !!\n", m_dwConnID);
 					ASSERT(FALSE);
@@ -451,7 +454,7 @@ BOOL CUdpClient::SendData()
 				else
 				{
 					SetLastError(SE_NETWORK, __FUNCTION__, iCode);
-					FireError(m_dwConnID, SO_SEND, iCode);
+					FireError(this, SO_SEND, iCode);
 
 					return FALSE;
 				}
@@ -535,7 +538,7 @@ BOOL CUdpClient::CreateDetectorThread()
 
 		if(iCode != NO_ERROR)
 		{
-			pClient->FireError(pClient->m_dwConnID, SO_CONNECT, WSAECONNRESET);
+			pClient->FireError(pClient, SO_CONNECT, WSAECONNRESET);
 			pClient->Stop();
 			break;
 		}
@@ -567,7 +570,7 @@ BOOL CUdpClient::Stop()
 	WaitForWorkerThreadEnd(dwCurrentThreadID);
 
 	if(bNeedFireClose)
-		FireClose(m_dwConnID);
+		FireClose(this);
 
 	if(m_evSocket != nullptr)
 	{
@@ -587,18 +590,21 @@ BOOL CUdpClient::Stop()
 	return TRUE;
 }
 
-void CUdpClient::Reset()
+void CUdpClient::Reset(BOOL bAll)
 {
-	m_rcBuffer.Free();
-	m_evBuffer.Reset();
-	m_evWorker.Reset();
-	m_evDetector.Reset();
-	m_lsSend.Clear();
-	m_itPool.Clear();
+	if(bAll)
+	{
+		m_rcBuffer.Free();
+		m_evBuffer.Reset();
+		m_evWorker.Reset();
+		m_evDetector.Reset();
+		m_lsSend.Clear();
+		m_itPool.Clear();
+	}
 
 	m_iPending		= 0;
 	m_dwDetectFails	= 0;
-	m_enState		= SS_STOPED;
+	m_enState		= SS_STOPPED;
 }
 
 void CUdpClient::WaitForWorkerThreadEnd(DWORD dwCurrentThreadID)

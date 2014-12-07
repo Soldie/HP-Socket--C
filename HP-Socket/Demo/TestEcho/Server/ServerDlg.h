@@ -46,7 +46,7 @@ private:
 	virtual EnHandleResult OnReceive(CONNID dwConnID, const BYTE* pData, int iLength);
 	virtual EnHandleResult OnClose(CONNID dwConnID);
 	virtual EnHandleResult OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode);
-	virtual EnHandleResult OnServerShutdown();
+	virtual EnHandleResult OnShutdown();
 
 private:
 	CListBox m_Info;

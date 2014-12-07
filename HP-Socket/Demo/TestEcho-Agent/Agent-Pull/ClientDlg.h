@@ -45,7 +45,7 @@ private:
 	virtual EnHandleResult OnClose(CONNID dwConnID);
 	virtual EnHandleResult OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode);
 	virtual EnHandleResult OnConnect(CONNID dwConnID);
-	virtual EnHandleResult OnAgentShutdown();
+	virtual EnHandleResult OnShutdown();
 private:
 	CEdit m_Content;
 	CButton m_Send;

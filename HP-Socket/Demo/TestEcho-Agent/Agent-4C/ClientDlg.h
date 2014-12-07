@@ -46,7 +46,7 @@ private:
 	static En_HP_HandleResult __stdcall OnReceive(HP_CONNID dwConnID, int iLength);
 	static En_HP_HandleResult __stdcall OnClose(HP_CONNID dwConnID);
 	static En_HP_HandleResult __stdcall OnError(HP_CONNID dwConnID, En_HP_SocketOperation enOperation, int iErrorCode);
-	static En_HP_HandleResult __stdcall OnAgentShutdown();
+	static En_HP_HandleResult __stdcall OnShutdown();
 private:
 	CEdit m_Content;
 	CButton m_Send;

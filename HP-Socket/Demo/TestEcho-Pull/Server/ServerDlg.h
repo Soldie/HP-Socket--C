@@ -46,7 +46,7 @@ private:
 	virtual EnHandleResult OnReceive(CONNID dwConnID, int iLength);
 	virtual EnHandleResult OnClose(CONNID dwConnID);
 	virtual EnHandleResult OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode);
-	virtual EnHandleResult OnServerShutdown();
+	virtual EnHandleResult OnShutdown();
 
 private:
 	TPkgInfo* FindPkgInfo(CONNID dwConnID);
