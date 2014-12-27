@@ -384,6 +384,28 @@ namespace HPSocketCS
         }
 
         /// <summary>
+        /// 断开超过指定时间的连接
+        /// </summary>
+        /// <param name="period">毫秒</param>
+        /// <param name="force">强制</param>
+        /// <returns></returns>
+        public bool DisconnectLongConnections(uint period, bool force = true)
+        {
+            return HPSocketSdk.HP_Agent_DisconnectLongConnections(pAgent, period, force);
+        }
+
+        /// <summary>
+        /// 断开超过指定时长的静默连接
+        /// </summary>
+        /// <param name="period">毫秒</param>
+        /// <param name="force">强制</param>
+        /// <returns></returns>
+        public bool DisconnectSilenceConnections(uint period, bool force = true)
+        {
+            return HPSocketSdk.HP_Agent_DisconnectSilenceConnections(pAgent, period, force);
+        }
+
+        /// <summary>
         /// 设置连接的附加数据
         /// </summary>
         /// <param name="connId"></param>
@@ -549,6 +571,28 @@ namespace HPSocketCS
             return ret;
         }
 
+        /// <summary>
+        /// 获取指定连接的连接时长（毫秒）
+        /// </summary>
+        /// <param name="connId"></param>
+        /// <param name="period"></param>
+        /// <returns></returns>
+        public bool GetConnectPeriod(IntPtr connId, ref uint period)
+        {
+            return HPSocketSdk.HP_Agent_GetConnectPeriod(pAgent, connId, ref period);
+        }
+
+        /// <summary>
+        /// 获取某个连接静默时间（毫秒）
+        /// </summary>
+        /// <param name="connId"></param>
+        /// <param name="period"></param>
+        /// <returns></returns>
+        public bool GetSilencePeriod(IntPtr connId, ref uint period)
+        {
+            return HPSocketSdk.HP_Agent_GetSilencePeriod(pAgent, connId, ref period);
+        }
+
         ///////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// 置是否启用地址重用机制（默认：不启用）
@@ -659,6 +703,15 @@ namespace HPSocketCS
         }
 
         /// <summary>
+        /// 设置是否标记静默时间（设置为 TRUE 时 DisconnectSilenceConnections() 和 GetSilencePeriod() 才有效，默认：FALSE）
+        /// </summary>
+        /// <param name="val"></param>
+        public void SetMarkSilence(bool val)
+        {
+            HPSocketSdk.HP_Agent_SetMarkSilence(pAgent, val);
+        }
+
+        /// <summary>
         /// 获取工作线程数量
         /// </summary>
         /// <returns></returns>
@@ -746,6 +799,15 @@ namespace HPSocketCS
         public uint GetMaxShutdownWaitTime()
         {
             return HPSocketSdk.HP_Agent_GetMaxShutdownWaitTime(pAgent);
+        }
+
+        /// <summary>
+        /// 检测是否标记静默时间
+        /// </summary>
+        /// <returns></returns>
+        public bool IsMarkSilence()
+        {
+            return HPSocketSdk.HP_Agent_IsMarkSilence(pAgent);
         }
 
         /// <summary>

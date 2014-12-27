@@ -589,6 +589,16 @@ namespace HPSocketCS.SDK
         [DllImport(SOCKET_DLL_PATH)]
         public static extern bool HP_Server_DisconnectLongConnections(IntPtr pServer, uint dwPeriod, bool bForce);
 
+        /// <summary>
+        /// 断开超过指定时长的静默连接
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="dwPeriod">时长（毫秒）</param>
+        /// <param name="bForce">是否强制断开连接</param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern bool HP_Server_DisconnectSilenceConnections(IntPtr pServer, uint dwPeriod, bool bForce);
+
         /******************************************************************************/
         /***************************** Server 属性访问方法 *****************************/
 
@@ -716,6 +726,16 @@ namespace HPSocketCS.SDK
         public static extern bool HP_Server_GetConnectPeriod(IntPtr pServer, IntPtr dwConnId, ref uint pdwPeriod);
 
         /// <summary>
+        /// 获取某个连接静默时间（毫秒）
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="dwConnId"></param>
+        /// <param name="pdwPeriod"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern bool HP_Server_GetSilencePeriod(IntPtr pServer, IntPtr dwConnId, ref uint pdwPeriod);
+
+        /// <summary>
         /// 获取监听 Socket 的地址信息
         /// </summary>
         /// <param name="pServer"></param>
@@ -795,6 +815,13 @@ namespace HPSocketCS.SDK
         [DllImport(SOCKET_DLL_PATH)]
         public static extern void HP_Server_SetMaxShutdownWaitTime(IntPtr pServer, uint dwMaxShutdownWaitTime);
 
+        /// <summary>
+        /// 设置是否标记静默时间（设置为 TRUE 时 DisconnectSilenceConnections() 和 GetSilencePeriod() 才有效，默认：FALSE）
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="bMarkSilence"></param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void HP_Server_SetMarkSilence(IntPtr pServer, bool bMarkSilence);
 
         /// <summary>
         /// 获取 Socket 缓存对象锁定时间
@@ -851,6 +878,14 @@ namespace HPSocketCS.SDK
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
         public static extern uint HP_Server_GetMaxShutdownWaitTime(IntPtr pServer);
+
+        /// <summary>
+        /// 检测是否标记静默时间
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern bool HP_Server_IsMarkSilence(IntPtr pServer);
 
         /**********************************************************************************/
         /***************************** TCP Server 操作方法 *****************************/
@@ -1447,6 +1482,16 @@ namespace HPSocketCS.SDK
         [DllImport(SOCKET_DLL_PATH)]
         public static extern bool HP_Agent_DisconnectLongConnections(IntPtr pAgent, uint dwPeriod, bool bForce);
 
+        /// <summary>
+        /// 断开超过指定时长的静默连接
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="dwPeriod">时长（毫秒）</param>
+        /// <param name="bForce">是否强制断开连接</param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern bool HP_Agent_DisconnectSilenceConnections(IntPtr pAgent, uint dwPeriod, bool bForce);
+
         /******************************************************************************/
         /***************************** Agent 操作方法 *****************************/
 
@@ -1566,6 +1611,16 @@ namespace HPSocketCS.SDK
         public static extern bool HP_Agent_GetConnectPeriod(IntPtr pAgent, IntPtr dwConnId, ref uint pdwPeriod);
 
         /// <summary>
+        /// 获取某个连接静默时间（毫秒）
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="dwConnId"></param>
+        /// <param name="pdwPeriod"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern bool HP_Agent_GetSilencePeriod(IntPtr pAgent, IntPtr dwConnId, ref uint pdwPeriod);
+
+        /// <summary>
         /// 获取监听 Socket 的地址信息
         /// </summary>
         /// <param name="pAgent"></param>
@@ -1671,6 +1726,14 @@ namespace HPSocketCS.SDK
         public static extern void HP_Agent_SetMaxShutdownWaitTime(IntPtr pAgent, uint dwMaxShutdownWaitTime);
 
         /// <summary>
+        /// 设置是否标记静默时间（设置为 TRUE 时 DisconnectSilenceConnections() 和 GetSilencePeriod() 才有效，默认：FALSE）
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="bMarkSilence"></param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void HP_Agent_SetMarkSilence(IntPtr pAgent, bool bMarkSilence);
+
+        /// <summary>
         /// 获取 Socket 缓存对象锁定时间
         /// </summary>
         /// <param name="pAgent"></param>
@@ -1725,6 +1788,14 @@ namespace HPSocketCS.SDK
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
         public static extern uint HP_Agent_GetMaxShutdownWaitTime(IntPtr pAgent);
+
+        /// <summary>
+        /// 检测是否标记静默时间
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern bool HP_Agent_IsMarkSilence(IntPtr pAgent);
 
         /**********************************************************************************/
         /***************************** TCP Agent 属性访问方法 *****************************/

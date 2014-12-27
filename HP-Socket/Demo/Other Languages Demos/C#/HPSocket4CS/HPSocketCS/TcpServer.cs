@@ -375,7 +375,6 @@ namespace HPSocketCS
             return HPSocketSdk.HP_Server_Disconnect(pServer, dwConnId, force);
         }
 
-
         /// <summary>
         /// 断开超过指定时间的连接
         /// </summary>
@@ -385,6 +384,17 @@ namespace HPSocketCS
         public bool DisconnectLongConnections(uint period, bool force = true)
         {
             return HPSocketSdk.HP_Server_DisconnectLongConnections(pServer, period, force);
+        }
+
+        /// <summary>
+        /// 断开超过指定时长的静默连接
+        /// </summary>
+        /// <param name="period">毫秒</param>
+        /// <param name="force">强制</param>
+        /// <returns></returns>
+        public bool DisconnectSilenceConnections(uint period, bool force = true)
+        {
+            return HPSocketSdk.HP_Server_DisconnectSilenceConnections(pServer, period, force);
         }
 
         /// <summary>
@@ -559,7 +569,7 @@ namespace HPSocketCS
         }
 
         /// <summary>
-        /// 获取指定连接的连接时长
+        /// 获取指定连接的连接时长（毫秒）
         /// </summary>
         /// <param name="connId"></param>
         /// <param name="period"></param>
@@ -569,6 +579,16 @@ namespace HPSocketCS
             return HPSocketSdk.HP_Server_GetConnectPeriod(pServer, connId, ref period);
         }
 
+        /// <summary>
+        /// 获取某个连接静默时间（毫秒）
+        /// </summary>
+        /// <param name="connId"></param>
+        /// <param name="period"></param>
+        /// <returns></returns>
+        public bool GetSilencePeriod(IntPtr connId, ref uint period)
+        {
+            return HPSocketSdk.HP_Server_GetSilencePeriod(pServer, connId, ref period);
+        }
 
         ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -681,6 +701,15 @@ namespace HPSocketCS
         }
 
         /// <summary>
+        /// 设置是否标记静默时间（设置为 TRUE 时 DisconnectSilenceConnections() 和 GetSilencePeriod() 才有效，默认：FALSE）
+        /// </summary>
+        /// <param name="val"></param>
+        public void SetMarkSilence(bool val)
+        {
+            HPSocketSdk.HP_Server_SetMarkSilence(pServer, val);
+        }
+
+        /// <summary>
         /// 获取工作线程数量
         /// </summary>
         /// <returns></returns>
@@ -788,6 +817,14 @@ namespace HPSocketCS
             return HPSocketSdk.HP_Server_GetMaxShutdownWaitTime(pServer);
         }
 
+        /// <summary>
+        /// 检测是否标记静默时间
+        /// </summary>
+        /// <returns></returns>
+        public bool IsMarkSilence()
+        {
+            return HPSocketSdk.HP_Server_IsMarkSilence(pServer);
+        }
 
         /// <summary>
         /// 根据错误码返回错误信息
