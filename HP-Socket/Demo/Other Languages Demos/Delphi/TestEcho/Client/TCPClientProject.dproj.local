@@ -4,10 +4,11 @@
     <Transaction>2013/09/26 12:41:30.000.878,=E:\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
     <Transaction>2014/03/28 14:37:52.000.944,=F:\Documents\RAD Studio\Projects\Unit2.pas</Transaction>
     <Transaction>2014/03/28 14:40:16.000.880,=F:\Documents\RAD Studio\Projects\Unit2.pas</Transaction>
-    <Transaction>2014/03/28 14:40:24.000.985,F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Client\ClientUnit.dfm=F:\Documents\RAD Studio\Projects\Unit2.dfm</Transaction>
-    <Transaction>2014/03/28 14:40:24.000.985,F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Client\ClientUnit.pas=F:\Documents\RAD Studio\Projects\Unit2.pas</Transaction>
-    <Transaction>2014/03/28 14:40:33.000.094,F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Client\TCPClientProject.dproj=F:\Documents\RAD Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2014/03/28 14:40:24.000.985,F:\Documents\RAD Studio\Projects\Unit2.pas=F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Client\ClientUnit.pas</Transaction>
+    <Transaction>2014/03/28 14:40:24.000.985,F:\Documents\RAD Studio\Projects\Unit2.dfm=F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Client\ClientUnit.dfm</Transaction>
+    <Transaction>2014/03/28 14:40:33.000.094,F:\Documents\RAD Studio\Projects\Project1.dproj=F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Client\TCPClientProject.dproj</Transaction>
     <Transaction>2014/03/28 17:39:27.000.287,=F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Client\Unit1.pas</Transaction>
-    <Transaction>2014/03/28 17:39:44.000.403,F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Client\Unit1.pas=F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Client\HPSocketSDKUnit.pas</Transaction>
+    <Transaction>2014/03/28 17:39:44.000.403,F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Client\HPSocketSDKUnit.pas=F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Client\Unit1.pas</Transaction>
+    <Transaction>2015/01/22 21:16:31.000.078,=E:\MyProject\Hp_Socket\Delphi\TestEcho\ExePublic.pas</Transaction>
   </Transactions>
 </BorlandProject>

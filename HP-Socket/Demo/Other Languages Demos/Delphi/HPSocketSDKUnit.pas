@@ -3,7 +3,7 @@ unit HPSocketSDKUnit;
 interface
 
 uses
-  Winapi.Windows;
+    Winapi.Windows;
 
 const
   HPSocketDLL = 'HPSocket4C_UD.dll';
@@ -38,16 +38,19 @@ type
   HP_Object = PVOID;
 
   HP_Server = HP_Object;
-  HP_Client = HP_Object;
   HP_Agent = HP_Object;
+  HP_Client = HP_Object;
   HP_TcpServer = HP_Object;
-  HP_TcpClient = HP_Object;
   HP_TcpAgent = HP_Object;
+  HP_TcpClient = HP_Object;
+  HP_PullSocket = HP_Object;
+  HP_PullClient = HP_Object;
   HP_TcpPullServer = HP_Object;
   HP_TcpPullClient = HP_Object;
   HP_TcpPullAgent = HP_Object;
   HP_UdpServer = HP_Object;
   HP_UdpClient = HP_Object;
+  HP_UdpCast = HP_Object;
 
   HP_Listener = HP_Object;
   HP_ServerListener = HP_Object;
@@ -55,12 +58,14 @@ type
   HP_AgentListener = HP_Object;
   HP_TcpServerListener = HP_Object;
   HP_TcpClientListener = HP_Object;
+  HP_PullSocketListener = HP_Object;
   HP_TcpAgentListener = HP_Object;
   HP_TcpPullServerListener = HP_Object;
   HP_TcpPullClientListener = HP_Object;
   HP_TcpPullAgentListener = HP_Object;
   HP_UdpServerListener = HP_Object;
   HP_UdpClientListener = HP_Object;
+  HP_UdpCastListener = HP_Object;
 
   { /*****************************************************************************************************/
     /******************************************** 公共类、接口 ********************************************/
@@ -162,34 +167,38 @@ type
     HP_SE_DATA_SEND = 14 // 数据发送失败
     );
 
+  {
+    /************************************************************************
+  名称：播送模式
+  描述：UDP 组件的播送模式（组播或广播）
+  ************************************************************************/
+  }
+  En_HP_CastMode = (
+    HP_CM_MULTICAST	= 0,	// 组播
+    HP_CM_BROADCAST	= 1 	// 广播
+  );
+
   { /****************************************************/
     /************** HPSocket4C.dll 回调函数 **************/ }
 
   { **************************************************** }
 
   { /* 公共回调函数 */ }
-  HP_FN_OnSend = function(dwConnID: HP_CONNID; const pData: Pointer;
-    iLength: Integer): En_HP_HandleResult; stdcall;
-  HP_FN_OnReceive = function(dwConnID: HP_CONNID; const pData: Pointer;
-    iLength: Integer): En_HP_HandleResult; stdcall;
-  HP_FN_OnPullReceive = function(dwConnID: HP_CONNID; iLength: Integer)
-    : En_HP_HandleResult; stdcall;
+  HP_FN_OnSend = function(dwConnID: HP_CONNID; const pData: Pointer; iLength: Integer): En_HP_HandleResult; stdcall;
+  HP_FN_OnReceive = function(dwConnID: HP_CONNID; const pData: Pointer; iLength: Integer): En_HP_HandleResult; stdcall;
+  HP_FN_Client_OnReceive = function(dwConnID: HP_CONNID; const pData: Pointer; iLength: Integer): En_HP_HandleResult; stdcall;
+  HP_FN_OnPullReceive = function(dwConnID: HP_CONNID; iLength: Integer): En_HP_HandleResult; stdcall;
   HP_FN_OnClose = function(dwConnID: HP_CONNID): En_HP_HandleResult; stdcall;
-  HP_FN_OnError = function(dwConnID: HP_CONNID;
-    enOperation: En_HP_SocketOperation; iErrorCode: Integer)
-    : En_HP_HandleResult; stdcall;
+  HP_FN_OnError = function(dwConnID: HP_CONNID; enOperation: En_HP_SocketOperation; iErrorCode: Integer) : En_HP_HandleResult; stdcall;
 
   { /* 服务端回调函数 */ }
-  HP_FN_OnPrepareListen = function(soListen: Pointer)
-    : En_HP_HandleResult; stdcall;
+  HP_FN_OnPrepareListen = function(soListen: Pointer): En_HP_HandleResult; stdcall;
   // 如果为 TCP 连接，pClient为 SOCKET 句柄；如果为 UDP 连接，pClient为 SOCKADDR_IN 指针；
-  HP_FN_OnAccept = function(dwConnID: HP_CONNID; pClient: Pointer)
-    : En_HP_HandleResult; stdcall;
+  HP_FN_OnAccept = function(dwConnID: HP_CONNID; pClient: Pointer): En_HP_HandleResult; stdcall;
   HP_FN_OnServerShutdown = function(): En_HP_HandleResult; stdcall;
 
   { /* 客户端和 Agent 回调函数 */ }
-  HP_FN_OnPrepareConnect = function(dwConnID: HP_CONNID; SOCKET: Pointer)
-    : En_HP_HandleResult; stdcall;
+  HP_FN_OnPrepareConnect = function(dwConnID: HP_CONNID; SOCKET: Pointer): En_HP_HandleResult; stdcall;
   HP_FN_OnConnect = function(dwConnID: HP_CONNID): En_HP_HandleResult; stdcall;
 
   { /* Agent 回调函数 */ }
@@ -311,7 +320,7 @@ procedure HP_Set_FN_Server_OnClose(pListener: HP_TcpServerListener;
   fn: HP_FN_OnClose); stdcall; external HPSocketDLL;
 procedure HP_Set_FN_Server_OnError(pListener: HP_TcpServerListener;
   fn: HP_FN_OnError); stdcall; external HPSocketDLL;
-procedure HP_Set_FN_Server_OnServerShutdown(pListener: HP_TcpServerListener;
+procedure HP_Set_FN_Server_OnShutdown(pListener: HP_TcpServerListener;
   fn: HP_FN_OnServerShutdown); stdcall; external HPSocketDLL;
 
 { /***************************** Client 回调函数设置方法 *****************************/ }
@@ -321,6 +330,8 @@ procedure HP_Set_FN_Client_OnConnect(pListener: HP_TcpClientListener;
   fn: HP_FN_OnConnect); stdcall; external HPSocketDLL;
 procedure HP_Set_FN_Client_OnSend(pListener: HP_TcpClientListener;
   fn: HP_FN_OnSend); stdcall; external HPSocketDLL;
+procedure HP_Set_FN_Client_OnReceive(pListener: HP_TcpClientListener;
+  fn : HP_FN_Client_OnReceive); stdcall; external HPSocketDLL;
 procedure HP_Set_FN_Client_OnPullReceive(pListener: HP_TcpClientListener;
   fn: HP_FN_OnPullReceive); stdcall; external HPSocketDLL;
 procedure HP_Set_FN_Client_OnClose(pListener: HP_TcpClientListener;

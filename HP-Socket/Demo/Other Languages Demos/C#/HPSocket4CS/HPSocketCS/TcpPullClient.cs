@@ -6,18 +6,19 @@ using HPSocketCS.SDK;
 
 namespace HPSocketCS
 {
+    public class TcpPullClientEvent
+    {
+
+        public delegate HandleResult OnReceiveEventHandler(TcpPullClient sender, int length);
+    }
+
     public class TcpPullClient : TcpClient
     {
-        public delegate HandleResult OnPullReceive(TcpPullClient sender, int iLength);
-
-        protected OnPullReceive OnPullReceiveCallback;
-        protected HPSocketSdk.OnPullReceive SDK_OnPullReceiveCallback;
+        /// <summary>
+        /// 数据到达事件
+        /// </summary>
+        public new event TcpPullClientEvent.OnReceiveEventHandler OnReceive;
        
-        HandleResult SDK_OnPullReceive(IntPtr pClient, int iLength)
-        {
-            return OnPullReceiveCallback(this, iLength);
-        }
-
         public TcpPullClient()
         {
             CreateListener();
@@ -86,36 +87,21 @@ namespace HPSocketCS
         /// <summary>
         /// 设置回调函数
         /// </summary>
-        /// <param name="prepareConnect"></param>
-        /// <param name="connect"></param>
-        /// <param name="send"></param>
-        /// <param name="recv"></param>
-        /// <param name="close"></param>
-        /// <param name="error"></param>
-        public virtual void SetCallback(OnPrepareConnect prepareConnect, OnConnect connect,
-            OnSend send, OnPullReceive recv, OnClose close,
-            OnError error)
+        protected  override void SetCallback()
         {
-
-            // 设置 Socket 监听器回调函数
-            SetOnPullReceiveCallback(recv);
-            base.SetCallback(prepareConnect, connect, send, null, close, error);
+            HPSocketSdk.HP_Set_FN_Client_OnPullReceive(pListener, SDK_OnReceive);
+            base.SetCallback();
         }
 
-        public virtual void SetOnPullReceiveCallback(OnPullReceive recv)
+
+        protected HandleResult SDK_OnReceive(IntPtr pClient, int length)
         {
-            if (recv != null)
+            if (OnReceive != null)
             {
-                OnPullReceiveCallback = new OnPullReceive(recv);
-                SDK_OnPullReceiveCallback = new HPSocketSdk.OnPullReceive(SDK_OnPullReceive);
-            }
-            else
-            {
-                OnPullReceiveCallback = null;
-                SDK_OnPullReceiveCallback = null;
+                return OnReceive(this, length);
             }
 
-            HPSocketSdk.HP_Set_FN_Client_OnPullReceive(pListener, SDK_OnPullReceiveCallback);
+            return HandleResult.Ignore;
         }
 
         /// <summary>

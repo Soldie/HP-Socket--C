@@ -131,8 +131,16 @@ namespace TcpClient_PFM
                 for (int i = 0; i < ThreadCount; i++)
                 {
                     TcpClient client = new TcpClient();
-                    client.SetCallback(OnPrepareConnect, OnConnect, OnSend, OnReceive, OnClose, OnError);
-                    if (client.Start(address, port) == true)
+
+                    // 设置client事件
+                    client.OnPrepareConnect += new TcpClientEvent.OnPrepareConnectEventHandler(OnPrepareConnect);
+                    client.OnConnect += new TcpClientEvent.OnConnectEventHandler(OnConnect);
+                    client.OnSend += new TcpClientEvent.OnSendEventHandler(OnSend);
+                    client.OnReceive += new TcpClientEvent.OnReceiveEventHandler(OnReceive);
+                    client.OnClose += new TcpClientEvent.OnCloseEventHandler(OnClose);
+                    client.OnError += new TcpClientEvent.OnErrorEventHandler(OnError);
+
+                    if (client.Connetion(address, port) == true)
                     {
                         clientList.Add(client);
                     }
@@ -143,7 +151,7 @@ namespace TcpClient_PFM
                             c.Stop();
                         }
                         clientList.Clear();
-                        throw new Exception(string.Format(" > {2}, Connection to server fail ->({0},{1})", client.GetlastError(), client.GetLastErrorDesc(), i));
+                        throw new Exception(string.Format(" > {2}, Connection to server fail ->({0},{1})", client.ErrorCode, client.ErrorMessage, i));
                     }
                 }
 
@@ -252,22 +260,22 @@ namespace TcpClient_PFM
         HandleResult OnConnect(TcpClient sender)
         {
             // 已连接 到达一次
-            AddMsg(string.Format(" > [{0}, OnConnect]", sender.GetConnectionId()));
+            AddMsg(string.Format(" > [{0}, OnConnect]", sender.ConnectionId));
             return HandleResult.Ok;
         }
 
-        HandleResult OnSend(TcpClient sender, IntPtr pData, int iLength)
+        HandleResult OnSend(TcpClient sender, IntPtr pData, int length)
         {
             // 客户端发数据了
-            Interlocked.Add(ref TotalSent, iLength);
+            Interlocked.Add(ref TotalSent, length);
             return HandleResult.Ok;
         }
 
-        HandleResult OnReceive(TcpClient sender, IntPtr pData, int iLength)
+        HandleResult OnReceive(TcpClient sender, IntPtr pData, int length)
         {
             // 数据到达了
 
-            Interlocked.Add(ref TotalReceived, iLength);
+            Interlocked.Add(ref TotalReceived, length);
             if (TotalReceived == ExpectReceived)
             {
                 StopWatch.Stop();
@@ -284,7 +292,7 @@ namespace TcpClient_PFM
             return HandleResult.Ok;
         }
 
-        HandleResult OnError(TcpClient sender, SocketOperation enOperation, int iErrorCode)
+        HandleResult OnError(TcpClient sender, SocketOperation enOperation, int errorCode)
         {
             // 出错了
             return HandleResult.Ok;

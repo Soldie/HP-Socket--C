@@ -6,9 +6,13 @@ using HPSocketCS.SDK;
 
 namespace HPSocketCS
 {
+    public class TcpPullAgentEvent
+    {
+        public delegate HandleResult OnReceiveEventHandler(IntPtr connId, int length);
+    }
     public class TcpPullAgent : TcpAgent
     {
-        protected HPSocketSdk.OnPullReceive OnPullReceiveCallback;
+        protected new TcpPullAgentEvent.OnReceiveEventHandler OnReceive;
 
         public TcpPullAgent()
         {
@@ -85,21 +89,20 @@ namespace HPSocketCS
         /// <param name="close"></param>
         /// <param name="error"></param>
         /// <param name="agentShutdown"></param>
-        public virtual void SetCallback(HPSocketSdk.OnPrepareConnect prepareConnect, HPSocketSdk.OnConnect connect,
-            HPSocketSdk.OnSend send, HPSocketSdk.OnPullReceive recv, HPSocketSdk.OnClose close,
-            HPSocketSdk.OnError error, HPSocketSdk.OnShutdown agentShutdown)
+        protected override void SetCallback()
         {
-
             // 设置 Socket 监听器回调函数
-            SetOnPullReceiveCallback(recv);
-            base.SetCallback(prepareConnect, connect, send, null, close, error, agentShutdown);
+            HPSocketSdk.HP_Set_FN_Agent_OnPullReceive(pListener, SDK_OnReceive);
+            base.SetCallback();
         }
 
-
-        public virtual void SetOnPullReceiveCallback(HPSocketSdk.OnPullReceive recv)
+        protected virtual HandleResult SDK_OnReceive(IntPtr connId, int length)
         {
-            OnPullReceiveCallback = recv == null ? null : new HPSocketSdk.OnPullReceive(recv);
-            HPSocketSdk.HP_Set_FN_Agent_OnPullReceive(pListener, OnPullReceiveCallback);
+            if (OnReceive != null)
+            {
+                OnReceive(connId, length);
+            }
+            return HandleResult.Ignore;
         }
 
         /// <summary>

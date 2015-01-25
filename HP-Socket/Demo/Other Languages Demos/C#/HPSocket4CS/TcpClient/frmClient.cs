@@ -47,10 +47,13 @@ namespace TcpClientNS
                 // 加个委托显示msg,因为on系列都是在工作线程中调用的,ui不允许直接操作
                 AddMsgDelegate = new ShowMsg(AddMsg);
 
-
-                // 设置 Socket 监听器回调函数
-                client.SetCallback(OnPrepareConnect, OnConnect, OnSend, OnReceive, OnClose, OnError);
-
+                // 设置client事件
+                client.OnPrepareConnect += new TcpClientEvent.OnPrepareConnectEventHandler(OnPrepareConnect);
+                client.OnConnect += new TcpClientEvent.OnConnectEventHandler(OnConnect);
+                client.OnSend += new TcpClientEvent.OnSendEventHandler(OnSend);
+                client.OnReceive += new TcpClientEvent.OnReceiveEventHandler(OnReceive);
+                client.OnClose += new TcpClientEvent.OnCloseEventHandler(OnClose);
+                client.OnError += new TcpClientEvent.OnErrorEventHandler(OnError);
 
                 SetAppState(AppState.Stoped);
             }
@@ -73,7 +76,7 @@ namespace TcpClientNS
 
                 AddMsg(string.Format("$Client Starting ... -> ({0}:{1})", ip, port));
 
-                if (client.Start(ip, port, this.cbxAsyncConn.Checked))
+                if (client.Connetion(ip, port, this.cbxAsyncConn.Checked))
                 {
                     if (cbxAsyncConn.Checked == false)
                     {
@@ -85,7 +88,7 @@ namespace TcpClientNS
                 else
                 {
                     SetAppState(AppState.Stoped);
-                    throw new Exception(string.Format("$Client Start Error -> {0}({1})", client.GetLastErrorDesc(), client.GetlastError()));
+                    throw new Exception(string.Format("$Client Start Error -> {0}({1})", client.ErrorMessage, client.ErrorCode));
                 }
             }
             catch (Exception ex)
@@ -105,7 +108,7 @@ namespace TcpClientNS
             }
             else
             {
-                AddMsg(string.Format("$Stop Error -> {0}({1})", client.GetLastErrorDesc(), client.GetlastError()));
+                AddMsg(string.Format("$Stop Error -> {0}({1})", client.ErrorMessage, client.ErrorCode));
             }
         }
 
@@ -120,16 +123,16 @@ namespace TcpClientNS
                 }
 
                 byte[] bytes = Encoding.Default.GetBytes(send);
-                IntPtr dwConnId = client.GetConnectionId();
+                IntPtr connId = client.ConnectionId;
 
                 // 发送
                 if (client.Send(bytes, bytes.Length))
                 {
-                    AddMsg(string.Format("$ ({0}) Send OK --> {1}", dwConnId, send));
+                    AddMsg(string.Format("$ ({0}) Send OK --> {1}", connId, send));
                 }
                 else
                 {
-                    AddMsg(string.Format("$ ({0}) Send Fail --> {1} ({2})", dwConnId, send, bytes.Length));
+                    AddMsg(string.Format("$ ({0}) Send Fail --> {1} ({2})", connId, send, bytes.Length));
                 }
 
             }
@@ -154,7 +157,7 @@ namespace TcpClientNS
 
 
 
-                IntPtr dwConnId = client.GetConnectionId();
+                IntPtr connId = client.ConnectionId;
 
                 Thread thread = new Thread(new ThreadStart(delegate()
                 {
@@ -172,11 +175,11 @@ namespace TcpClientNS
                     studentType = StudentType.Array;
                     if (client.SendBySerializable(students))
                     {
-                        AddMsg(string.Format("$ ({0}) Send OK --> {1}", dwConnId, "Student[]"));
+                        AddMsg(string.Format("$ ({0}) Send OK --> {1}", connId, "Student[]"));
                     }
                     else
                     {
-                        AddMsg(string.Format("$ ({0}) Send Fail --> {1}", dwConnId, "Student[]"));
+                        AddMsg(string.Format("$ ({0}) Send Fail --> {1}", connId, "Student[]"));
                     }
 
                     ////////////////////////////////////////////////////////////////////////////////
@@ -196,11 +199,11 @@ namespace TcpClientNS
                     studentType = StudentType.List;
                     if (client.SendBySerializable(stuList))
                     {
-                        AddMsg(string.Format("$ ({0}) Send OK --> {1}", dwConnId, "List<Student>"));
+                        AddMsg(string.Format("$ ({0}) Send OK --> {1}", connId, "List<Student>"));
                     }
                     else
                     {
-                        AddMsg(string.Format("$ ({0}) Send Fail --> {1}", dwConnId, "List<Student>"));
+                        AddMsg(string.Format("$ ({0}) Send Fail --> {1}", connId, "List<Student>"));
                     }
 
                     ////////////////////////////////////////////////////////////////////////////////
@@ -216,11 +219,11 @@ namespace TcpClientNS
                     studentType = StudentType.Single;
                     if (client.SendBySerializable(students[0]))
                     {
-                        AddMsg(string.Format("$ ({0}) Send OK --> {1}", dwConnId, "Student"));
+                        AddMsg(string.Format("$ ({0}) Send OK --> {1}", connId, "Student"));
                     }
                     else
                     {
-                        AddMsg(string.Format("$ ({0}) Send Fail --> {1}", dwConnId, "Student"));
+                        AddMsg(string.Format("$ ({0}) Send Fail --> {1}", connId, "Student"));
                     }
 
                 }));
@@ -298,20 +301,20 @@ namespace TcpClientNS
             // 如果是异步联接,更新界面状态
             this.Invoke(new ConnectUpdateUiDelegate(ConnectUpdateUi));
 
-            AddMsg(string.Format(" > [{0},OnConnect]", sender.GetConnectionId()));
+            AddMsg(string.Format(" > [{0},OnConnect]", sender.ConnectionId));
 
             return HandleResult.Ok;
         }
 
-        HandleResult OnSend(TcpClient sender, IntPtr pData, int iLength)
+        HandleResult OnSend(TcpClient sender, IntPtr pData, int length)
         {
             // 客户端发数据了
-            AddMsg(string.Format(" > [{0},OnSend] -> ({1} bytes)", sender.GetConnectionId(), iLength));
+            AddMsg(string.Format(" > [{0},OnSend] -> ({1} bytes)", sender.ConnectionId, length));
 
             return HandleResult.Ok;
         }
 
-        HandleResult OnReceive(TcpClient sender, IntPtr pData, int iLength)
+        HandleResult OnReceive(TcpClient sender, IntPtr pData, int length)
         {
             // 数据到达了
             if (isSendFile == true)
@@ -320,9 +323,9 @@ namespace TcpClientNS
                 isSendFile = false;
                 MyFileInfo myFile = (MyFileInfo)Marshal.PtrToStructure(pData, typeof(MyFileInfo));
                 int objSize = Marshal.SizeOf(myFile);
-                // 因为没有附加尾数据,所以大小可以用iLength - objSize
-                byte[] bytes = new byte[iLength - objSize];
-                Marshal.Copy(pData + objSize, bytes, 0, iLength - objSize);
+                // 因为没有附加尾数据,所以大小可以用length - objSize
+                byte[] bytes = new byte[length - objSize];
+                Marshal.Copy(pData + objSize, bytes, 0, length - objSize);
 
                 string txt = Encoding.Default.GetString(bytes);
                 string msg = string.Empty;
@@ -335,13 +338,13 @@ namespace TcpClientNS
                     msg = txt;
                 }
 
-                AddMsg(string.Format(" > [{0},OnReceive] -> FileInfo(Path:\"{1}\",Size:{2})", sender.GetConnectionId(), myFile.FilePath, myFile.FileSize));
-                AddMsg(string.Format(" > [{0},OnReceive] -> FileContent(\"{1}\")", sender.GetConnectionId(), msg));
+                AddMsg(string.Format(" > [{0},OnReceive] -> FileInfo(Path:\"{1}\",Size:{2})", sender.ConnectionId, myFile.FilePath, myFile.FileSize));
+                AddMsg(string.Format(" > [{0},OnReceive] -> FileContent(\"{1}\")", sender.ConnectionId, msg));
             }
             else if (studentType != StudentType.None)
             {
-                byte[] bytes = new byte[iLength];
-                Marshal.Copy(pData, bytes, 0, iLength);
+                byte[] bytes = new byte[length];
+                Marshal.Copy(pData, bytes, 0, length);
 
                 switch (studentType)
                 {
@@ -349,26 +352,26 @@ namespace TcpClientNS
                         Student[] students = sender.BytesToObject(bytes) as Student[];
                         foreach (var stu in students)
                         {
-                            AddMsg(string.Format(" > [{0},OnReceive] -> Student({1},{2},{3})", sender.GetConnectionId(), stu.Id, stu.Name, stu.GetSexString()));
+                            AddMsg(string.Format(" > [{0},OnReceive] -> Student({1},{2},{3})", sender.ConnectionId, stu.Id, stu.Name, stu.GetSexString()));
                         }
                         break;
                     case StudentType.List:
                         List<Student> stuList = sender.BytesToObject(bytes) as List<Student>;
                         foreach (var stu in stuList)
                         {
-                            AddMsg(string.Format(" > [{0},OnReceive] -> Student({1},{2},{3})", sender.GetConnectionId(), stu.Id, stu.Name, stu.GetSexString()));
+                            AddMsg(string.Format(" > [{0},OnReceive] -> Student({1},{2},{3})", sender.ConnectionId, stu.Id, stu.Name, stu.GetSexString()));
                         }
                         break;
                     case StudentType.Single:
                         Student student = sender.BytesToObject(bytes) as Student;
-                        AddMsg(string.Format(" > [{0},OnReceive] -> Student({1},{2},{3})", sender.GetConnectionId(), student.Id, student.Name, student.GetSexString()));
+                        AddMsg(string.Format(" > [{0},OnReceive] -> Student({1},{2},{3})", sender.ConnectionId, student.Id, student.Name, student.GetSexString()));
                         studentType = StudentType.None;
                         break;
                 }
             }
             else
             {
-                AddMsg(string.Format(" > [{0},OnReceive] -> ({1} bytes)", sender.GetConnectionId(), iLength));
+                AddMsg(string.Format(" > [{0},OnReceive] -> ({1} bytes)", sender.ConnectionId, length));
             }
 
             return HandleResult.Ok;
@@ -378,18 +381,18 @@ namespace TcpClientNS
         {
             // 连接关闭了
 
-            AddMsg(string.Format(" > [{0},OnClose]", sender.GetConnectionId()));
+            AddMsg(string.Format(" > [{0},OnClose]", sender.ConnectionId));
 
             // 通知界面
             this.Invoke(new SetAppStateDelegate(SetAppState), AppState.Stoped);
             return HandleResult.Ok;
         }
 
-        HandleResult OnError(TcpClient sender, SocketOperation enOperation, int iErrorCode)
+        HandleResult OnError(TcpClient sender, SocketOperation enOperation, int errorCode)
         {
             // 出错了
 
-            AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", sender.GetConnectionId(), enOperation, iErrorCode));
+            AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", sender.ConnectionId, enOperation, errorCode));
 
             // 通知界面,只处理了连接错误,也没进行是不是连接错误的判断,所以有错误就会设置界面
             // 生产环境请自己控制

@@ -3,10 +3,12 @@
 	<Transactions>
     <Transaction>2013/09/26 12:41:30.000.878,=E:\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
     <Transaction>2014/03/28 14:36:31.000.945,=F:\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2014/03/28 14:37:25.000.032,F:\Documents\RAD Studio\Projects\Unit1.pas=F:\Documents\RAD Studio\Projects\HPSocketDemo-4C\ServerUnit.pas</Transaction>
-    <Transaction>2014/03/28 14:37:25.000.032,F:\Documents\RAD Studio\Projects\Unit1.dfm=F:\Documents\RAD Studio\Projects\HPSocketDemo-4C\ServerUnit.dfm</Transaction>
-    <Transaction>2014/03/28 14:37:37.000.878,F:\Documents\RAD Studio\Projects\Project1.dproj=F:\Documents\RAD Studio\Projects\HPSocketDemo-4C\TCPServerProject.dproj</Transaction>
+    <Transaction>2014/03/28 14:37:25.000.032,F:\Documents\RAD Studio\Projects\HPSocketDemo-4C\ServerUnit.pas=F:\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2014/03/28 14:37:25.000.032,F:\Documents\RAD Studio\Projects\HPSocketDemo-4C\ServerUnit.dfm=F:\Documents\RAD Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>2014/03/28 14:37:37.000.878,F:\Documents\RAD Studio\Projects\HPSocketDemo-4C\TCPServerProject.dproj=F:\Documents\RAD Studio\Projects\Project1.dproj</Transaction>
     <Transaction>2014/03/28 14:59:55.000.233,=F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Server\Unit1.pas</Transaction>
-    <Transaction>2014/03/28 15:00:15.000.092,F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Server\Unit1.pas=F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Server\HPSocketSDKUnit.pas</Transaction>
+    <Transaction>2014/03/28 15:00:15.000.092,F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Server\HPSocketSDKUnit.pas=F:\Documents\RAD Studio\Projects\DelphiEcho-4C\Server\Unit1.pas</Transaction>
+    <Transaction>2015/01/22 21:15:59.000.553,=E:\MyProject\Hp_Socket\Delphi\TestEcho\Server\Unit1.pas</Transaction>
+    <Transaction>2015/01/22 21:16:24.000.337,E:\MyProject\Hp_Socket\Delphi\TestEcho\ExePublic.pas=E:\MyProject\Hp_Socket\Delphi\TestEcho\Server\Unit1.pas</Transaction>
   </Transactions>
 </BorlandProject>

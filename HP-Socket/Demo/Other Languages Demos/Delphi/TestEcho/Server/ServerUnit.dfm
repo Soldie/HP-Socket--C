@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 0
-  Top = 0
+  Left = 687
+  Top = 272
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Echo Server [ '#39'C'#39' - clear list box ]'

@@ -4,7 +4,7 @@ interface
 
 uses
     Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-    Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, HPSocketSDKUnit;
+    Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, HPSocketSDKUnit, ExePublic;
 
 type
     TForm1 = class(TForm)
@@ -28,6 +28,18 @@ type
         procedure SetAppState(state: EnAppState);
     public
         { Public declarations }
+    end;
+
+    TDoClientRec = class(TThread)
+      Flen : Integer;
+      fData: Pointer;
+      RecMsg : PTMsg;
+      procedure showmsg;
+    protected
+      procedure Execute;override;
+    public
+
+      constructor Create(len : Integer; pData: Pointer);
     end;
 
 var
@@ -86,19 +98,27 @@ end;
 
 function SendString(str: string): Boolean;
 var
+    {
     sendBuffer: array of byte;
     sendStr: AnsiString;
-    sendLength: Integer;
+    sendLength: Integer;  }
+  SendMsg : PTMsg;
 begin
+    {
     sendStr := AnsiString(str);
     // 获取ansi字符串的长度
     sendLength := Length(sendStr);
     // 设置buf数组的长度
     SetLength(sendBuffer, sendLength);
     // 复制数据到buf数组
-    Move(sendStr[1], sendBuffer[0], sendLength);
+    Move(sendStr[1], sendBuffer[0], sendLength);    }
 
-    Result := HP_Client_Send(pClient, sendBuffer, sendLength);
+
+    New(SendMsg);
+    SendMsg.nType := 1000;
+    SendMsg.nMsg := str;
+
+    Result := HP_Client_Send(pClient, SendMsg, SizeOf(ttmsg));
 end;
 
 procedure TForm1.btnSendClick(Sender: TObject);
@@ -137,7 +157,8 @@ begin
     else
     begin
         SetAppState(ST_STOPED);
-        AddMsg(Format('$Client Start Error -> %s(%d)', [HP_Client_GetLastErrorDesc(pClient), HP_Client_GetLastError(pClient)]));
+        AddMsg(Format('$Client Start Error -> %s(%d)', [HP_Client_GetLastErrorDesc(pClient),
+            Integer( HP_Client_GetLastError(pClient))]));
     end;
 
 end;
@@ -151,6 +172,8 @@ end;
 function OnReceive(dwConnID: DWORD; const pData: Pointer; iLength: Integer): En_HP_HandleResult; stdcall;
 var
     testString: AnsiString;
+
+    doRec : TDoClientRec;
 begin
     Form1.AddMsg(Format(' > [%d,OnReceive] -> (%d bytes)', [dwConnID, iLength]));
 
@@ -159,6 +182,9 @@ begin
     Move(pData^, testString[1],  iLength);
     Form1.AddMsg(Format(' > [%d,OnReceive] -> say:%s', [dwConnId, testString]));
     }
+
+    doRec := TDoClientRec.Create(iLength, pData);
+    doRec.Resume;
 
     Result := HP_HR_OK;
 end;
@@ -192,7 +218,8 @@ begin
         SetAppState(ST_STOPED)
     else
     begin
-        AddMsg(Format('$Stop Error -> %s(%d)', [HP_Client_GetLastErrorDesc(pClient), HP_Client_GetLastError(pClient)]));
+        AddMsg(Format('$Stop Error -> %s(%d)', [HP_Client_GetLastErrorDesc(pClient),
+                Integer(HP_Client_GetLastError(pClient))]));
     end;
 end;
 
@@ -226,6 +253,39 @@ procedure TForm1.lstMsgKeyPress(Sender: TObject; var Key: Char);
 begin
     if (Key = 'c') or (Key = 'C') then
         lstMsg.Items.Clear;
+end;
+
+{ TDoClientRec }
+
+constructor TDoClientRec.Create(len: Integer; pData: Pointer);
+begin
+  inherited Create(True);
+  Flen := len;
+  Move(pdata, fData, Flen);
+end;
+
+procedure TDoClientRec.Execute;
+begin
+  inherited;
+  try
+    Move(fdata, RecMsg, Flen);
+    try
+      case RecMsg.nType of
+        1001 : begin
+                 Synchronize(showmsg);
+               end;
+      end;
+    except
+
+    end;
+  finally
+
+  end;
+end;
+
+procedure TDoClientRec.showmsg;
+begin
+  Form1.AddMsg('Rec:' + RecMsg.nMsg);
 end;
 
 end.

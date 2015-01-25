@@ -3,8 +3,8 @@ unit ServerUnit;
 interface
 
 uses
-    Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-    Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, HPSocketSDKUnit;
+    Windows, Messages, SysUtils, Variants, Classes, Graphics,
+    Controls, Forms, Dialogs, StdCtrls, HPSocketSDKUnit, ExePublic;
 
 type
 
@@ -29,6 +29,22 @@ type
         procedure SetAppState(state: EnAppState);
     public
         { Public declarations }
+        procedure OnRec(dwConnId: DWORD; const pData: Pointer; iLength: Integer);
+    end;
+
+    //处理接受客户端结构体
+    TDoSerRec = class(TThread)
+      FId : DWORD;
+      RecMsg : PTMsg;
+      procedure showmsg;
+    protected
+      procedure Execute;override;
+    public
+      //回传给客户端
+      ilen : Integer;
+      pdata : Pointer;
+
+      constructor Create(connid : DWORD);
     end;
 
 var
@@ -118,6 +134,8 @@ end;
 function OnReceive(dwConnId: DWORD; const pData: Pointer; iLength: Integer): En_HP_HandleResult; stdcall;
 var
     testString: AnsiString;
+
+    doRec : TDoSerRec;
 begin
     Form1.AddMsg(Format(' > [%d,OnReceive] -> (%d bytes)', [dwConnId, iLength]));
 
@@ -125,7 +143,7 @@ begin
     SetLength(testString, iLength);
     Move(pData^, testString[1],  iLength);
     Form1.AddMsg(Format(' > [%d,OnReceive] -> say:%s', [dwConnId, testString]));
-    }
+
 
     if HP_Server_Send(pServer, dwConnId, pData, iLength) then
     begin
@@ -135,7 +153,11 @@ begin
     begin
         Result := HP_HR_ERROR;
     end;
+    }
 
+    Form1.OnRec(dwConnId, pData, iLength);
+
+    Result := HP_HR_OK;
 end;
 
 function OnCloseConn(dwConnId: DWORD): En_HP_HandleResult; stdcall;
@@ -168,7 +190,7 @@ procedure TForm1.btnStartClick(Sender: TObject);
 var
     ip: PWideChar;
     port: USHORT;
-    errorId: Integer;
+    errorId: En_HP_SocketError;
     errorMsg: PWideChar;
 begin
     ip := PWideChar(edtIpAddress.Text);
@@ -183,14 +205,14 @@ begin
     begin
         errorId := HP_Server_GetLastError(pServer);
         errorMsg := HP_Server_GetLastErrorDesc(pServer);
-        AddMsg(Format('$Server Start Error -> %s(%d)', [errorMsg, errorId]));
+        AddMsg(Format('$Server Start Error -> %s(%d)', [errorMsg, Integer(errorId)]));
         SetAppState(ST_STOPED);
     end;
 end;
 
 procedure TForm1.btnStopClick(Sender: TObject);
 var
-    errorId: Integer;
+    errorId: En_HP_SocketError;
     errorMsg: PWideChar;
 begin
 
@@ -204,7 +226,7 @@ begin
     begin
         errorId := HP_Server_GetLastError(pServer);
         errorMsg := HP_Server_GetLastErrorDesc(pServer);
-        AddMsg(Format('$Stop Error -> %s(%d)', [errorMsg, errorId]));
+        AddMsg(Format('$Stop Error -> %s(%d)', [errorMsg, Integer(errorId)]));
 
     end;
 end;
@@ -237,7 +259,7 @@ begin
     HP_Set_FN_Server_OnReceive(pListener, OnReceive);
     HP_Set_FN_Server_OnClose(pListener, OnCloseConn);
     HP_Set_FN_Server_OnError(pListener, OnError);
-    HP_Set_FN_Server_OnServerShutdown(pListener, OnServerShutdown);
+    HP_Set_FN_Server_OnShutdown(pListener, OnServerShutdown);
 
     SetAppState(ST_STOPED);
 end;
@@ -247,6 +269,63 @@ begin
     if (Key = 'c') or (Key = 'C') then
         lstMsg.Items.Clear;
 
+end;
+
+procedure TForm1.OnRec(dwConnId: DWORD; const pData: Pointer;
+  iLength: Integer);
+var
+  doRec : TDoSerRec;
+
+  SendMsg, RecMsg : PTMsg;
+begin
+  doRec := TDoSerRec.Create(dwConnId);
+  //拷贝至指针
+  Move(pdata, dorec.pdata, iLength);
+  doRec.ilen := iLength;
+  doRec.Resume;
+end;
+
+{ TDoSerRec }
+
+constructor TDoSerRec.Create(connid: DWORD);
+begin
+  inherited Create(True);
+  FId := connid;
+end;
+
+procedure TDoSerRec.Execute;
+var
+  SendMsg : PTMsg;
+begin
+  inherited;
+  try
+    Move(pdata, RecMsg, ilen);
+    try
+      case RecMsg.nType of
+        1000 : begin
+                 //处理消息
+                 Synchronize(showmsg);
+                 New(SendMsg);
+                 try
+                   SendMsg.nType := 1001;
+                   SendMsg.nMsg := 'Do Rec; Ready do other thing?';
+                   HP_Server_Send(pServer, FId, SendMsg, SizeOf(ttmsg));
+                 finally
+                   Dispose(SendMsg);
+                 end;
+               end;
+      end;
+    except
+
+    end;
+  finally
+
+  end;
+end;
+
+procedure TDoSerRec.showmsg;
+begin
+  form1.AddMsg('Rec from client:' + RecMsg.nMsg);
 end;
 
 end.

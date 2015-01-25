@@ -47,8 +47,14 @@ namespace TcpPullServer
                 // 加个委托显示msg,因为on系列都是在工作线程中调用的,ui不允许直接操作
                 AddMsgDelegate = new ShowMsg(AddMsg);
 
-                // 设置回调函数
-                server.SetCallback(OnPrepareListen, OnAccept, OnSend, OnPullReceive, OnClose, OnError, OnServerShutdown);
+                // 设置服务器事件
+                server.OnPrepareListen += new TcpServerEvent.OnPrepareListenEventHandler(OnPrepareListen);
+                server.OnAccept += new TcpServerEvent.OnAcceptEventHandler(OnAccept);
+                server.OnSend += new TcpServerEvent.OnSendEventHandler(OnSend);
+                server.OnReceive += new TcpPullServerEvent.OnReceiveEventHandler(OnReceive);
+                server.OnClose += new TcpServerEvent.OnCloseEventHandler(OnClose);
+                server.OnError += new TcpServerEvent.OnErrorEventHandler(OnError);
+                server.OnShutdown += new TcpServerEvent.OnShutdownEventHandler(OnShutdown);
 
                 SetAppState(AppState.Stoped);
             }
@@ -69,8 +75,10 @@ namespace TcpPullServer
                 // 写在这个位置是上面可能会异常
                 SetAppState(AppState.Starting);
 
+                server.IpAddress = ip;
+                server.Port = port;
                 // 启动服务
-                if (server.Start(ip, port))
+                if (server.Start())
                 {
                     this.Text = string.Format("{2} - ({0}:{1})", ip, port, title);
                     SetAppState(AppState.Started);
@@ -79,7 +87,7 @@ namespace TcpPullServer
                 else
                 {
                     SetAppState(AppState.Stoped);
-                    throw new Exception(string.Format("$Server Start Error -> {0}({1})", server.GetLastErrorDesc(), server.GetlastError()));
+                    throw new Exception(string.Format("$Server Start Error -> {0}({1})", server.ErrorMessage, server.ErrorCode));
                 }
             }
             catch (Exception ex)
@@ -101,7 +109,7 @@ namespace TcpPullServer
             }
             else
             {
-                AddMsg(string.Format("$Stop Error -> {0}({1})", server.GetLastErrorDesc(), server.GetlastError()));
+                AddMsg(string.Format("$Stop Error -> {0}({1})", server.ErrorMessage, server.ErrorCode));
             }
         }
 
@@ -109,17 +117,16 @@ namespace TcpPullServer
         {
             try
             {
-                // 未做64位判断
-                IntPtr dwConnId = (IntPtr)Convert.ToUInt32(this.txtDisConn.Text.Trim());
+                IntPtr connId = (IntPtr)Convert.ToUInt32(this.txtDisConn.Text.Trim());
 
                 // 断开指定客户
-                if (server.Disconnect(dwConnId, true))
+                if (server.Disconnect(connId, true))
                 {
-                    AddMsg(string.Format("$({0}) Disconnect OK", dwConnId));
+                    AddMsg(string.Format("$({0}) Disconnect OK", connId));
                 }
                 else
                 {
-                    throw new Exception(string.Format("Disconnect({0}) Error", dwConnId));
+                    throw new Exception(string.Format("Disconnect({0}) Error", connId));
                 }
             }
             catch (Exception ex)
@@ -136,7 +143,7 @@ namespace TcpPullServer
             return HandleResult.Ok;
         }
 
-        HandleResult OnAccept(IntPtr dwConnId, IntPtr pClient)
+        HandleResult OnAccept(IntPtr connId, IntPtr pClient)
         {
             // 客户进入了
 
@@ -144,19 +151,19 @@ namespace TcpPullServer
             // 获取客户端ip和端口
             string ip = string.Empty;
             ushort port = 0;
-            if (server.GetRemoteAddress(dwConnId, ref ip, ref port))
+            if (server.GetRemoteAddress(connId, ref ip, ref port))
             {
-                AddMsg(string.Format(" > [{0},OnAccept] -> PASS({1}:{2})", dwConnId, ip.ToString(), port));
+                AddMsg(string.Format(" > [{0},OnAccept] -> PASS({1}:{2})", connId, ip.ToString(), port));
             }
             else
             {
-                AddMsg(string.Format(" > [{0},OnAccept] -> Server_GetClientAddress() Error", dwConnId));
+                AddMsg(string.Format(" > [{0},OnAccept] -> Server_GetClientAddress() Error", connId));
             }
 
 
             // 设置附加数据
             ClientInfo ci = new ClientInfo();
-            ci.ConnId = dwConnId;
+            ci.ConnId = connId;
             ci.IpAddress = ip;
             ci.Port = port;
             ci.PkgInfo = new PkgInfo()
@@ -164,29 +171,29 @@ namespace TcpPullServer
                 IsHeader = true,
                 Length = pkgHeaderSize,
             };
-            if (server.SetConnectionExtra(dwConnId, ci) == false)
+            if (server.SetConnectionExtra(connId, ci) == false)
             {
-                AddMsg(string.Format(" > [{0},OnAccept] -> SetConnectionExtra fail", dwConnId));
+                AddMsg(string.Format(" > [{0},OnAccept] -> SetConnectionExtra fail", connId));
             }
 
             return HandleResult.Ok;
         }
 
-        HandleResult OnSend(IntPtr dwConnId, IntPtr pData, int iLength)
+        HandleResult OnSend(IntPtr connId, IntPtr pData, int length)
         {
             // 服务器发数据了
 
 
-            AddMsg(string.Format(" > [{0},OnSend] -> ({1} bytes)", dwConnId, iLength));
+            AddMsg(string.Format(" > [{0},OnSend] -> ({1} bytes)", connId, length));
 
             return HandleResult.Ok;
         }
 
-        HandleResult OnPullReceive(IntPtr dwConnId, int iLength)
+        HandleResult OnReceive(IntPtr connId, int length)
         {
             // 数据到达了
             IntPtr clientPtr = IntPtr.Zero;
-            if (server.GetConnectionExtra(dwConnId, ref clientPtr) == false)
+            if (server.GetConnectionExtra(connId, ref clientPtr) == false)
             {
                 return HandleResult.Error;
             }
@@ -198,7 +205,7 @@ namespace TcpPullServer
             int required = pkgInfo.Length;
 
             // 剩余大小
-            int remain = iLength;
+            int remain = length;
 
             while (remain >= required)
             {
@@ -207,7 +214,7 @@ namespace TcpPullServer
                 {
                     remain -= required;
                     bufferPtr = Marshal.AllocHGlobal(required); ;
-                    if (server.Fetch(dwConnId, bufferPtr, required) == FetchResult.Ok)
+                    if (server.Fetch(connId, bufferPtr, required) == FetchResult.Ok)
                     {
                         if (pkgInfo.IsHeader == true)
                         {
@@ -235,12 +242,12 @@ namespace TcpPullServer
 
                         }
 
-                        AddMsg(string.Format(" > [{0},OnPullReceive] -> ({1} bytes)", dwConnId, pkgInfo.Length));
+                        AddMsg(string.Format(" > [{0},OnReceive] -> ({1} bytes)", connId, pkgInfo.Length));
 
                         // 回发数据
                         byte[] sendBytes = new byte[pkgInfo.Length];
                         Marshal.Copy(bufferPtr, sendBytes, 0, sendBytes.Length);
-                        if (server.Send(dwConnId, sendBytes, sendBytes.Length) == false)
+                        if (server.Send(connId, sendBytes, sendBytes.Length) == false)
                         {
                             throw new Exception("server.Send() == false");
                         }
@@ -248,7 +255,7 @@ namespace TcpPullServer
                         // 在后面赋值,因为前面需要用到pkgInfo.Length
                         pkgInfo.IsHeader = !pkgInfo.IsHeader;
                         pkgInfo.Length = required;
-                        if (server.SetConnectionExtra(dwConnId, ci) == false)
+                        if (server.SetConnectionExtra(connId, ci) == false)
                         {
                             return HandleResult.Error;
                         }
@@ -272,39 +279,39 @@ namespace TcpPullServer
             return HandleResult.Ok;
         }
 
-        HandleResult OnClose(IntPtr dwConnId)
+        HandleResult OnClose(IntPtr connId)
         {
             // 客户离开了
 
 
             // 释放附加数据
-            if (server.SetConnectionExtra(dwConnId, null) == false)
+            if (server.SetConnectionExtra(connId, null) == false)
             {
-                AddMsg(string.Format(" > [{0},OnClose] -> SetConnectionExtra({0}, null) fail", dwConnId));
+                AddMsg(string.Format(" > [{0},OnClose] -> SetConnectionExtra({0}, null) fail", connId));
             }
 
 
-            AddMsg(string.Format(" > [{0},OnClose]", dwConnId));
+            AddMsg(string.Format(" > [{0},OnClose]", connId));
             return HandleResult.Ok;
         }
 
-        HandleResult OnError(IntPtr dwConnId, SocketOperation enOperation, int iErrorCode)
+        HandleResult OnError(IntPtr connId, SocketOperation enOperation, int errorCode)
         {
             // 客户出错了
 
-            AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", dwConnId, enOperation, iErrorCode));
+            AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
             // return HPSocketSdk.HandleResult.Ok;
 
             // 因为要释放附加数据,所以直接返回OnClose()了
-            return OnClose(dwConnId);
+            return OnClose(connId);
         }
 
-        HandleResult OnServerShutdown()
+        HandleResult OnShutdown()
         {
             // 服务关闭了
 
 
-            AddMsg(" > [OnServerShutdown]");
+            AddMsg(" > [OnShutdown]");
             return HandleResult.Ok;
         }
 

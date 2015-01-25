@@ -42,11 +42,25 @@ namespace TcpProxyServer
 
         public ProxyServer()
         {
-            server.SetCallback(OnServerPrepareListen, OnServerAccept, OnServerSend, OnServerReceive, OnServerClose,
-                               OnServerError, OnServerShutdown);
+            // 设置服务器事件
+            server.OnPrepareListen += new TcpServerEvent.OnPrepareListenEventHandler(OnServerPrepareListen);
+            server.OnAccept += new TcpServerEvent.OnAcceptEventHandler(OnServerAccept);
+            server.OnSend += new TcpServerEvent.OnSendEventHandler(OnServerSend);
+            server.OnReceive += new TcpServerEvent.OnReceiveEventHandler(OnServerReceive);
+            server.OnClose += new TcpServerEvent.OnCloseEventHandler(OnServerClose);
+            server.OnError += new TcpServerEvent.OnErrorEventHandler(OnServerError);
+            server.OnShutdown += new TcpServerEvent.OnShutdownEventHandler(OnServerShutdown);
 
-            agent.SetCallback(OnAgentPrepareConnect, OnAgentConnect, OnAgentSend, OnAgentReceive, OnAgentClose,
-                              OnAgentError, OnAgentShutdown);
+
+            // 设置代理事件
+            agent.OnPrepareConnect += new TcpAgentEvent.OnPrepareConnectEventHandler(OnAgentPrepareConnect);
+            agent.OnConnect += new TcpAgentEvent.OnConnectEventHandler(OnAgentConnect);
+            agent.OnSend += new TcpAgentEvent.OnSendEventHandler(OnAgentSend);
+            agent.OnReceive += new TcpAgentEvent.OnReceiveEventHandler(OnAgentReceive);
+            agent.OnClose += new TcpAgentEvent.OnCloseEventHandler(OnAgentClose);
+            agent.OnError += new TcpAgentEvent.OnErrorEventHandler(OnAgentError);
+            agent.OnShutdown += new TcpAgentEvent.OnShutdownEventHandler(OnAgentShutdown);
+
         }
 
         public bool Start()
@@ -57,17 +71,19 @@ namespace TcpProxyServer
                 throw new Exception("请先设置属性[BindAddr,TargetAddr,BindPort,TargetPort,AddMsgDelegate]");
             }
 
-            bool isStart = server.Start(BindAddr, BindPort);
+            server.IpAddress = BindAddr;
+            server.Port = BindPort;
+            bool isStart = server.Start();
             if (isStart == false)
             {
-                AddMsg(string.Format(" > Server start fail -> {0}({1})", server.GetLastErrorDesc(), server.GetlastError()));
+                AddMsg(string.Format(" > Server start fail -> {0}({1})", server.ErrorMessage, server.ErrorCode));
                 return isStart;
             }
 
             isStart = agent.Start(BindAddr, false);
             if (isStart == false)
             {
-                AddMsg(string.Format(" > Server start fail -> {0}({1})", agent.GetLastErrorDesc(), agent.GetlastError()));
+                AddMsg(string.Format(" > Server start fail -> {0}({1})", agent.ErrorMessage, agent.ErrorCode));
                 return isStart;
             }
 
@@ -85,9 +101,9 @@ namespace TcpProxyServer
         }
 
 
-        public bool Disconnect(IntPtr dwConnId, bool force = true)
+        public bool Disconnect(IntPtr connId, bool force = true)
         {
-            return server.Disconnect(dwConnId, force);
+            return server.Disconnect(connId, force);
         }
 
         //////////////////////////////Agent//////////////////////////////////////////////////
@@ -95,10 +111,10 @@ namespace TcpProxyServer
         /// <summary>
         /// 准备连接了
         /// </summary>
-        /// <param name="dwConnId"></param>
+        /// <param name="connId"></param>
         /// <param name="socket"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnAgentPrepareConnect(IntPtr dwConnId, uint socket)
+        protected virtual HandleResult OnAgentPrepareConnect(IntPtr connId, uint socket)
         {
             return HandleResult.Ok;
         }
@@ -106,46 +122,46 @@ namespace TcpProxyServer
         /// <summary>
         /// 已连接
         /// </summary>
-        /// <param name="dwConnId"></param>
+        /// <param name="connId"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnAgentConnect(IntPtr dwConnId)
+        protected virtual HandleResult OnAgentConnect(IntPtr connId)
         {
-            AddMsg(string.Format(" > [{0},OnAgentConnect]", dwConnId));
+            AddMsg(string.Format(" > [{0},OnAgentConnect]", connId));
             return HandleResult.Ok;
         }
 
         /// <summary>
         /// 客户端发数据了
         /// </summary>
-        /// <param name="dwConnId"></param>
+        /// <param name="connId"></param>
         /// <param name="pData"></param>
-        /// <param name="iLength"></param>
+        /// <param name="length"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnAgentSend(IntPtr dwConnId, IntPtr pData, int iLength)
+        protected virtual HandleResult OnAgentSend(IntPtr connId, IntPtr pData, int length)
         {
-            AddMsg(string.Format(" > [{0},OnAgentSend] -> ({1} bytes)", dwConnId, iLength));
+            AddMsg(string.Format(" > [{0},OnAgentSend] -> ({1} bytes)", connId, length));
             return HandleResult.Ok;
         }
 
         /// <summary>
         /// 数据到达了
         /// </summary>
-        /// <param name="dwConnId"></param>
+        /// <param name="connId"></param>
         /// <param name="pData"></param>
-        /// <param name="iLength"></param>
+        /// <param name="length"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnAgentReceive(IntPtr dwConnId, IntPtr pData, int iLength)
+        protected virtual HandleResult OnAgentReceive(IntPtr connId, IntPtr pData, int length)
         {
             // 获取附加数据
             IntPtr extraPtr = IntPtr.Zero;
-            if (agent.GetConnectionExtra(dwConnId, ref extraPtr) == false)
+            if (agent.GetConnectionExtra(connId, ref extraPtr) == false)
             {
                 return HandleResult.Error;
             }
             
             ConnExtraData extra = (ConnExtraData)Marshal.PtrToStructure(extraPtr, typeof(ConnExtraData));
-            AddMsg(string.Format(" > [{0},OnAgentReceive] -> ({1} bytes)", dwConnId, iLength));
-            if (extra.Server.Send(extra.ConnIdForServer, pData, iLength) == false)
+            AddMsg(string.Format(" > [{0},OnAgentReceive] -> ({1} bytes)", connId, length));
+            if (extra.Server.Send(extra.ConnIdForServer, pData, length) == false)
             {
                 return HandleResult.Error;
             }
@@ -156,22 +172,22 @@ namespace TcpProxyServer
         /// <summary>
         /// 连接关闭了
         /// </summary>
-        /// <param name="dwConnId"></param>
+        /// <param name="connId"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnAgentClose(IntPtr dwConnId)
+        protected virtual HandleResult OnAgentClose(IntPtr connId)
         {
-            AddMsg(string.Format(" > [{0},OnAgentClose]", dwConnId));
+            AddMsg(string.Format(" > [{0},OnAgentClose]", connId));
 
             // 获取附加数据
             IntPtr extraPtr = IntPtr.Zero;
-            if (agent.GetConnectionExtra(dwConnId, ref extraPtr) == false)
+            if (agent.GetConnectionExtra(connId, ref extraPtr) == false)
             {
                 return HandleResult.Error;
             }
 
             ConnExtraData extra = (ConnExtraData)Marshal.PtrToStructure(extraPtr, typeof(ConnExtraData));
 
-            agent.SetConnectionExtra(dwConnId, null);
+            agent.SetConnectionExtra(connId, null);
 
             if (extra.FreeType == 0)
             {
@@ -189,17 +205,17 @@ namespace TcpProxyServer
         /// <summary>
         /// 出错了
         /// </summary>
-        /// <param name="dwConnId"></param>
+        /// <param name="connId"></param>
         /// <param name="enOperation"></param>
-        /// <param name="iErrorCode"></param>
+        /// <param name="errorCode"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnAgentError(IntPtr dwConnId, SocketOperation enOperation, int iErrorCode)
+        protected virtual HandleResult OnAgentError(IntPtr connId, SocketOperation enOperation, int errorCode)
         {
-            AddMsg(string.Format(" > [{0},OnAgentError] -> OP:{1},CODE:{2}", dwConnId, enOperation, iErrorCode));
+            AddMsg(string.Format(" > [{0},OnAgentError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
             // return HPSocketSdk.HandleResult.Ok;
 
             // 因为要释放附加数据,所以直接返回OnAgentClose()了
-            return OnAgentClose(dwConnId);
+            return OnAgentClose(connId);
         }
 
         /// <summary>
@@ -227,21 +243,21 @@ namespace TcpProxyServer
         /// <summary>
         /// 客户进入
         /// </summary>
-        /// <param name="dwConnId"></param>
+        /// <param name="connId"></param>
         /// <param name="pClient"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnServerAccept(IntPtr dwConnId, IntPtr pClient)
+        protected virtual HandleResult OnServerAccept(IntPtr connId, IntPtr pClient)
         {
             // 获取客户端ip和端口
             string ip = string.Empty;
             ushort port = 0;
-            if (server.GetRemoteAddress(dwConnId, ref ip, ref port))
+            if (server.GetRemoteAddress(connId, ref ip, ref port))
             {
-                AddMsg(string.Format(" > [{0},OnServerAccept] -> PASS({1}:{2})", dwConnId, ip.ToString(), port));
+                AddMsg(string.Format(" > [{0},OnServerAccept] -> PASS({1}:{2})", connId, ip.ToString(), port));
             }
             else
             {
-                AddMsg(string.Format(" > [{0},OnServerAccept] -> Server_GetClientAddress() Error", dwConnId));
+                AddMsg(string.Format(" > [{0},OnServerAccept] -> Server_GetClientAddress() Error", connId));
                 return HandleResult.Error;
             }
 
@@ -264,20 +280,20 @@ namespace TcpProxyServer
 
             // 设置附加数据
             ConnExtraData extra = new ConnExtraData();
-            extra.ConnIdForServer = dwConnId;
+            extra.ConnIdForServer = connId;
             extra.ConnIdForClient = clientConnId;
             extra.Server = server;
             extra.FreeType = 0;
-            if (server.SetConnectionExtra(dwConnId, extra) == false)
+            if (server.SetConnectionExtra(connId, extra) == false)
             {
-                AddMsg(string.Format(" > [{0},OnServerAccept] -> server.SetConnectionExtra fail", dwConnId));
+                AddMsg(string.Format(" > [{0},OnServerAccept] -> server.SetConnectionExtra fail", connId));
                 return HandleResult.Error;
             }
 
             if (agent.SetConnectionExtra(clientConnId, extra) == false)
             {
-                server.SetConnectionExtra(dwConnId, null);
-                AddMsg(string.Format(" > [{0}-{1},OnServerAccept] -> agent.SetConnectionExtra fail", dwConnId, clientConnId));
+                server.SetConnectionExtra(connId, null);
+                AddMsg(string.Format(" > [{0}-{1},OnServerAccept] -> agent.SetConnectionExtra fail", connId, clientConnId));
                 return HandleResult.Error;
             }
 
@@ -287,32 +303,31 @@ namespace TcpProxyServer
         /// <summary>
         /// 服务器发数据了
         /// </summary>
-        /// <param name="dwConnId"></param>
+        /// <param name="connId"></param>
         /// <param name="pData"></param>
-        /// <param name="iLength"></param>
+        /// <param name="length"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnServerSend(IntPtr dwConnId, IntPtr pData, int iLength)
+        protected virtual HandleResult OnServerSend(IntPtr connId, IntPtr pData, int length)
         {
-            AddMsg(string.Format(" > [Server->OnServerSend] -> ({0} bytes)", iLength));
+            AddMsg(string.Format(" > [Server->OnServerSend] -> ({0} bytes)", length));
             return HandleResult.Ok;
         }
 
         /// <summary>
         /// 数据到达了
         /// </summary>
-        /// <param name="dwConnId"></param>
+        /// <param name="connId"></param>
         /// <param name="pData"></param>
-        /// <param name="iLength"></param>
+        /// <param name="length"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnServerReceive(IntPtr dwConnId, IntPtr pData, int iLength)
+        protected virtual HandleResult OnServerReceive(IntPtr connId, IntPtr pData, int length)
         {
-
             try
             {
                 // 获取附加数据
                 IntPtr extraPtr = IntPtr.Zero;
 
-                if (server.GetConnectionExtra(dwConnId, ref extraPtr) == false)
+                if (server.GetConnectionExtra(connId, ref extraPtr) == false)
                 {
                     return HandleResult.Error;
                 }
@@ -320,10 +335,10 @@ namespace TcpProxyServer
                 // extra 就是accept里传入的附加数据了
                 ConnExtraData extra = (ConnExtraData)Marshal.PtrToStructure(extraPtr, typeof(ConnExtraData));
 
-                AddMsg(string.Format(" > [Server->OnServerReceive] -> ({0} bytes)", iLength));
+                AddMsg(string.Format(" > [Server->OnServerReceive] -> ({0} bytes)", length));
 
                 // 服务端收到数据了,应该调用agent发送到顶层服务器,实现 client(N)->server->targetServer 的中转
-                if (agent.Send(extra.ConnIdForClient, pData, iLength) == false)
+                if (agent.Send(extra.ConnIdForClient, pData, length) == false)
                 {
                     return HandleResult.Error;
                 }
@@ -341,13 +356,13 @@ namespace TcpProxyServer
         /// <summary>
         /// 客户离开了
         /// </summary>
-        /// <param name="dwConnId"></param>
+        /// <param name="connId"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnServerClose(IntPtr dwConnId)
+        protected virtual HandleResult OnServerClose(IntPtr connId)
         {
             // 获取附加数据
             IntPtr extraPtr = IntPtr.Zero;
-            if (server.GetConnectionExtra(dwConnId, ref extraPtr) == false)
+            if (server.GetConnectionExtra(connId, ref extraPtr) == false)
             {
                 return HandleResult.Error;
             }
@@ -361,26 +376,26 @@ namespace TcpProxyServer
                 agent.SetConnectionExtra(extra.ConnIdForClient, null);
             }
 
-            server.SetConnectionExtra(dwConnId, null);
+            server.SetConnectionExtra(connId, null);
 
-            AddMsg(string.Format(" > [{0},OnServerClose]", dwConnId));
+            AddMsg(string.Format(" > [{0},OnServerClose]", connId));
             return HandleResult.Ok;
         }
 
         /// <summary>
         /// 出错了
         /// </summary>
-        /// <param name="dwConnId"></param>
+        /// <param name="connId"></param>
         /// <param name="enOperation"></param>
-        /// <param name="iErrorCode"></param>
+        /// <param name="errorCode"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnServerError(IntPtr dwConnId, SocketOperation enOperation, int iErrorCode)
+        protected virtual HandleResult OnServerError(IntPtr connId, SocketOperation enOperation, int errorCode)
         {
-            AddMsg(string.Format(" > [{0},OnServerError] -> OP:{1},CODE:{2}", dwConnId, enOperation, iErrorCode));
+            AddMsg(string.Format(" > [{0},OnServerError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
             // return HPSocketSdk.HandleResult.Ok;
 
             // 因为要释放附加数据,所以直接返回OnServerClose()了
-            return OnServerClose(dwConnId);
+            return OnServerClose(connId);
         }
 
         /// <summary>
