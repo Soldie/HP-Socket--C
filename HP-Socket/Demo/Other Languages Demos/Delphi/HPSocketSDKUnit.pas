@@ -3,7 +3,7 @@ unit HPSocketSDKUnit;
 interface
 
 uses
-    Winapi.Windows;
+    Windows;
 
 const
   HPSocketDLL = 'HPSocket4C_UD.dll';
@@ -11,6 +11,7 @@ const
 type
 {$Z4}
   SOCKET = Pointer;
+  PVOID = Pointer;
 
   WSABUF = packed record
     len: ULONG; { the length of the buffer }

@@ -47,6 +47,7 @@ var
     appState: EnAppState;
     pClient: Pointer;
     pListener: Pointer;
+    FConnId : DWORD;
 
 implementation
 
@@ -128,11 +129,12 @@ begin
     dwConnID := HP_Client_GetConnectionID(pClient);
     if SendString(edtMsg.Text) then
     begin
-        AddMsg(Format('$ (%d) Send OK --> %s', [dwConnID, edtMsg.Text]));
+        FConnId := HP_Client_GetConnectionID(pClient);
+        AddMsg(Format('$ (%d) Send OK --> %s', [FConnId, edtMsg.Text]));
     end
     else
     begin
-        AddMsg(Format('$ (%d) Send Fail --> %s', [dwConnID, edtMsg.Text]));
+        AddMsg(Format('$ (%d) Send Fail --> %s', [FConnId, edtMsg.Text]));
     end;
 end;
 
@@ -165,7 +167,7 @@ end;
 
 function OnSend(dwConnID: DWORD; const pData: Pointer; iLength: Integer): En_HP_HandleResult; stdcall;
 begin
-    Form1.AddMsg(Format(' > [%d,OnSend] -> (%d bytes)', [dwConnID, iLength]));
+    Form1.AddMsg(Format(' > [%d,OnSend] -> (%d bytes)', [FConnId, iLength]));
     Result := HP_HR_OK;
 end;
 
@@ -175,7 +177,7 @@ var
 
     doRec : TDoClientRec;
 begin
-    Form1.AddMsg(Format(' > [%d,OnReceive] -> (%d bytes)', [dwConnID, iLength]));
+    Form1.AddMsg(Format(' > [%d,OnReceive] -> (%d bytes)', [FConnId, iLength]));
 
     {// 以下是一个pData转字符串的演示
     SetLength(testString, iLength);
@@ -192,7 +194,7 @@ end;
 function OnCloseConn(dwConnID: DWORD): En_HP_HandleResult; stdcall;
 begin
 
-    Form1.AddMsg(Format(' > [%d,OnCloseConn]', [dwConnID]));
+    Form1.AddMsg(Format(' > [%d,OnCloseConn]', [FConnId]));
 
     Form1.SetAppState(ST_STOPED);
     Result := HP_HR_OK;
@@ -201,7 +203,7 @@ end;
 function OnError(dwConnID: DWORD; enOperation: En_HP_SocketOperation; iErrorCode: Integer): En_HP_HandleResult; stdcall;
 begin
 
-    Form1.AddMsg(Format('> [%d,OnError] -> OP:%d,CODE:%d', [dwConnID, Integer(enOperation), iErrorCode]));
+    Form1.AddMsg(Format('> [%d,OnError] -> OP:%d,CODE:%d', [FConnId, Integer(enOperation), iErrorCode]));
 
     Form1.SetAppState(ST_STOPED);
     Result := HP_HR_OK;
