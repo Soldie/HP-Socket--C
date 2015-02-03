@@ -874,16 +874,33 @@ namespace HPSocketCS
 
 
         ///////////////////////////////////////////////////////////////////////////////////////
+        HPSocketCS.SDK.HPSocketSdk.OnPrepareListen _OnPrepareListen = null;
+        HPSocketCS.SDK.HPSocketSdk.OnAccept _OnAccept = null;
+        HPSocketCS.SDK.HPSocketSdk.OnReceive _OnReceive = null;
+        HPSocketCS.SDK.HPSocketSdk.OnSend _OnSend = null;
+        HPSocketCS.SDK.HPSocketSdk.OnClose _OnClose = null;
+        HPSocketCS.SDK.HPSocketSdk.OnError _OnError = null;
+        HPSocketCS.SDK.HPSocketSdk.OnShutdown _OnShutdown = null;
+
         protected virtual void SetCallback()
         {
-            HPSocketSdk.HP_Set_FN_Server_OnPrepareListen(pListener, SDK_OnPrepareListen);
-            HPSocketSdk.HP_Set_FN_Server_OnAccept(pListener, SDK_OnAccept);
-            HPSocketSdk.HP_Set_FN_Server_OnSend(pListener, SDK_OnSend);
-            HPSocketSdk.HP_Set_FN_Server_OnReceive(pListener, SDK_OnReceive);
-            HPSocketSdk.HP_Set_FN_Server_OnClose(pListener, SDK_OnClose);
-            HPSocketSdk.HP_Set_FN_Server_OnError(pListener, SDK_OnError);
-            HPSocketSdk.HP_Set_FN_Server_OnShutdown(pListener, SDK_OnShutdown);
+            _OnPrepareListen = new HPSocketSdk.OnPrepareListen(SDK_OnPrepareListen);
+            _OnAccept = new HPSocketSdk.OnAccept(SDK_OnAccept);
+            _OnSend = new HPSocketSdk.OnSend(SDK_OnSend);
+            _OnReceive = new HPSocketSdk.OnReceive(SDK_OnReceive);
+            _OnClose = new HPSocketSdk.OnClose(SDK_OnClose);
+            _OnError = new HPSocketSdk.OnError(SDK_OnError);
+            _OnShutdown = new HPSocketSdk.OnShutdown(SDK_OnShutdown);
+
+            HPSocketSdk.HP_Set_FN_Server_OnPrepareListen(pListener, _OnPrepareListen);
+            HPSocketSdk.HP_Set_FN_Server_OnAccept(pListener, _OnAccept);
+            HPSocketSdk.HP_Set_FN_Server_OnSend(pListener, _OnSend);
+            HPSocketSdk.HP_Set_FN_Server_OnReceive(pListener, _OnReceive);
+            HPSocketSdk.HP_Set_FN_Server_OnClose(pListener, _OnClose);
+            HPSocketSdk.HP_Set_FN_Server_OnError(pListener, _OnError);
+            HPSocketSdk.HP_Set_FN_Server_OnShutdown(pListener, _OnShutdown);
         }
+
 
         protected HandleResult SDK_OnPrepareListen(IntPtr soListen)
         {

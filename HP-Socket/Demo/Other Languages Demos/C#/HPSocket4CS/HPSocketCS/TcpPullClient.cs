@@ -84,12 +84,16 @@ namespace HPSocketCS
             return HPSocketSdk.HP_TcpPullClient_Peek(pClient, pBuffer, size);
         }
 
+        
+        HPSocketCS.SDK.HPSocketSdk.OnPullReceive _OnReceive = null;
+
         /// <summary>
         /// 设置回调函数
         /// </summary>
         protected  override void SetCallback()
         {
-            HPSocketSdk.HP_Set_FN_Client_OnPullReceive(pListener, SDK_OnReceive);
+            _OnReceive = new HPSocketSdk.OnPullReceive(SDK_OnReceive);
+            HPSocketSdk.HP_Set_FN_Client_OnPullReceive(pListener, _OnReceive);
             base.SetCallback();
         }
 

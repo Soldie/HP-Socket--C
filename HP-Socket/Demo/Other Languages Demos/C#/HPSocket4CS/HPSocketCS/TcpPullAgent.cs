@@ -79,6 +79,8 @@ namespace HPSocketCS
             return HPSocketSdk.HP_TcpPullAgent_Peek(pAgent, connId, pBuffer, size);
         }
 
+        HPSocketCS.SDK.HPSocketSdk.OnPullReceive _OnReceive = null;
+
         /// <summary>
         /// 设置回调函数
         /// </summary>
@@ -91,8 +93,10 @@ namespace HPSocketCS
         /// <param name="agentShutdown"></param>
         protected override void SetCallback()
         {
+            _OnReceive = new HPSocketSdk.OnPullReceive(SDK_OnReceive);
+
             // 设置 Socket 监听器回调函数
-            HPSocketSdk.HP_Set_FN_Agent_OnPullReceive(pListener, SDK_OnReceive);
+            HPSocketSdk.HP_Set_FN_Agent_OnPullReceive(pListener, _OnReceive);
             base.SetCallback();
         }
 

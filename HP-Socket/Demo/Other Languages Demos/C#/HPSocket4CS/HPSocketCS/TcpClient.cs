@@ -597,21 +597,32 @@ namespace HPSocketCS
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////
-
+        HPSocketCS.SDK.HPSocketSdk.OnPrepareConnect _OnPrepareConnect = null;
+        HPSocketCS.SDK.HPSocketSdk.OnConnect _OnConnect = null;
+        HPSocketCS.SDK.HPSocketSdk.OnReceive _OnReceive = null;
+        HPSocketCS.SDK.HPSocketSdk.OnSend _OnSend = null;
+        HPSocketCS.SDK.HPSocketSdk.OnClose _OnClose = null;
+        HPSocketCS.SDK.HPSocketSdk.OnError _OnError = null;
         /// <summary>
         /// 设置回调函数
         /// </summary>
         protected virtual void SetCallback()
         {
             // 设置 Socket 监听器回调函数
-            HPSocketSdk.HP_Set_FN_Client_OnPrepareConnect(pListener, SDK_OnPrepareConnect);
-            HPSocketSdk.HP_Set_FN_Client_OnConnect(pListener, SDK_OnConnect);
-            HPSocketSdk.HP_Set_FN_Client_OnSend(pListener, SDK_OnSend);
-            HPSocketSdk.HP_Set_FN_Client_OnReceive(pListener, SDK_OnReceive);
-            HPSocketSdk.HP_Set_FN_Client_OnClose(pListener, SDK_OnClose);
-            HPSocketSdk.HP_Set_FN_Client_OnError(pListener, SDK_OnError);
-        }
+            _OnPrepareConnect = new HPSocketSdk.OnPrepareConnect(SDK_OnPrepareConnect);
+            _OnConnect = new HPSocketSdk.OnConnect(SDK_OnConnect);
+            _OnSend = new HPSocketSdk.OnSend(SDK_OnSend);
+            _OnReceive = new HPSocketSdk.OnReceive(SDK_OnReceive);
+            _OnClose = new HPSocketSdk.OnClose(SDK_OnClose);
+            _OnError = new HPSocketSdk.OnError(SDK_OnError);
 
+            HPSocketSdk.HP_Set_FN_Client_OnPrepareConnect(pListener, _OnPrepareConnect);
+            HPSocketSdk.HP_Set_FN_Client_OnConnect(pListener, _OnConnect);
+            HPSocketSdk.HP_Set_FN_Client_OnSend(pListener, _OnSend);
+            HPSocketSdk.HP_Set_FN_Client_OnReceive(pListener, _OnReceive);
+            HPSocketSdk.HP_Set_FN_Client_OnClose(pListener, _OnClose);
+            HPSocketSdk.HP_Set_FN_Client_OnError(pListener, _OnError);
+        }
 
         protected HandleResult SDK_OnPrepareConnect(IntPtr pClient, uint socket)
         {

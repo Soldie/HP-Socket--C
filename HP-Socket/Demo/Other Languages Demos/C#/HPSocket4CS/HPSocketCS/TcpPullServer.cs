@@ -54,9 +54,12 @@ namespace HPSocketCS
             return true;
         }
 
+        HPSocketCS.SDK.HPSocketSdk.OnPullReceive _OnReceive = null;
+
         protected override void SetCallback()
         {
-            HPSocketSdk.HP_Set_FN_Server_OnPullReceive(pListener, SDK_OnReceive);
+            _OnReceive = new HPSocketSdk.OnPullReceive(SDK_OnReceive);
+            HPSocketSdk.HP_Set_FN_Server_OnPullReceive(pListener, _OnReceive);
             base.SetCallback();
         }
 
