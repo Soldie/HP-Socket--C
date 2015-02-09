@@ -3,7 +3,7 @@ unit HPSocketSDKUnit;
 interface
 
 uses
-    Winapi.Windows;
+    Windows;
 
 const
   HPSocketDLL = 'HPSocket4C_UD.dll';
@@ -11,6 +11,7 @@ const
 type
 {$Z4}
   SOCKET = Pointer;
+  PVOID = Pointer;
 
   WSABUF = packed record
     len: ULONG; { the length of the buffer }
@@ -499,7 +500,7 @@ function HP_Server_GetPendingDataLength(pServer: HP_Server; dwConnID: HP_CONNID;
 function HP_Server_GetConnectionCount(pServer: HP_Server): LongInt; stdcall;
   external HPSocketDLL;
 { /* 获取所有连接的 CONNID */ }
-function Server_GetAllConnectionIDs(pServer: HP_Server; pIDs: HP_CONNIDArray;
+function HP_Server_GetAllConnectionIDs(pServer: HP_Server; pIDs: HP_CONNIDArray;
   pdwCount: PLongint): BOOL; stdcall; external HPSocketDLL;
 { /* 获取某个客户端连接时长（毫秒） */ }
 function HP_Server_GetConnectPeriod(pServer: HP_Server; dwConnID: HP_CONNID;
