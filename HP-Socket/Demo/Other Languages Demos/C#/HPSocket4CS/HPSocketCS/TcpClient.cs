@@ -408,16 +408,17 @@ namespace HPSocketCS
             return HPSocketSdk.HP_Client_GetPendingDataLength(pClient, ref length);
         }
 
+
         /// <summary>
         /// 设置连接的附加数据
         /// </summary>
         /// <param name="connId"></param>
         /// <param name="obj">如果为null,则为释放设置的数据</param>
         /// <returns></returns>
-        public void SetExtra(IntPtr client, object obj)
+        public void SetExtra(object obj)
         {
             // 释放附加数据
-            IntPtr ptr = HPSocketSdk.HP_Client_GetExtra(client);
+            IntPtr ptr = GetExtra();
             if (ptr != IntPtr.Zero)
             {
                 Marshal.FreeHGlobal(ptr);
@@ -441,9 +442,9 @@ namespace HPSocketCS
         /// <param name="connId"></param>
         /// <param name="ptr"></param>
         /// <returns></returns>
-        public IntPtr GetExtra(IntPtr client)
+        public IntPtr GetExtra()
         {
-            return HPSocketSdk.HP_Client_GetExtra(client);
+            return HPSocketSdk.HP_Client_GetExtra(pClient);
         }
 
         /// <summary>
