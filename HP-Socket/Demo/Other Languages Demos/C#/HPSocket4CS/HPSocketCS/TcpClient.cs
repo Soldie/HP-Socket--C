@@ -16,8 +16,7 @@ namespace HPSocketCS
         public delegate HandleResult OnConnectEventHandler(TcpClient sender);
         public delegate HandleResult OnSendEventHandler(TcpClient sender, IntPtr pData, int length);
         public delegate HandleResult OnReceiveEventHandler(TcpClient sender, IntPtr pData, int length);
-        public delegate HandleResult OnCloseEventHandler(TcpClient sender);
-        public delegate HandleResult OnErrorEventHandler(TcpClient sender, SocketOperation enOperation, int errorCode);
+        public delegate HandleResult OnCloseEventHandler(TcpClient sender, SocketOperation enOperation, int errorCode);
     }
 
     public class TcpClient
@@ -61,10 +60,6 @@ namespace HPSocketCS
         /// 连接关闭事件
         /// </summary>
         public event TcpClientEvent.OnCloseEventHandler OnClose;
-        /// <summary>
-        /// 连接发生错误事件
-        /// </summary>
-        public event TcpClientEvent.OnErrorEventHandler OnError;
 
         public TcpClient()
         {
@@ -79,7 +74,6 @@ namespace HPSocketCS
         /// <summary>
         /// 创建socket监听&服务组件
         /// </summary>
-        /// <param name="isUseDefaultCallback">是否使用tcpserver类默认回调函数</param>
         /// <returns></returns>
         protected virtual bool CreateListener()
         {
@@ -603,7 +597,6 @@ namespace HPSocketCS
         HPSocketCS.SDK.HPSocketSdk.OnReceive _OnReceive = null;
         HPSocketCS.SDK.HPSocketSdk.OnSend _OnSend = null;
         HPSocketCS.SDK.HPSocketSdk.OnClose _OnClose = null;
-        HPSocketCS.SDK.HPSocketSdk.OnError _OnError = null;
         /// <summary>
         /// 设置回调函数
         /// </summary>
@@ -615,14 +608,12 @@ namespace HPSocketCS
             _OnSend = new HPSocketSdk.OnSend(SDK_OnSend);
             _OnReceive = new HPSocketSdk.OnReceive(SDK_OnReceive);
             _OnClose = new HPSocketSdk.OnClose(SDK_OnClose);
-            _OnError = new HPSocketSdk.OnError(SDK_OnError);
 
             HPSocketSdk.HP_Set_FN_Client_OnPrepareConnect(pListener, _OnPrepareConnect);
             HPSocketSdk.HP_Set_FN_Client_OnConnect(pListener, _OnConnect);
             HPSocketSdk.HP_Set_FN_Client_OnSend(pListener, _OnSend);
             HPSocketSdk.HP_Set_FN_Client_OnReceive(pListener, _OnReceive);
             HPSocketSdk.HP_Set_FN_Client_OnClose(pListener, _OnClose);
-            HPSocketSdk.HP_Set_FN_Client_OnError(pListener, _OnError);
         }
 
         protected HandleResult SDK_OnPrepareConnect(IntPtr pClient, uint socket)
@@ -661,20 +652,11 @@ namespace HPSocketCS
             return HandleResult.Ignore;
         }
 
-        protected HandleResult SDK_OnClose(IntPtr pClient)
+         protected HandleResult SDK_OnClose(IntPtr pClient, SocketOperation enOperation, int errorCode)
         {
             if (OnClose != null)
             {
-                return OnClose(this);
-            }
-            return HandleResult.Ignore;
-        }
-
-        protected HandleResult SDK_OnError(IntPtr pClient, SocketOperation enOperation, int errorCode)
-        {
-            if (OnError != null)
-            {
-                return OnError(this, enOperation, errorCode);
+                return OnClose(this, enOperation, errorCode);
             }
             return HandleResult.Ignore;
         }

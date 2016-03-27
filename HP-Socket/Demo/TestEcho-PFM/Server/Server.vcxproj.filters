@@ -60,6 +60,9 @@
     <ClInclude Include="..\..\..\Src\SocketInterface.h">
       <Filter>HPSocket</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Common\Src\SysHelper.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Server.cpp">
@@ -75,6 +78,9 @@
       <Filter>Global</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Common\Src\WaitFor.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Common\Src\SysHelper.cpp">
       <Filter>Common</Filter>
     </ClCompile>
   </ItemGroup>

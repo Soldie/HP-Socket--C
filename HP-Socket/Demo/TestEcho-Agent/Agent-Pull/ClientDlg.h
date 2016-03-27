@@ -42,8 +42,7 @@ public:
 private:
 	virtual EnHandleResult OnSend(CONNID dwConnID, const BYTE* pData, int iLength);
 	virtual EnHandleResult OnReceive(CONNID dwConnID, int iLength);
-	virtual EnHandleResult OnClose(CONNID dwConnID);
-	virtual EnHandleResult OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode);
+	virtual EnHandleResult OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode);
 	virtual EnHandleResult OnConnect(CONNID dwConnID);
 	virtual EnHandleResult OnShutdown();
 private:

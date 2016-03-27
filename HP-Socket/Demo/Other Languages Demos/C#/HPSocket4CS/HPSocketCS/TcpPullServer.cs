@@ -28,7 +28,6 @@ namespace HPSocketCS
         /// <summary>
         /// 创建socket监听&服务组件
         /// </summary>
-        /// <param name="isUseDefaultCallback">是否使用tcppullserver类默认回调函数</param>
         /// <returns></returns>
         protected override bool CreateListener()
         {

@@ -43,8 +43,7 @@ private:
 	virtual EnHandleResult OnPrepareConnect(CONNID dwConnID, SOCKET socket);
 	virtual EnHandleResult OnSend(CONNID dwConnID, const BYTE* pData, int iLength);
 	virtual EnHandleResult OnReceive(CONNID dwConnID, const BYTE* pData, int iLength);
-	virtual EnHandleResult OnClose(CONNID dwConnID);
-	virtual EnHandleResult OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode);
+	virtual EnHandleResult OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode);
 	virtual EnHandleResult OnConnect(CONNID dwConnID);
 	virtual EnHandleResult OnShutdown();
 private:
@@ -56,7 +55,6 @@ private:
 	CComboBox m_ThreadCount;
 	CComboBox m_DataLen;
 	CComboBox m_SendPolicy;
-	CComboBox m_RecvPolicy;
 	CListBox m_Info;
 	CEdit m_Address;
 	CEdit m_Port;

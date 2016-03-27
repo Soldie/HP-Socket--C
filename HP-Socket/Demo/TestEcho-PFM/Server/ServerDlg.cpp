@@ -7,6 +7,7 @@
 #include "ServerDlg.h"
 #include "afxdialogex.h"
 #include "../../../../Common/Src/WaitFor.h"
+#include "../../../../Common/Src/SysHelper.h"
 
 #ifdef _WIN64
 	#ifdef _DEBUG
@@ -42,7 +43,7 @@ void CServerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STOP, m_Stop);
 	DDX_Control(pDX, IDC_PORT, m_Port);
 	DDX_Control(pDX, IDC_SEND_POLICY, m_SendPolicy);
-	DDX_Control(pDX, IDC_RECV_POLICY, m_RecvPolicy);
+	DDX_Control(pDX, IDC_THREAD_COUNT, m_ThreadCount);
 }
 
 BEGIN_MESSAGE_MAP(CServerDlg, CDialogEx)
@@ -72,7 +73,7 @@ BOOL CServerDlg::OnInitDialog()
 	CString strTitle;
 	CString strOriginTitle;
 	m_SendPolicy.SetCurSel(0);
-	m_RecvPolicy.SetCurSel(0);
+	m_ThreadCount.SetCurSel(0);
 	m_Port.SetWindowText(DEFAULT_PORT);
 
 	::SetMainWnd(this);
@@ -159,7 +160,7 @@ void CServerDlg::SetAppState(EnAppState state)
 	m_Stop.EnableWindow(m_enState == ST_STARTED);
 	m_Port.EnableWindow(m_enState == ST_STOPPED);
 	m_SendPolicy.EnableWindow(m_enState == ST_STOPPED);
-	m_RecvPolicy.EnableWindow(m_enState == ST_STOPPED);
+	m_ThreadCount.EnableWindow(m_enState == ST_STOPPED);
 }
 
 void CServerDlg::OnBnClickedStart()
@@ -176,11 +177,25 @@ void CServerDlg::OnBnClickedStart()
 	}
 
 	EnSendPolicy enSendPolicy = (EnSendPolicy)m_SendPolicy.GetCurSel();
-	EnRecvPolicy enRecvPolicy = (EnRecvPolicy)m_RecvPolicy.GetCurSel();
+
+	CString strThreadCount;
+	m_ThreadCount.GetWindowText(strThreadCount);
+	int iThreadCount = _ttoi(strThreadCount);
+
+	if(iThreadCount == 0)
+		iThreadCount = min((::SysGetNumberOfProcessors() * 2 + 2), 500);
+	else if(iThreadCount < 0 || iThreadCount > 500)
+	{
+		m_ThreadCount.SetFocus();
+		return;
+	}
 
 	SetAppState(ST_STARTING);
 
 	Reset();
+
+	m_Server->SetSendPolicy(enSendPolicy);
+	m_Server->SetWorkerThreadCount(iThreadCount);
 
 	//m_Server->SetFreeSocketObjPool(500);
 	//m_Server->SetFreeSocketObjHold(1500);
@@ -189,8 +204,6 @@ void CServerDlg::OnBnClickedStart()
 	//m_Server->SetSocketListenQueue(2000);
 	//m_Server->SetAcceptSocketCount(2000);
 
-	m_Server->SetSendPolicy(enSendPolicy);
-	m_Server->SetRecvPolicy(enRecvPolicy);
 
 	if(m_Server->Start(DEFAULT_ADDRESS, usPort))
 	{
@@ -290,17 +303,11 @@ EnHandleResult CServerDlg::OnReceive(CONNID dwConnID, const BYTE* pData, int iLe
 		return HR_ERROR;
 }
 
-EnHandleResult CServerDlg::OnClose(CONNID dwConnID)
+EnHandleResult CServerDlg::OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
-	::PostOnClose(dwConnID);
-	Statistics();
-
-	return HR_OK;
-}
-
-EnHandleResult CServerDlg::OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
-{
+	iErrorCode == SE_OK ? ::PostOnClose(dwConnID)	:
 	::PostOnError(dwConnID, enOperation, iErrorCode);
+
 	Statistics();
 
 	return HR_OK;

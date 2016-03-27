@@ -303,17 +303,11 @@ EnHandleResult CClientDlg::OnReceive(CONNID dwConnID, int iLength)
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnClose(CONNID dwConnID)
+EnHandleResult CClientDlg::OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
-	::PostOnClose(dwConnID);
-	SetAppState(ST_STARTED);
-
-	return HR_OK;
-}
-
-EnHandleResult CClientDlg::OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
-{
+	iErrorCode == SE_OK ? ::PostOnClose(dwConnID)	:
 	::PostOnError(dwConnID, enOperation, iErrorCode);
+
 	SetAppState(ST_STARTED);
 
 	return HR_OK;

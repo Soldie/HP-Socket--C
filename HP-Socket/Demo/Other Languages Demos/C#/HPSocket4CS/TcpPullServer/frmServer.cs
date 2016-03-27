@@ -53,7 +53,6 @@ namespace TcpPullServer
                 server.OnSend += new TcpServerEvent.OnSendEventHandler(OnSend);
                 server.OnReceive += new TcpPullServerEvent.OnReceiveEventHandler(OnReceive);
                 server.OnClose += new TcpServerEvent.OnCloseEventHandler(OnClose);
-                server.OnError += new TcpServerEvent.OnErrorEventHandler(OnError);
                 server.OnShutdown += new TcpServerEvent.OnShutdownEventHandler(OnShutdown);
 
                 SetAppState(AppState.Stoped);
@@ -279,10 +278,15 @@ namespace TcpPullServer
             return HandleResult.Ok;
         }
 
-        HandleResult OnClose(IntPtr connId)
+        HandleResult OnClose(IntPtr connId, SocketOperation enOperation, int errorCode)
         {
-            // 客户离开了
-
+            if(errorCode == 0)
+                // 客户离开了
+                AddMsg(string.Format(" > [{0},OnClose]", connId));
+            else
+                // 客户出错了
+                AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
+            // return HPSocketSdk.HandleResult.Ok;
 
             // 释放附加数据
             if (server.SetConnectionExtra(connId, null) == false)
@@ -290,20 +294,7 @@ namespace TcpPullServer
                 AddMsg(string.Format(" > [{0},OnClose] -> SetConnectionExtra({0}, null) fail", connId));
             }
 
-
-            AddMsg(string.Format(" > [{0},OnClose]", connId));
             return HandleResult.Ok;
-        }
-
-        HandleResult OnError(IntPtr connId, SocketOperation enOperation, int errorCode)
-        {
-            // 客户出错了
-
-            AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
-            // return HPSocketSdk.HandleResult.Ok;
-
-            // 因为要释放附加数据,所以直接返回OnClose()了
-            return OnClose(connId);
         }
 
         HandleResult OnShutdown()

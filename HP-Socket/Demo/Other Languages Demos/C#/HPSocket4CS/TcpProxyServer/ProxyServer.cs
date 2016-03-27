@@ -48,7 +48,6 @@ namespace TcpProxyServer
             server.OnSend += new TcpServerEvent.OnSendEventHandler(OnServerSend);
             server.OnReceive += new TcpServerEvent.OnReceiveEventHandler(OnServerReceive);
             server.OnClose += new TcpServerEvent.OnCloseEventHandler(OnServerClose);
-            server.OnError += new TcpServerEvent.OnErrorEventHandler(OnServerError);
             server.OnShutdown += new TcpServerEvent.OnShutdownEventHandler(OnServerShutdown);
 
 
@@ -58,7 +57,6 @@ namespace TcpProxyServer
             agent.OnSend += new TcpAgentEvent.OnSendEventHandler(OnAgentSend);
             agent.OnReceive += new TcpAgentEvent.OnReceiveEventHandler(OnAgentReceive);
             agent.OnClose += new TcpAgentEvent.OnCloseEventHandler(OnAgentClose);
-            agent.OnError += new TcpAgentEvent.OnErrorEventHandler(OnAgentError);
             agent.OnShutdown += new TcpAgentEvent.OnShutdownEventHandler(OnAgentShutdown);
 
         }
@@ -170,13 +168,19 @@ namespace TcpProxyServer
         }
 
         /// <summary>
-        /// 连接关闭了
+        /// 出错了
         /// </summary>
         /// <param name="connId"></param>
+        /// <param name="enOperation"></param>
+        /// <param name="errorCode"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnAgentClose(IntPtr connId)
+        protected virtual HandleResult OnAgentClose(IntPtr connId, SocketOperation enOperation, int errorCode)
         {
-            AddMsg(string.Format(" > [{0},OnAgentClose]", connId));
+            if(errorCode == 0)
+                AddMsg(string.Format(" > [{0},OnAgentClose]", connId));
+            else
+                AddMsg(string.Format(" > [{0},OnAgentError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
+            // return HPSocketSdk.HandleResult.Ok;
 
             // 获取附加数据
             IntPtr extraPtr = IntPtr.Zero;
@@ -198,24 +202,7 @@ namespace TcpProxyServer
                 extra.Server.Disconnect(extra.ConnIdForServer);
             }
 
-
             return HandleResult.Ok;
-        }
-
-        /// <summary>
-        /// 出错了
-        /// </summary>
-        /// <param name="connId"></param>
-        /// <param name="enOperation"></param>
-        /// <param name="errorCode"></param>
-        /// <returns></returns>
-        protected virtual HandleResult OnAgentError(IntPtr connId, SocketOperation enOperation, int errorCode)
-        {
-            AddMsg(string.Format(" > [{0},OnAgentError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
-            // return HPSocketSdk.HandleResult.Ok;
-
-            // 因为要释放附加数据,所以直接返回OnAgentClose()了
-            return OnAgentClose(connId);
         }
 
         /// <summary>
@@ -354,12 +341,20 @@ namespace TcpProxyServer
         }
 
         /// <summary>
-        /// 客户离开了
+        /// 出错了
         /// </summary>
         /// <param name="connId"></param>
+        /// <param name="enOperation"></param>
+        /// <param name="errorCode"></param>
         /// <returns></returns>
-        protected virtual HandleResult OnServerClose(IntPtr connId)
+        protected virtual HandleResult OnServerClose(IntPtr connId, SocketOperation enOperation, int errorCode)
         {
+            if (errorCode == 0)
+                AddMsg(string.Format(" > [{0},OnServerClose]", connId));
+            else
+                AddMsg(string.Format(" > [{0},OnServerError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
+            // return HPSocketSdk.HandleResult.Ok;
+
             // 获取附加数据
             IntPtr extraPtr = IntPtr.Zero;
             if (server.GetConnectionExtra(connId, ref extraPtr) == false)
@@ -378,24 +373,7 @@ namespace TcpProxyServer
 
             server.SetConnectionExtra(connId, null);
 
-            AddMsg(string.Format(" > [{0},OnServerClose]", connId));
             return HandleResult.Ok;
-        }
-
-        /// <summary>
-        /// 出错了
-        /// </summary>
-        /// <param name="connId"></param>
-        /// <param name="enOperation"></param>
-        /// <param name="errorCode"></param>
-        /// <returns></returns>
-        protected virtual HandleResult OnServerError(IntPtr connId, SocketOperation enOperation, int errorCode)
-        {
-            AddMsg(string.Format(" > [{0},OnServerError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
-            // return HPSocketSdk.HandleResult.Ok;
-
-            // 因为要释放附加数据,所以直接返回OnServerClose()了
-            return OnServerClose(connId);
         }
 
         /// <summary>

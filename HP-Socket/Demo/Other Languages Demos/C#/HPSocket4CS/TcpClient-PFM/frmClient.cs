@@ -138,7 +138,6 @@ namespace TcpClient_PFM
                     client.OnSend += new TcpClientEvent.OnSendEventHandler(OnSend);
                     client.OnReceive += new TcpClientEvent.OnReceiveEventHandler(OnReceive);
                     client.OnClose += new TcpClientEvent.OnCloseEventHandler(OnClose);
-                    client.OnError += new TcpClientEvent.OnErrorEventHandler(OnError);
 
                     if (client.Connetion(address, port) == true)
                     {
@@ -286,15 +285,9 @@ namespace TcpClient_PFM
             return HandleResult.Ok;
         }
 
-        HandleResult OnClose(TcpClient sender)
+        HandleResult OnClose(TcpClient sender, SocketOperation enOperation, int errorCode)
         {
             // 连接关闭了
-            return HandleResult.Ok;
-        }
-
-        HandleResult OnError(TcpClient sender, SocketOperation enOperation, int errorCode)
-        {
-            // 出错了
             return HandleResult.Ok;
         }
 

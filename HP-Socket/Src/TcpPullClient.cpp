@@ -1,7 +1,7 @@
 /*
  * Copyright: JessMA Open Source (ldcsaa@gmail.com)
  *
- * Version	: 3.3.2
+ * Version	: 3.4.1
  * Author	: Bruce Liang
  * Website	: http://www.jessma.org
  * Project	: https://github.com/ldcsaa
@@ -24,39 +24,28 @@
  
 #include "stdafx.h"
 #include "TcpPullClient.h"
+#include "MiscHelper.h"
 
 EnHandleResult CTcpPullClient::FireReceive(IClient* pClient, const BYTE* pData, int iLength)
 {
 	m_lsBuffer.Cat(pData, iLength);
-	m_iTotalLength += iLength;
 
-	return __super::FireReceive(pClient, m_iTotalLength);
+	return __super::FireReceive(pClient, m_lsBuffer.Length());
 }
 
 EnFetchResult CTcpPullClient::Fetch(BYTE* pData, int iLength)
 {
-	ASSERT(pData != nullptr && iLength > 0);
-
-	if(m_iTotalLength >= iLength)
-	{
-		m_lsBuffer.Fetch(pData, iLength);
-		m_iTotalLength -= iLength;
-
-		return FR_OK;
-	}
-
-	return FR_LENGTH_TOO_LONG;
+	return ::FetchBuffer(&m_lsBuffer, pData, iLength);;
 }
 
 EnFetchResult CTcpPullClient::Peek(BYTE* pData, int iLength)
 {
-	ASSERT(pData != nullptr && iLength > 0);
+	return ::PeekBuffer(&m_lsBuffer, pData, iLength);
+}
 
-	if(m_iTotalLength >= iLength)
-	{
-		m_lsBuffer.Peek(pData, iLength);
-		return FR_OK;
-	}
+void CTcpPullClient::Reset(BOOL bAll)
+{
+	m_lsBuffer.Clear();
 
-	return FR_LENGTH_TOO_LONG;
+	return __super::Reset(bAll);
 }

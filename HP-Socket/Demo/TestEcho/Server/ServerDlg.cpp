@@ -251,15 +251,11 @@ EnHandleResult CServerDlg::OnReceive(CONNID dwConnID, const BYTE* pData, int iLe
 		return HR_ERROR;
 }
 
-EnHandleResult CServerDlg::OnClose(CONNID dwConnID)
+EnHandleResult CServerDlg::OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
-	::PostOnClose(dwConnID);
-	return HR_OK;
-}
-
-EnHandleResult CServerDlg::OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
-{
+	iErrorCode == SE_OK ? ::PostOnClose(dwConnID)	:
 	::PostOnError(dwConnID, enOperation, iErrorCode);
+
 	return HR_OK;
 }
 

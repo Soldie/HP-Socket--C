@@ -58,7 +58,6 @@ namespace TcpServer_PFM
                 server.OnSend += new TcpServerEvent.OnSendEventHandler(OnSend);
                 server.OnReceive += new TcpServerEvent.OnReceiveEventHandler(OnReceive);
                 server.OnClose += new TcpServerEvent.OnCloseEventHandler(OnClose);
-                server.OnError += new TcpServerEvent.OnErrorEventHandler(OnError);
                 server.OnShutdown += new TcpServerEvent.OnShutdownEventHandler(OnShutdown);
 
                 SetAppState(AppState.Stoped);
@@ -254,22 +253,13 @@ namespace TcpServer_PFM
 
         }
 
-        HandleResult OnClose(IntPtr connId)
+        HandleResult OnClose(IntPtr connId, SocketOperation enOperation, int errorCode)
         {
-            // 客户离开了
+            if(errorCode == 0)
+                AddMsg(string.Format(" > [{0},OnClose]", connId));
+            else
+                AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
 
-			AddMsg(string.Format(" > [{0},OnClose]", connId));
-			Calculate();
-
-            return HandleResult.Ok;
-        }
-
-
-        HandleResult OnError(IntPtr connId, SocketOperation enOperation, int errorCode)
-        {
-            // 客户出错了
-
-            AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
 			Calculate();
 
 			return HandleResult.Ok;

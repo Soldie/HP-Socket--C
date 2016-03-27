@@ -36,29 +36,28 @@ protected:
 	afx_msg LRESULT CServerDlg::OnUserInfoMsg(WPARAM wp, LPARAM lp);
 	afx_msg int OnVKeyToItem(UINT nKey, CListBox* pListBox, UINT nIndex);
 	afx_msg void OnBnClickedDisconnect();
-	afx_msg void OnEnChangeConnId();
+	afx_msg void OnEnChangeHP_CONNID();
 	DECLARE_MESSAGE_MAP()
 public:
 	void SetAppState(EnAppState state);
 private:
 	static En_HP_HandleResult __stdcall OnPrepareListen(SOCKET soListen);
-	static En_HP_HandleResult __stdcall OnAccept(CONNID dwConnID, SOCKET soClient);
-	static En_HP_HandleResult __stdcall OnSend(CONNID dwConnID, const BYTE* pData, int iLength);
-	static En_HP_HandleResult __stdcall OnReceive(CONNID dwConnID, int iLength);
-	static En_HP_HandleResult __stdcall OnClose(CONNID dwConnID);
-	static En_HP_HandleResult __stdcall OnError(CONNID dwConnID, En_HP_SocketOperation enOperation, int iErrorCode);
+	static En_HP_HandleResult __stdcall OnAccept(HP_CONNID dwHP_CONNID, SOCKET soClient);
+	static En_HP_HandleResult __stdcall OnSend(HP_CONNID dwHP_CONNID, const BYTE* pData, int iLength);
+	static En_HP_HandleResult __stdcall OnReceive(HP_CONNID dwHP_CONNID, int iLength);
+	static En_HP_HandleResult __stdcall OnClose(HP_CONNID dwHP_CONNID, En_HP_SocketOperation enOperation, int iErrorCode);
 	static En_HP_HandleResult __stdcall OnShutdown();
 
 private:
-	TPkgInfo* FindPkgInfo(CONNID dwConnID);
-	void RemovePkgInfo(CONNID dwConnID);
+	TPkgInfo* FindPkgInfo(HP_CONNID dwHP_CONNID);
+	void RemovePkgInfo(HP_CONNID dwHP_CONNID);
 
 private:
 	CListBox m_Info;
 	CButton m_Start;
 	CButton m_Stop;
 	CEdit m_Address;
-	CEdit m_ConnID;
+	CEdit m_HP_CONNID;
 	CButton m_DisConn;
 
 private:

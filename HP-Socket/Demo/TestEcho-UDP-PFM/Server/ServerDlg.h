@@ -46,8 +46,7 @@ private:
 	virtual EnHandleResult OnPrepareListen(SOCKET soListen);
 	virtual EnHandleResult OnSend(CONNID dwConnID, const BYTE* pData, int iLength);
 	virtual EnHandleResult OnReceive(CONNID dwConnID, const BYTE* pData, int iLength);
-	virtual EnHandleResult OnClose(CONNID dwConnID);
-	virtual EnHandleResult OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode);
+	virtual EnHandleResult OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode);
 	virtual EnHandleResult OnAccept(CONNID dwConnID, const SOCKADDR_IN* pSockAddr);
 	virtual EnHandleResult OnShutdown();
 
@@ -55,7 +54,6 @@ private:
 	CListBox m_Info;
 	CEdit m_Port;
 	CComboBox m_SendPolicy;
-	CComboBox m_RecvPolicy;
 	CComboBox m_RecvCount;
 	CButton m_Start;
 	CButton m_Stop;

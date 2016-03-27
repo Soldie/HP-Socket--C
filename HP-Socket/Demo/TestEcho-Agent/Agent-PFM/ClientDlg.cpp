@@ -51,7 +51,6 @@ void CClientDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_DATA_LEN, m_DataLen);
 	DDX_Control(pDX, IDC_TEST_TIMES_INTERV, m_TestInterv);
 	DDX_Control(pDX, IDC_SEND_POLICY, m_SendPolicy);
-	DDX_Control(pDX, IDC_RECV_POLICY, m_RecvPolicy);
 }
 
 BEGIN_MESSAGE_MAP(CClientDlg, CDialogEx)
@@ -84,7 +83,6 @@ BOOL CClientDlg::OnInitDialog()
 	m_ThreadCount.SetCurSel(0);
 	m_DataLen.SetCurSel(5);
 	m_SendPolicy.SetCurSel(0);
-	m_RecvPolicy.SetCurSel(0);
 	m_Address.SetWindowText(DEFAULT_ADDRESS);
 	m_Port.SetWindowText(DEFAULT_PORT);
 
@@ -170,7 +168,6 @@ void CClientDlg::SetAppState(EnAppState state)
 	m_ThreadCount.EnableWindow(m_enState == ST_STOPPED);
 	m_DataLen.EnableWindow(m_enState == ST_STOPPED);
 	m_SendPolicy.EnableWindow(m_enState == ST_STOPPED);
-	m_RecvPolicy.EnableWindow(m_enState == ST_STOPPED);
 }
 
 BOOL CClientDlg::CheckParams()
@@ -246,7 +243,6 @@ void CClientDlg::OnBnClickedStart()
 	m_iDataLen		= _ttoi(strDataLen);
 
 	EnSendPolicy enSendPolicy = (EnSendPolicy)m_SendPolicy.GetCurSel();
-	EnRecvPolicy enRecvPolicy = (EnRecvPolicy)m_RecvPolicy.GetCurSel();
 
 	if(!CheckParams())
 		return;
@@ -267,7 +263,6 @@ void CClientDlg::OnBnClickedStart()
 
 	m_Agent.SetWorkerThreadCount(m_iThreadCount);
 	m_Agent.SetSendPolicy(enSendPolicy);
-	m_Agent.SetRecvPolicy(enRecvPolicy);
 
 	if(m_Agent.Start(LOCAL_ADDRESS, FALSE))
 	{
@@ -438,17 +433,16 @@ EnHandleResult CClientDlg::OnReceive(CONNID dwConnID, const BYTE* pData, int iLe
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnClose(CONNID dwConnID)
+EnHandleResult CClientDlg::OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
-	::PostOnClose(dwConnID);
-	return HR_OK;
-}
+	if(iErrorCode == SE_OK)
+		::PostOnClose(dwConnID);
+	else
+	{
+		m_hasError = TRUE;
+		::PostOnError(dwConnID, enOperation, iErrorCode);
+	}
 
-EnHandleResult CClientDlg::OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
-{
-	m_hasError = TRUE;
-
-	::PostOnError(dwConnID, enOperation, iErrorCode);
 	return HR_OK;
 }
 

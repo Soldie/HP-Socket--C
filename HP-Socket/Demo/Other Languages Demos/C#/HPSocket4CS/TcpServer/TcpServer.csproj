@@ -8,7 +8,7 @@
     <ProjectGuid>{9A3339BC-37F0-4D03-9ACE-51CC4CF75277}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TcpServer_PFM</RootNamespace>
+    <RootNamespace>TcpServer</RootNamespace>
     <AssemblyName>TcpServer</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>

@@ -288,16 +288,12 @@ EnHandleResult CClientDlg::OnReceive(IClient* pClient, int iLength)
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnClose(IClient* pClient)
+EnHandleResult CClientDlg::OnClose(IClient* pClient, EnSocketOperation enOperation, int iErrorCode)
 {
-	::PostOnClose(pClient->GetConnectionID());
-	SetAppState(ST_STOPPED);
-	return HR_OK;
-}
+	iErrorCode == SE_OK ? ::PostOnClose(pClient->GetConnectionID())		:
+	::PostOnError(pClient->GetConnectionID(), enOperation, iErrorCode)	;
 
-EnHandleResult CClientDlg::OnError(IClient* pClient, EnSocketOperation enOperation, int iErrorCode)
-{
-	::PostOnError(pClient->GetConnectionID(), enOperation, iErrorCode);
 	SetAppState(ST_STOPPED);
+
 	return HR_OK;
 }

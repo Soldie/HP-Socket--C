@@ -53,7 +53,6 @@ namespace TcpPullClientNS
                 client.OnSend += new TcpClientEvent.OnSendEventHandler(OnSend);
                 client.OnReceive += new TcpPullClientEvent.OnReceiveEventHandler(OnReceive);
                 client.OnClose += new TcpClientEvent.OnCloseEventHandler(OnClose);
-                client.OnError += new TcpClientEvent.OnErrorEventHandler(OnError);
                 
                 SetAppState(AppState.Stoped);
             }
@@ -265,22 +264,14 @@ namespace TcpPullClientNS
             return HandleResult.Ok;
         }
 
-        HandleResult OnClose(TcpClient sender)
+        HandleResult OnClose(TcpClient sender, SocketOperation enOperation, int errorCode)
         {
-            // 连接关闭了
-
-            AddMsg(string.Format(" > [{0},OnClose]", sender.ConnectionId));
-
-            // 通知界面
-            this.Invoke(new SetAppStateDelegate(SetAppState), AppState.Stoped);
-            return HandleResult.Ok;
-        }
-
-        HandleResult OnError(TcpClient sender, SocketOperation enOperation, int errorCode)
-        {
-            // 出错了
-
-            AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", sender.ConnectionId, enOperation, errorCode));
+            if(errorCode == 0)
+                // 连接关闭了
+                AddMsg(string.Format(" > [{0},OnClose]", sender.ConnectionId));
+            else
+                // 出错了
+                AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", sender.ConnectionId, enOperation, errorCode));
 
             // 通知界面,只处理了连接错误,也没进行是不是连接错误的判断,所以有错误就会设置界面
             // 生产环境请自己控制

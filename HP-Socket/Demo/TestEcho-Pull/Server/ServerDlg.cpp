@@ -286,17 +286,11 @@ EnHandleResult CServerDlg::OnReceive(CONNID dwConnID, int iLength)
 	return HR_OK;
 }
 
-EnHandleResult CServerDlg::OnClose(CONNID dwConnID)
+EnHandleResult CServerDlg::OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
-	::PostOnClose(dwConnID);
-	RemovePkgInfo(dwConnID);
-
-	return HR_OK;
-}
-
-EnHandleResult CServerDlg::OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
-{
+	iErrorCode == SE_OK ? ::PostOnClose(dwConnID)	:
 	::PostOnError(dwConnID, enOperation, iErrorCode);
+
 	RemovePkgInfo(dwConnID);
 
 	return HR_OK;

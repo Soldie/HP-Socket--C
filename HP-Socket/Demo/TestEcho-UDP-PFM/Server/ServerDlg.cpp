@@ -43,7 +43,6 @@ void CServerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATISTICS, m_Statistics);
 	DDX_Control(pDX, IDC_PORT, m_Port);
 	DDX_Control(pDX, IDC_SEND_POLICY, m_SendPolicy);
-	DDX_Control(pDX, IDC_RECV_POLICY, m_RecvPolicy);
 	DDX_Control(pDX, IDC_RECV_COUNT, m_RecvCount);
 }
 
@@ -73,7 +72,6 @@ BOOL CServerDlg::OnInitDialog()
 	// TODO: Add extra initialization here
 
 	m_SendPolicy.SetCurSel(0);
-	m_RecvPolicy.SetCurSel(0);
 	m_RecvCount.SetCurSel(4);
 	m_Port.SetWindowText(DEFAULT_PORT);
 
@@ -162,7 +160,6 @@ void CServerDlg::SetAppState(EnAppState state)
 	m_Statistics.EnableWindow(m_enState == ST_STARTED);
 	m_Port.EnableWindow(m_enState == ST_STOPPED);
 	m_SendPolicy.EnableWindow(m_enState == ST_STOPPED);
-	m_RecvPolicy.EnableWindow(m_enState == ST_STOPPED);
 	m_RecvCount.EnableWindow(m_enState == ST_STOPPED);
 }
 
@@ -191,7 +188,6 @@ void CServerDlg::OnBnClickedStart()
 	}
 
 	EnSendPolicy enSendPolicy = (EnSendPolicy)m_SendPolicy.GetCurSel();
-	EnRecvPolicy enRecvPolicy = (EnRecvPolicy)m_RecvPolicy.GetCurSel();
 
 	SetAppState(ST_STARTING);
 
@@ -205,7 +201,6 @@ void CServerDlg::OnBnClickedStart()
 	//m_Server->SetDetectAttempts(0);
 
 	m_Server->SetSendPolicy(enSendPolicy);
-	m_Server->SetRecvPolicy(enRecvPolicy);
 	m_Server->SetPostReceiveCount(dwRecvCount);
 
 	if(m_Server->Start(DEFAULT_ADDRESS, usPort))
@@ -312,17 +307,11 @@ EnHandleResult CServerDlg::OnReceive(CONNID dwConnID, const BYTE* pData, int iLe
 		return HR_ERROR;
 }
 
-EnHandleResult CServerDlg::OnClose(CONNID dwConnID)
+EnHandleResult CServerDlg::OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
-	::PostOnClose(dwConnID);
-	Statistics();
-
-	return HR_OK;
-}
-
-EnHandleResult CServerDlg::OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
-{
+	iErrorCode == SE_OK ? ::PostOnClose(dwConnID)	:
 	::PostOnError(dwConnID, enOperation, iErrorCode);
+
 	Statistics();
 
 	return HR_OK;

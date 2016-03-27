@@ -42,6 +42,7 @@ namespace HPSocketCS
         Connnect = 2,   // Connnect
         Send = 3,       // Send
         Receive = 4,    // Receive
+        Close = 5,    // Receive
     };
 
     /// <summary>
@@ -163,26 +164,11 @@ namespace HPSocketCS
         /// <summary>
         /// 安全模式
         /// </summary>
-        Safe = 1, 
+        Safe = 1,
         /// <summary>
         /// 直接模式
         /// </summary>
         Direct = 2,
-    };
-
-    /// <summary>
-    /// 接收策略
-    /// </summary>
-    public enum RecvPolicy
-    {
-        /// <summary>
-        /// 串行模式（默认）
-        /// </summary>
-        Serial = 0,
-        /// <summary>
-        /// 并行模式
-        /// </summary>
-        Parallel = 1,
     };
 
     /****************************************************/
@@ -230,11 +216,11 @@ namespace HPSocketCS.SDK
         /// <summary>
         /// HPSocket的文件路径
         /// </summary>
-//#if DEBUG
-//      private const string SOCKET_DLL_PATH = "HPSocket4C_UD.dll";
-//#else
+#if DEBUG
+        private const string SOCKET_DLL_PATH = "HPSocket4C_UD.dll";
+#else
         private const string SOCKET_DLL_PATH = "HPSocket4C_U.dll";
-//#endif
+#endif
         /*****************************************************************************************************/
         /******************************************** 公共类、接口 ********************************************/
         /*****************************************************************************************************/
@@ -247,8 +233,7 @@ namespace HPSocketCS.SDK
         public delegate HandleResult OnSend(IntPtr connId, IntPtr pData, int length);
         public delegate HandleResult OnReceive(IntPtr connId, IntPtr pData, int length);
         public delegate HandleResult OnPullReceive(IntPtr connId, int length);
-        public delegate HandleResult OnClose(IntPtr connId);
-        public delegate HandleResult OnError(IntPtr connId, SocketOperation enOperation, int errorCode);
+        public delegate HandleResult OnClose(IntPtr connId, SocketOperation enOperation, int errorCode);
 
         /* Agent & Server */
         public delegate HandleResult OnShutdown();
@@ -311,6 +296,30 @@ namespace HPSocketCS.SDK
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
         public static extern IntPtr Create_HP_TcpPullAgent(IntPtr pListener);
+
+        /// <summary>
+        /// 创建 HP_TcpPackServer 对象
+        /// </summary>
+        /// <param name="pListener"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern IntPtr Create_HP_TcpPackServer(IntPtr pListener);
+
+        /// <summary>
+        /// 创建 HP_TcpPackAgent 对象
+        /// </summary>
+        /// <param name="pListener"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern IntPtr Create_HP_TcpPackAgent(IntPtr pListener);
+
+        /// <summary>
+        /// 创建 HP_TcpPackAgent 对象
+        /// </summary>
+        /// <param name="pListener"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern IntPtr Create_HP_TcpPackClient(IntPtr pListener);
 
         /// <summary>
         /// 创建 UdpServer 对象
@@ -533,8 +542,6 @@ namespace HPSocketCS.SDK
         [DllImport(SOCKET_DLL_PATH)]
         public static extern void HP_Set_FN_Server_OnClose(IntPtr pListener, OnClose fn);
         [DllImport(SOCKET_DLL_PATH)]
-        public static extern void HP_Set_FN_Server_OnError(IntPtr pListener, OnError fn);
-        [DllImport(SOCKET_DLL_PATH)]
         public static extern void HP_Set_FN_Server_OnShutdown(IntPtr pListener, OnShutdown fn);
 
         /**********************************************************************************/
@@ -552,8 +559,6 @@ namespace HPSocketCS.SDK
         public static extern void HP_Set_FN_Client_OnPullReceive(IntPtr pListener, OnPullReceive fn);
         [DllImport(SOCKET_DLL_PATH)]
         public static extern void HP_Set_FN_Client_OnClose(IntPtr pListener, OnClose fn);
-        [DllImport(SOCKET_DLL_PATH)]
-        public static extern void HP_Set_FN_Client_OnError(IntPtr pListener, OnError fn);
 
         /**********************************************************************************/
         /****************************** Agent 回调函数设置方法 *****************************/
@@ -570,8 +575,6 @@ namespace HPSocketCS.SDK
         public static extern void HP_Set_FN_Agent_OnPullReceive(IntPtr pListener, OnPullReceive fn);
         [DllImport(SOCKET_DLL_PATH)]
         public static extern void HP_Set_FN_Agent_OnClose(IntPtr pListener, OnClose fn);
-        [DllImport(SOCKET_DLL_PATH)]
-        public static extern void HP_Set_FN_Agent_OnError(IntPtr pListener, OnError fn);
         [DllImport(SOCKET_DLL_PATH)]
         public static extern void HP_Set_FN_Agent_OnShutdown(IntPtr pListener, OnShutdown fn);
 
@@ -707,20 +710,6 @@ namespace HPSocketCS.SDK
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
         public static extern SendPolicy HP_Server_GetSendPolicy(IntPtr pServer);
-
-        /// <summary>
-        /// 设置数据接受策略
-        /// </summary>
-        /// <param name="pServer"></param>
-        /// <param name="enSendPolicy"></param>
-        [DllImport(SOCKET_DLL_PATH)]
-        public static extern void HP_Server_SetRecvPolicy(IntPtr pServer, RecvPolicy enSendPolicy);
-
-        /// <summary>
-        /// 获取数据接收策略
-        /// </summary>
-        [DllImport(SOCKET_DLL_PATH)]
-        public static extern RecvPolicy HP_Server_GetRecvPolicy(IntPtr pServer);
 
         /// <summary>
         /// 设置连接的附加数据
@@ -898,14 +887,6 @@ namespace HPSocketCS.SDK
         public static extern void HP_Server_SetWorkerThreadCount(IntPtr pServer, uint dwWorkerThreadCount);
 
         /// <summary>
-        /// 设置关闭服务前等待连接关闭的最长时限（毫秒，0 则不等待）
-        /// </summary>
-        /// <param name="pServer"></param>
-        /// <param name="dwMaxShutdownWaitTime"></param>
-        [DllImport(SOCKET_DLL_PATH)]
-        public static extern void HP_Server_SetMaxShutdownWaitTime(IntPtr pServer, uint dwMaxShutdownWaitTime);
-
-        /// <summary>
         /// 设置是否标记静默时间（设置为 TRUE 时 DisconnectSilenceConnections() 和 GetSilencePeriod() 才有效，默认：FALSE）
         /// </summary>
         /// <param name="pServer"></param>
@@ -960,14 +941,6 @@ namespace HPSocketCS.SDK
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
         public static extern uint HP_Server_GetWorkerThreadCount(IntPtr pServer);
-
-        /// <summary>
-        /// 获取关闭服务前等待连接关闭的最长时限
-        /// </summary>
-        /// <param name="pServer"></param>
-        /// <returns></returns>
-        [DllImport(SOCKET_DLL_PATH)]
-        public static extern uint HP_Server_GetMaxShutdownWaitTime(IntPtr pServer);
 
         /// <summary>
         /// 检测是否标记静默时间
@@ -1618,23 +1591,6 @@ namespace HPSocketCS.SDK
         public static extern SendPolicy HP_Agent_GetSendPolicy(IntPtr pAgent);
 
         /// <summary>
-        /// 获取数据接收策略
-        /// </summary>
-        /// <param name="pAgent"></param>
-        /// <returns></returns>
-        [DllImport(SOCKET_DLL_PATH)]
-        public static extern RecvPolicy HP_Agent_GetRecvPolicy(IntPtr pAgent);
-
-        /// <summary>
-        /// 设置数据接收策略
-        /// </summary>
-        /// <param name="pAgent"></param>
-        /// <param name="enRecvPolicy"></param>
-        [DllImport(SOCKET_DLL_PATH)]
-        public static extern void HP_Agent_SetRecvPolicy(IntPtr pAgent, RecvPolicy enRecvPolicy);
-
-
-        /// <summary>
         /// 设置连接的附加数据
         /// 是否为连接绑定附加数据或者绑定什么样的数据，均由应用程序只身决定
         /// </summary>
@@ -1808,14 +1764,6 @@ namespace HPSocketCS.SDK
         public static extern void HP_Agent_SetWorkerThreadCount(IntPtr pAgent, uint dwWorkerThreadCount);
 
         /// <summary>
-        /// 设置关闭组件前等待连接关闭的最长时限（毫秒，0 则不等待）
-        /// </summary>
-        /// <param name="pAgent"></param>
-        /// <param name="dwMaxShutdownWaitTime"></param>
-        [DllImport(SOCKET_DLL_PATH)]
-        public static extern void HP_Agent_SetMaxShutdownWaitTime(IntPtr pAgent, uint dwMaxShutdownWaitTime);
-
-        /// <summary>
         /// 设置是否标记静默时间（设置为 TRUE 时 DisconnectSilenceConnections() 和 GetSilencePeriod() 才有效，默认：FALSE）
         /// </summary>
         /// <param name="pServer"></param>
@@ -1870,14 +1818,6 @@ namespace HPSocketCS.SDK
         /// <returns></returns>
         [DllImport(SOCKET_DLL_PATH)]
         public static extern uint HP_Agent_GetWorkerThreadCount(IntPtr pAgent);
-
-        /// <summary>
-        /// 获取关闭组件前等待连接关闭的最长时限
-        /// </summary>
-        /// <param name="pAgent"></param>
-        /// <returns></returns>
-        [DllImport(SOCKET_DLL_PATH)]
-        public static extern uint HP_Agent_GetMaxShutdownWaitTime(IntPtr pAgent);
 
         /// <summary>
         /// 检测是否标记静默时间
@@ -2044,6 +1984,118 @@ namespace HPSocketCS.SDK
         /***************************************************************************************/
         /***************************** TCP Pull Agent 属性访问方法 *****************************/
 
+        /***************************************************************************************/
+
+        /***************************************************************************************/
+        /***************************** TCP Pack Server 组件操作方法 *****************************/
+
+        /***************************************************************************************/
+        /***************************** TCP Pack Server 属性访问方法 *****************************/
+
+        /// <summary>
+        /// 设置数据包最大长度（有效数据包最大长度不能超过 524287/0x7FFFF 字节，默认：262144/0x40000）
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="dwMaxPackSize">有效数据包最大长度不能超过 524287/0x7FFFF 字节，默认：262144/0x40000</param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void HP_TcpPackServer_SetMaxPackSize(IntPtr pServer, uint dwMaxPackSize);
+
+        /// <summary>
+        /// 设置包头标识（有效包头标识取值范围 0 ~ 8191/0x1FFF，当包头标识为 0 时不校验包头，默认：0）
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="usPackHeaderFlag">有效包头标识取值范围 0 ~ 8191/0x1FFF，当包头标识为 0 时不校验包头，默认：0</param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void HP_TcpPackServer_SetPackHeaderFlag(IntPtr pServer, ushort usPackHeaderFlag);
+
+        /// <summary>
+        /// 获取数据包最大长度
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern uint HP_TcpPackServer_GetMaxPackSize(IntPtr pServer);
+
+        /// <summary>
+        /// 获取包头标识
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern ushort HP_TcpPackServer_GetPackHeaderFlag(IntPtr pServer);
+        /***************************************************************************************/
+        /***************************** TCP Pack Agent 组件操作方法 *****************************/
+
+        /***************************************************************************************/
+        /***************************** TCP Pack Agent 属性访问方法 *****************************/
+
+        /// <summary>
+        /// 设置数据包最大长度（有效数据包最大长度不能超过 524287/0x7FFFF 字节，默认：262144/0x40000）
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="dwMaxPackSize">有效数据包最大长度不能超过 524287/0x7FFFF 字节，默认：262144/0x40000</param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void HP_TcpPackAgent_SetMaxPackSize(IntPtr pAgent, uint dwMaxPackSize);
+
+        /// <summary>
+        /// 设置包头标识（有效包头标识取值范围 0 ~ 8191/0x1FFF，当包头标识为 0 时不校验包头，默认：0）
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="usPackHeaderFlag">有效包头标识取值范围 0 ~ 8191/0x1FFF，当包头标识为 0 时不校验包头，默认：0</param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void HP_TcpPackAgent_SetPackHeaderFlag(IntPtr pAgent, ushort usPackHeaderFlag);
+
+        /// <summary>
+        /// 获取数据包最大长度
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern uint HP_TcpPackAgent_GetMaxPackSize(IntPtr pAgent);
+
+        /// <summary>
+        /// 获取包头标识
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern ushort HP_TcpPackAgent_GetPackHeaderFlag(IntPtr pAgent);
+        /***************************************************************************************/
+        /***************************** TCP Pack Client 组件操作方法 *****************************/
+
+        /***************************************************************************************/
+        /***************************** TCP Pack Client 属性访问方法 *****************************/
+        /// <summary>
+        /// 设置数据包最大长度（有效数据包最大长度不能超过 524287/0x7FFFF 字节，默认：262144/0x40000）
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="dwMaxPackSize">有效数据包最大长度不能超过 524287/0x7FFFF 字节，默认：262144/0x40000</param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void HP_TcpPackClient_SetMaxPackSize(IntPtr pClient, uint dwMaxPackSize);
+
+        /// <summary>
+        /// 设置包头标识（有效包头标识取值范围 0 ~ 8191/0x1FFF，当包头标识为 0 时不校验包头，默认：0）
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <param name="usPackHeaderFlag">有效包头标识取值范围 0 ~ 8191/0x1FFF，当包头标识为 0 时不校验包头，默认：0</param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void HP_TcpPackClient_SetPackHeaderFlag(IntPtr pClient, ushort usPackHeaderFlag);
+
+        /// <summary>
+        /// 获取数据包最大长度
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern uint HP_TcpPackClient_GetMaxPackSize(IntPtr pClient);
+
+        /// <summary>
+        /// 获取包头标识
+        /// </summary>
+        /// <param name="pServer"></param>
+        /// <returns></returns>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern ushort HP_TcpPackClient_GetPackHeaderFlag(IntPtr pClient);
         /***************************************************************************************/
         /*************************************** 其它方法 ***************************************/
 

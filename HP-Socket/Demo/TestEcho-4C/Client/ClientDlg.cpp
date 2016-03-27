@@ -32,7 +32,6 @@ CClientDlg::CClientDlg(CWnd* pParent /*=NULL*/)
 	::HP_Set_FN_Client_OnSend(m_pListener, OnSend);
 	::HP_Set_FN_Client_OnPullReceive(m_pListener, OnReceive);
 	::HP_Set_FN_Client_OnClose(m_pListener, OnClose);
-	::HP_Set_FN_Client_OnError(m_pListener, OnError);
 }
 
 CClientDlg::~CClientDlg()
@@ -288,16 +287,12 @@ En_HP_HandleResult CClientDlg::OnReceive(HP_Client pClient, int iLength)
 	return HP_HR_OK;
 }
 
-En_HP_HandleResult CClientDlg::OnClose(HP_Client pClient)
+En_HP_HandleResult CClientDlg::OnClose(HP_Client pClient, En_HP_SocketOperation enOperation, int iErrorCode)
 {
-	::PostOnClose(::HP_Client_GetConnectionID(pClient));
-	m_spThis->SetAppState(ST_STOPPED);
-	return HP_HR_OK;
-}
-
-En_HP_HandleResult CClientDlg::OnError(HP_Client pClient, En_HP_SocketOperation enOperation, int iErrorCode)
-{
+	iErrorCode == HP_SE_OK ? ::PostOnClose(::HP_Client_GetConnectionID(pClient)):
 	::PostOnError(::HP_Client_GetConnectionID(pClient), enOperation, iErrorCode);
+
 	m_spThis->SetAppState(ST_STOPPED);
+
 	return HP_HR_OK;
 }

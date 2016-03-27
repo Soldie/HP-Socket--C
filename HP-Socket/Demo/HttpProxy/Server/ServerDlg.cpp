@@ -217,8 +217,6 @@ void CServerDlg::OnBnClickedStart()
 
 	m_Server->SetSendPolicy(SP_DIRECT);
 	m_Agent->SetSendPolicy(SP_DIRECT);
-	m_Server->SetRecvPolicy(RP_PARALLEL);
-	m_Agent->SetRecvPolicy(RP_PARALLEL);
 
 	if(m_Server->Start(DEFAULT_ADDRESS, usPort))
 	{
@@ -346,18 +344,15 @@ EnHandleResult CTcpServerListenerImpl::OnReceive(CONNID dwConnID, const BYTE* pD
 	return rs;
 }
 
-EnHandleResult CTcpServerListenerImpl::OnClose(CONNID dwConnID)
+EnHandleResult CTcpServerListenerImpl::OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
-	//if(m_pDlg->m_bLog) ::PostOnClose(dwConnID);
-
-	DetachConnInfo(dwConnID);
-
-	return HR_OK;
-}
-
-EnHandleResult CTcpServerListenerImpl::OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
-{
-	//if(m_pDlg->m_bLog) ::PostOnError(dwConnID, enOperation, iErrorCode);
+	/*
+	if(m_pDlg->m_bLog)
+	{
+		iErrorCode == SE_OK ? ::PostOnClose(dwConnID)	:
+		::PostOnError(dwConnID, enOperation, iErrorCode);
+	}
+	*/
 
 	DetachConnInfo(dwConnID);
 
@@ -589,18 +584,13 @@ EnHandleResult CTcpAgentListenerImpl::OnReceive(CONNID dwConnID, const BYTE* pDa
 	return HR_OK;
 }
 
-EnHandleResult CTcpAgentListenerImpl::OnClose(CONNID dwConnID)
+EnHandleResult CTcpAgentListenerImpl::OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
-	if(m_pDlg->m_bLog) ::PostOnClose(dwConnID);
-
-	DetachConnInfo(dwConnID);
-
-	return HR_OK;
-}
-
-EnHandleResult CTcpAgentListenerImpl::OnError(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
-{
-	if(m_pDlg->m_bLog) ::PostOnError(dwConnID, enOperation, iErrorCode);
+	if(m_pDlg->m_bLog)
+	{
+		iErrorCode == SE_OK ? ::PostOnClose(dwConnID)	:
+		::PostOnError(dwConnID, enOperation, iErrorCode);
+	}
 
 	DetachConnInfo(dwConnID);
 

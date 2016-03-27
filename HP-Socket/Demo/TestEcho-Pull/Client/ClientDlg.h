@@ -41,8 +41,7 @@ public:
 private:
 	virtual EnHandleResult OnSend(IClient* pClient, const BYTE* pData, int iLength);
 	virtual EnHandleResult OnReceive(IClient* pClient, int iLength);
-	virtual EnHandleResult OnClose(IClient* pClient);
-	virtual EnHandleResult OnError(IClient* pClient, EnSocketOperation enOperation, int iErrorCode);
+	virtual EnHandleResult OnClose(IClient* pClient, EnSocketOperation enOperation, int iErrorCode);
 	virtual EnHandleResult OnConnect(IClient* pClient);
 private:
 	CEdit m_Content;

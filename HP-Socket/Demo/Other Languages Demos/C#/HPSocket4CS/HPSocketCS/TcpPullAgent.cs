@@ -27,7 +27,6 @@ namespace HPSocketCS
         /// <summary>
         /// 创建socket监听&服务组件
         /// </summary>
-        /// <param name="isUseDefaultCallback">是否使用tcppullAgent类默认回调函数</param>
         /// <returns></returns>
         protected override bool CreateListener()
         {
@@ -104,7 +103,7 @@ namespace HPSocketCS
         {
             if (OnReceive != null)
             {
-                OnReceive(connId, length);
+                return OnReceive(connId, length);
             }
             return HandleResult.Ignore;
         }

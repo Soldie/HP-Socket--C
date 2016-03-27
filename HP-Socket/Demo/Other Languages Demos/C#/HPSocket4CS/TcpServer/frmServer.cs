@@ -43,13 +43,13 @@ namespace TcpServer_PFM
                 // 加个委托显示msg,因为on系列都是在工作线程中调用的,ui不允许直接操作
                 AddMsgDelegate = new ShowMsg(AddMsg);
 
+
                 // 设置服务器事件
                 server.OnPrepareListen += new TcpServerEvent.OnPrepareListenEventHandler(OnPrepareListen);
                 server.OnAccept += new TcpServerEvent.OnAcceptEventHandler(OnAccept);
                 server.OnSend += new TcpServerEvent.OnSendEventHandler(OnSend);
                 server.OnReceive += new TcpServerEvent.OnReceiveEventHandler(OnReceive);
                 server.OnClose += new TcpServerEvent.OnCloseEventHandler(OnClose);
-                server.OnError += new TcpServerEvent.OnErrorEventHandler(OnError);
                 server.OnShutdown += new TcpServerEvent.OnShutdownEventHandler(OnShutdown);
 
                 SetAppState(AppState.Stoped);
@@ -218,31 +218,19 @@ namespace TcpServer_PFM
             }
         }
 
-        HandleResult OnClose(IntPtr connId)
+        HandleResult OnClose(IntPtr connId, SocketOperation enOperation, int errorCode)
         {
-            // 客户离开了
+            if(errorCode == 0)
+                AddMsg(string.Format(" > [{0},OnClose]", connId));
+            else
+                AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
 
-
-            // 释放附加数据
             if (server.SetConnectionExtra(connId, null) == false)
             {
                 AddMsg(string.Format(" > [{0},OnClose] -> SetConnectionExtra({0}, null) fail", connId));
             }
 
-
-            AddMsg(string.Format(" > [{0},OnClose]", connId));
             return HandleResult.Ok;
-        }
-
-        HandleResult OnError(IntPtr connId, SocketOperation enOperation, int errorCode)
-        {
-            // 客户出错了
-
-            AddMsg(string.Format(" > [{0},OnError] -> OP:{1},CODE:{2}", connId, enOperation, errorCode));
-            // return HPSocketSdk.HandleResult.Ok;
-
-            // 因为要释放附加数据,所以直接返回OnClose()了
-            return OnClose(connId);
         }
 
         HandleResult OnShutdown()
