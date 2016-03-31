@@ -96,6 +96,9 @@
     <ClInclude Include="..\..\..\Src\TcpAgent.h">
       <Filter>HPSocket</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Common\Src\RingBuffer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">

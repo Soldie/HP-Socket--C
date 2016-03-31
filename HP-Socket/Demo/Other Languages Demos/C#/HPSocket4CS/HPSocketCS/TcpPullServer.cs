@@ -99,7 +99,7 @@ namespace HPSocketCS
 
 
         /// <summary>
-        /// 释放TcpPullServer和TcpPullServerListener
+        /// 终止服务并释放资源
         /// </summary>
         public override void Destroy()
         {

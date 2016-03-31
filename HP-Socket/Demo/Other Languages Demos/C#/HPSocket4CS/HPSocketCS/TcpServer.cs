@@ -118,7 +118,7 @@ namespace HPSocketCS
         }
 
         /// <summary>
-        /// 释放TcpServer和TcpServerListener
+        /// 终止服务并释放资源
         /// </summary>
         public virtual void Destroy()
         {

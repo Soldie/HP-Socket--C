@@ -387,6 +387,28 @@ namespace HPSocketCS.SDK
         public static extern void Destroy_HP_TcpPullAgent(IntPtr pAgent);
 
         /// <summary>
+        /// 销毁 HP_TcpPackServer 对象
+        /// </summary>
+        /// <param name="pServer"></param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void Destroy_HP_TcpPackServer(IntPtr pServer);
+
+        /// <summary>
+        /// 销毁 HP_TcpPackAgent 对象
+        /// </summary>
+        /// <param name="pAgent"></param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void Destroy_HP_TcpPackAgent(IntPtr pAgent);
+
+        /// <summary>
+        /// 销毁 HP_TcpPackClient 对象
+        /// </summary>
+        /// <param name="pClient"></param>
+        [DllImport(SOCKET_DLL_PATH)]
+        public static extern void Destroy_HP_TcpPackClient(IntPtr pClient);
+
+
+        /// <summary>
         /// 销毁 UdpServer 对象
         /// </summary>
         /// <param name="pServer"></param>

@@ -111,7 +111,7 @@ namespace HPSocketCS
         }
 
         /// <summary>
-        /// 释放TcpAgent和TcpAgentListener
+        /// 终止服务并释放资源
         /// </summary>
         public virtual void Destroy()
         {

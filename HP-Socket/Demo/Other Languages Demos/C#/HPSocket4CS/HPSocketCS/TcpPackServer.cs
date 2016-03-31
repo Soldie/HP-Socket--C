@@ -42,6 +42,27 @@ namespace HPSocketCS
         }
 
         /// <summary>
+        /// 终止服务并释放资源
+        /// </summary>
+        public override void Destroy()
+        {
+            Stop();
+
+            if (pServer != IntPtr.Zero)
+            {
+                HPSocketSdk.Destroy_HP_TcpPackServer(pServer);
+                pServer = IntPtr.Zero;
+            }
+            if (pListener != IntPtr.Zero)
+            {
+                HPSocketSdk.Destroy_HP_TcpServerListener(pListener);
+                pListener = IntPtr.Zero;
+            }
+
+            IsCreate = false;
+        }
+
+        /// <summary>
         /// 读取或设置数据包最大长度
         /// 有效数据包最大长度不能超过 524287/0x7FFFF 字节，默认：262144/0x40000
         /// </summary>

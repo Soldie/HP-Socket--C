@@ -13,6 +13,7 @@ namespace HPSocketCS
             CreateListener();
         }
 
+
         /// <summary>
         /// 创建socket监听&服务组件
         /// </summary>
@@ -39,6 +40,27 @@ namespace HPSocketCS
             IsCreate = true;
 
             return true;
+        }
+
+        /// <summary>
+        /// 终止服务并释放资源
+        /// </summary>
+        public override void Destroy()
+        {
+            Stop();
+
+            if (pClient != IntPtr.Zero)
+            {
+                HPSocketSdk.Destroy_HP_TcpPackClient(pClient);
+                pClient = IntPtr.Zero;
+            }
+            if (pListener != IntPtr.Zero)
+            {
+                HPSocketSdk.Destroy_HP_TcpClientListener(pListener);
+                pListener = IntPtr.Zero;
+            }
+
+            IsCreate = false;
         }
 
         /// <summary>

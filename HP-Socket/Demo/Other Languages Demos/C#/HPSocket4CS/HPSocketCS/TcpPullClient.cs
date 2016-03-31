@@ -57,6 +57,7 @@ namespace HPSocketCS
             return true;
         }
 
+
         /// <summary>
         /// 抓取数据
         /// 用户通过该方法从 Socket 组件中抓取数据
@@ -108,7 +109,7 @@ namespace HPSocketCS
         }
 
         /// <summary>
-        /// 释放TcpPullClient和TcpPullClientListener
+        /// 终止服务并释放资源
         /// </summary>
         public override void Destroy()
         {
