@@ -37,9 +37,9 @@ CServerDlg::CServerDlg(CWnd* pParent /*=NULL*/)
 CServerDlg::~CServerDlg()
 {
 	// 销毁 Socket 对象
-	::Destroy_HP_TcpPullServer(m_spThis->m_pServer);
+	::Destroy_HP_TcpPackServer(m_spThis->m_pServer);
 	// 销毁监听器对象
-	::Destroy_HP_TcpPullServerListener(m_pListener);
+	::Destroy_HP_TcpServerListener(m_pListener);
 }
 
 void CServerDlg::DoDataExchange(CDataExchange* pDX)
