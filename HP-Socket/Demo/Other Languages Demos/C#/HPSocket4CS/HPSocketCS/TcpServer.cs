@@ -374,7 +374,7 @@ namespace HPSocketCS
             byte[] tailBuffer = null;
             if (tail != null)
             {
-                StructureToByte<T1>(head);
+                tailBuffer = StructureToByte<T2>(tail);
             }
             return SendSmallFile(connId, filePath, headBuffer, tailBuffer);
         }
