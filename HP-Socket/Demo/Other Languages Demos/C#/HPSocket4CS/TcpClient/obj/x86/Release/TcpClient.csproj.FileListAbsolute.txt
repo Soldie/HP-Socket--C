@@ -1,0 +1,7 @@
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x86\Release\TcpClient.exe
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x86\Release\TcpClient.pdb
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpClient\obj\x86\Release\SSLClientNS.frmClient.resources
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpClient\obj\x86\Release\TcpClientNS.Properties.Resources.resources
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpClient\obj\x86\Release\TcpClient.csproj.GenerateResource.Cache
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpClient\obj\x86\Release\TcpClient.exe
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpClient\obj\x86\Release\TcpClient.pdb

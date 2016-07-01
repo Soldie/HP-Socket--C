@@ -1,0 +1,8 @@
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x64\Release\SSLServer.exe
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x64\Release\SSLServer.pdb
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\SSLServer\obj\x64\Release\SSLServer.csprojResolveAssemblyReference.cache
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\SSLServer\obj\x64\Release\SSLServerNS.frmServer.resources
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\SSLServer\obj\x64\Release\SSLServerNS.Properties.Resources.resources
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\SSLServer\obj\x64\Release\SSLServer.csproj.GenerateResource.Cache
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\SSLServer\obj\x64\Release\SSLServer.exe
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\SSLServer\obj\x64\Release\SSLServer.pdb

@@ -1,0 +1,7 @@
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x86\Release\TcpPortForwarding.exe
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x86\Release\TcpPortForwarding.pdb
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpPortForwarding\obj\x86\Release\TcpPortForwarding.frmTcpPortForwarding.resources
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpPortForwarding\obj\x86\Release\TcpPortForwarding.Properties.Resources.resources
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpPortForwarding\obj\x86\Release\TcpPortForwarding.csproj.GenerateResource.Cache
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpPortForwarding\obj\x86\Release\TcpPortForwarding.exe
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpPortForwarding\obj\x86\Release\TcpPortForwarding.pdb

@@ -211,11 +211,10 @@ void CClientDlg::OnBnClickedStart()
 	m_Cast.SetMultiCastLoop(bIPLoop);
 	m_Cast.SetReuseAddress(bReuseAddr);
 	m_Cast.SetMultiCastTtl(iTTL);
-	m_Cast.SetBindAdddress(strBindAddress);
 
 	::LogClientStarting(strCastAddress, usPort);
 
-	if(m_Cast.Start(strCastAddress, usPort, FALSE))
+	if(m_Cast.Start(strCastAddress, usPort, FALSE, strBindAddress))
 	{
 
 	}

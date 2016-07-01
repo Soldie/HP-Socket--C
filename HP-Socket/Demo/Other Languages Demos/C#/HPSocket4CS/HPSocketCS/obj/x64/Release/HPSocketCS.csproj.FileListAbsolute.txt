@@ -1,0 +1,5 @@
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x64\Release\HPSocketCS.dll
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x64\Release\HPSocketCS.pdb
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\HPSocketCS\obj\x64\Release\HPSocketCS.csprojResolveAssemblyReference.cache
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\HPSocketCS\obj\x64\Release\HPSocketCS.dll
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\HPSocketCS\obj\x64\Release\HPSocketCS.pdb
