@@ -1,0 +1,4 @@
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x86\Release\HPSocketCS.dll
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x86\Release\HPSocketCS.pdb
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\HPSocketCS\obj\Release\HPSocketCS.dll
+E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\HPSocketCS\obj\Release\HPSocketCS.pdb
