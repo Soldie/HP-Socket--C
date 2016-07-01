@@ -1,7 +1,0 @@
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x86\Release\TcpServer.exe
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x86\Release\TcpServer.pdb
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpServer\obj\x86\Release\SSLServerNS.frmServer.resources
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpServer\obj\x86\Release\TcpServer.Properties.Resources.resources
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpServer\obj\x86\Release\TcpServer.csproj.GenerateResource.Cache
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpServer\obj\x86\Release\TcpServer.exe
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpServer\obj\x86\Release\TcpServer.pdb

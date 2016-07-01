@@ -1,7 +1,0 @@
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x64\Release\SSLPackServer.exe
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x64\Release\SSLPackServer.pdb
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\SSLPackServer\obj\x64\Release\SSLPackServerNS.frmServer.resources
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\SSLPackServer\obj\x64\Release\SSLPackServerNS.Properties.Resources.resources
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\SSLPackServer\obj\x64\Release\SSLPackServer.csproj.GenerateResource.Cache
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\SSLPackServer\obj\x64\Release\SSLPackServer.exe
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\SSLPackServer\obj\x64\Release\SSLPackServer.pdb
