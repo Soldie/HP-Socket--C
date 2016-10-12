@@ -1,7 +1,0 @@
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x86\Release\TcpPullClient.exe
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x86\Release\TcpPullClient.pdb
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpPullClient\obj\x86\Release\TcpPullClientNS.frmClient.resources
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpPullClient\obj\x86\Release\TcpPullClientNS.Properties.Resources.resources
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpPullClient\obj\x86\Release\TcpPullClient.csproj.GenerateResource.Cache
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpPullClient\obj\x86\Release\TcpPullClient.exe
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpPullClient\obj\x86\Release\TcpPullClient.pdb
