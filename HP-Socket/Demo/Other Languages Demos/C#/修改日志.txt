@@ -1,0 +1,31 @@
+﻿2016-09-02
+
+Server/Agent各组件增加 GetConnectionExtra泛型方法, 用来直接得到指定类型的对象
+    例:  var ojb = server.GetConnectionExtra<MyClass>(connid);
+
+
+Server/Agent增加 RemoveConnectionExtra方法,用来移除附加数据并释放资源(同SetConnectionExtra(connId, null)) 
+    例:  server.RemoveConnectionExtra(connid);
+
+
+Client组件增加 GetExtra泛型方法, 用来直接得到指定类型的对象
+    例:  var ojb = client.GetExtra<MyClass>();
+
+Client组件增加 RemoveExtra方法, 用来移除附加数据并释放资源(同SetExtra(null)和client.Extra = null) 
+    例:  client.RemoveExtra();
+
+Client组件增加Extra属性,功能同GetExtra/SetExtra
+    读例:  var ojb = client.Extra as MyClass;
+    写例:  client.Extra = ojb;
+    删例:  client.Extra = null;
+
+
+Client/SSLClient组件Connetion方法改成Connect
+
+
+Server/Client/Agent组件增加接收事件类型 OnPointerDataReceiveEventHandler(IntPtr connId, IntPtr pData, int length)
+    注: 1.不想自己实现IntPtr到byte[]的转换, 可使用OnReceiveEventHandler(IntPtr connId, byte[] bytes), 其中 bytes.Length 就是封包长度
+        2.可以自己手动调整源码中的判断条件改变2个事件检测的优先级
+        3.TcpServer这个demo中有使用方法
+
+
