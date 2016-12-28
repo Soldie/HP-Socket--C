@@ -1,0 +1,13 @@
+16:57 2016/12/28
+1、解决URL编码错误问题
+2、增加几个API封装命令：
+   _HP_Compress: 普通压缩
+   _HP_Uncompress: 普通解压
+   _HP_CompressEx: 高级压缩
+   _HP_UncompressEx: 高级解压
+   _HP_GZipCompress: Gzip 压缩
+   _HP_GZipUncompress: Gzip 解压
+   GetHttpDefaultStatusCodeDesc: 获取HTTP状态码文本描述
+
+3、各个组件的send方法改为指针+长度方式，新曾SendBytes来发送字节集数据
+4、dll更换为4.1.2-rc2，直接替换，完美兼容
