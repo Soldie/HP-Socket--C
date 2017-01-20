@@ -393,7 +393,7 @@ function HP_Server_SetConnectionExtra(pServer: HP_Server; dwConnID: HP_CONNID; p
 * 返回值：	TRUE	-- 成功
 *			FALSE	-- 失败（无效的连接 ID）
 */}
-function HP_Server_GetConnectionExtra(pServer: HP_Server; dwConnID: HP_CONNID; ppExtra: Pointer):BOOL; stdcall; external HPSocketDLL;
+function HP_Server_GetConnectionExtra(pServer: HP_Server; dwConnID: HP_CONNID;var ppExtra: Pointer):BOOL; stdcall; external HPSocketDLL;
 
 //* 检查通信组件是否已启动 */
 function HP_Server_HasStarted(pServer: HP_Server):BOOL; stdcall; external HPSocketDLL;

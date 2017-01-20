@@ -9,7 +9,7 @@ type
     名称：连接 ID 数据类型
     描述：定义连接 ID 的数据类型
     ************************************************************************/ }
-  HP_CONNID = Word;
+  HP_CONNID = LongWord;
   PHP_CONNID = ^HP_CONNID;
   HP_CONNIDArray = array of HP_CONNID; { TODO : 这个数组变量用来获取所有连接id }
   
@@ -225,7 +225,11 @@ type
 名称：Name/Value 结构体
 描述：字符串名值对结构体
 ************************************************************************/}
-  TNVPair = array of array of PChar;
+  WSABUF = Record
+    name: PChar; { the length of the buffer }
+    value: PChar; { the pointer to the buffer }
+  end { WSABUF };
+  TNVPair = array of WSABUF;
   
 implementation
 

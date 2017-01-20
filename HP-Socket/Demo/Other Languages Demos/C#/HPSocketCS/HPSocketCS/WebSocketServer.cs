@@ -28,8 +28,9 @@ namespace HPSocketCS
             _OnWSMessageComplete = new HttpSdk.OnWSMessageComplete(SDK_OnWSMessageComplete);
 
             HttpSdk.HP_Set_FN_HttpServer_OnWSMessageHeader(pListener, _OnWSMessageHeader);
-            HttpSdk.HP_Set_FN_HttpServer_OnWSMessageBody(pListener, SDK_OnWSMessageBody);
-            HttpSdk.HP_Set_FN_HttpServer_OnWSMessageComplete(pListener, SDK_OnWSMessageComplete);
+            HttpSdk.HP_Set_FN_HttpServer_OnWSMessageBody(pListener, _OnWSMessageBody);
+            HttpSdk.HP_Set_FN_HttpServer_OnWSMessageComplete(pListener, _OnWSMessageComplete);
+            
         }
 
         protected virtual HandleResult SDK_OnWSMessageHeader(IntPtr pSender, IntPtr dwConnID, bool bFinal, byte iReserved, byte iOperationCode, byte[] lpszMask, ulong ullBodyLen)

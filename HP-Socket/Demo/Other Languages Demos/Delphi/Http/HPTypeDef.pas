@@ -9,7 +9,7 @@ type
     名称：连接 ID 数据类型
     描述：定义连接 ID 的数据类型
     ************************************************************************/ }
-  HP_CONNID = LongInt;
+  HP_CONNID = LongWord;
   PHP_CONNID = ^HP_CONNID;
   HP_CONNIDArray = array of HP_CONNID; { TODO : 这个数组变量用来获取所有连接id }
   
