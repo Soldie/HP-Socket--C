@@ -265,7 +265,7 @@ LRESULT CServerDlg::OnUserInfoMsg(WPARAM wp, LPARAM lp)
 	return 0;
 }
 
-EnHandleResult CTcpServerListenerImpl::OnPrepareListen(SOCKET soListen)
+EnHandleResult CTcpServerListenerImpl::OnPrepareListen(ITcpServer* pSender, SOCKET soListen)
 {
 	TCHAR szAddress[40];
 	int iAddressLen = sizeof(szAddress) / sizeof(TCHAR);
@@ -277,21 +277,21 @@ EnHandleResult CTcpServerListenerImpl::OnPrepareListen(SOCKET soListen)
 	return HR_OK;
 }
 
-EnHandleResult CTcpServerListenerImpl::OnAccept(CONNID dwConnID, SOCKET soClient)
+EnHandleResult CTcpServerListenerImpl::OnAccept(ITcpServer* pSender, CONNID dwConnID, SOCKET soClient)
 {
 	//if(m_pDlg->m_bLog) ::PostOnAccept2(dwConnID);
 
 	return HR_OK;
 }
 
-EnHandleResult CTcpServerListenerImpl::OnSend(CONNID dwConnID, const BYTE* pData, int iLength)
+EnHandleResult CTcpServerListenerImpl::OnSend(ITcpServer* pSender, CONNID dwConnID, const BYTE* pData, int iLength)
 {
 	//if(m_pDlg->m_bLog) ::PostOnSend(dwConnID, pData, iLength);
 
 	return HR_OK;
 }
 
-EnHandleResult CTcpServerListenerImpl::OnReceive(CONNID dwConnID, const BYTE* pData, int iLength)
+EnHandleResult CTcpServerListenerImpl::OnReceive(ITcpServer* pSender, CONNID dwConnID, const BYTE* pData, int iLength)
 {
 	//if(m_pDlg->m_bLog) ::PostOnReceive(dwConnID, pData, iLength);
 
@@ -344,7 +344,7 @@ EnHandleResult CTcpServerListenerImpl::OnReceive(CONNID dwConnID, const BYTE* pD
 	return rs;
 }
 
-EnHandleResult CTcpServerListenerImpl::OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
+EnHandleResult CTcpServerListenerImpl::OnClose(ITcpServer* pSender, CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
 	/*
 	if(m_pDlg->m_bLog)
@@ -359,7 +359,7 @@ EnHandleResult CTcpServerListenerImpl::OnClose(CONNID dwConnID, EnSocketOperatio
 	return HR_OK;
 }
 
-EnHandleResult CTcpServerListenerImpl::OnShutdown()
+EnHandleResult CTcpServerListenerImpl::OnShutdown(ITcpServer* pSender)
 {
 	return HR_OK;
 }
@@ -536,7 +536,7 @@ BOOL CTcpServerListenerImpl::CheckIfHttp(const BYTE* pData, int iLength)
 	return FALSE;
 }
 
-EnHandleResult CTcpAgentListenerImpl::OnConnect(CONNID dwConnID)
+EnHandleResult CTcpAgentListenerImpl::OnConnect(ITcpAgent* pSender, CONNID dwConnID)
 {
 	if(m_pDlg->m_bLog)
 	{
@@ -552,14 +552,14 @@ EnHandleResult CTcpAgentListenerImpl::OnConnect(CONNID dwConnID)
 	return HR_OK;
 }
 
-EnHandleResult CTcpAgentListenerImpl::OnSend(CONNID dwConnID, const BYTE* pData, int iLength)
+EnHandleResult CTcpAgentListenerImpl::OnSend(ITcpAgent* pSender, CONNID dwConnID, const BYTE* pData, int iLength)
 {
 	if(m_pDlg->m_bLog) ::PostOnSend(dwConnID, pData, iLength);
 
 	return HR_OK;
 }
 
-EnHandleResult CTcpAgentListenerImpl::OnReceive(CONNID dwConnID, const BYTE* pData, int iLength)
+EnHandleResult CTcpAgentListenerImpl::OnReceive(ITcpAgent* pSender, CONNID dwConnID, const BYTE* pData, int iLength)
 {
 	if(m_pDlg->m_bLog) ::PostOnReceive(dwConnID, pData, iLength);
 
@@ -584,7 +584,7 @@ EnHandleResult CTcpAgentListenerImpl::OnReceive(CONNID dwConnID, const BYTE* pDa
 	return HR_OK;
 }
 
-EnHandleResult CTcpAgentListenerImpl::OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
+EnHandleResult CTcpAgentListenerImpl::OnClose(ITcpAgent* pSender, CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
 	if(m_pDlg->m_bLog)
 	{
@@ -597,7 +597,7 @@ EnHandleResult CTcpAgentListenerImpl::OnClose(CONNID dwConnID, EnSocketOperation
 	return HR_OK;
 }
 
-EnHandleResult CTcpAgentListenerImpl::OnShutdown()
+EnHandleResult CTcpAgentListenerImpl::OnShutdown(ITcpAgent* pSender)
 {
 	::PostOnShutdown();
 

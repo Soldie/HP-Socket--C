@@ -1,7 +1,0 @@
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x86\Release\TcpClient-PFM.exe
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\bin\x86\Release\TcpClient-PFM.pdb
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpClient-PFM\obj\x86\Release\TcpClient_PFM.frmClient.resources
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpClient-PFM\obj\x86\Release\TcpClient_PFM.Properties.Resources.resources
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpClient-PFM\obj\x86\Release\TcpClient-PFM.csproj.GenerateResource.Cache
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpClient-PFM\obj\x86\Release\TcpClient-PFM.exe
-E:\MyWork\Cpp\HP-Socket\Demo\Other Languages Demos\C#\HPSocket4CS\TcpClient-PFM\obj\x86\Release\TcpClient-PFM.pdb

@@ -342,15 +342,15 @@ LRESULT CClientDlg::OnUserInfoMsg(WPARAM wp, LPARAM lp)
 	return 0;
 }
 
-EnHandleResult CClientDlg::OnPrepareConnect(IClient* pClient, SOCKET socket)
+EnHandleResult CClientDlg::OnPrepareConnect(IUdpClient* pSender, CONNID dwConnID, SOCKET socket)
 {
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnSend(IClient* pClient, const BYTE* pData, int iLength)
+EnHandleResult CClientDlg::OnSend(IUdpClient* pSender, CONNID dwConnID, const BYTE* pData, int iLength)
 {
 #ifdef _DEBUG
-	::PostOnSend(pClient->GetConnectionID(), pData, iLength);
+	::PostOnSend(dwConnID, pData, iLength);
 #endif
 
 #if (_WIN32_WINNT <= _WIN32_WINNT_WS03)
@@ -362,10 +362,10 @@ EnHandleResult CClientDlg::OnSend(IClient* pClient, const BYTE* pData, int iLeng
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnReceive(IClient* pClient, const BYTE* pData, int iLength)
+EnHandleResult CClientDlg::OnReceive(IUdpClient* pSender, CONNID dwConnID, const BYTE* pData, int iLength)
 {
 #ifdef _DEBUG
-	::PostOnReceive(pClient->GetConnectionID(), pData, iLength);
+	::PostOnReceive(dwConnID, pData, iLength);
 #endif
 
 #if (_WIN32_WINNT <= _WIN32_WINNT_WS03)
@@ -384,16 +384,16 @@ EnHandleResult CClientDlg::OnReceive(IClient* pClient, const BYTE* pData, int iL
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnClose(IClient* pClient, EnSocketOperation enOperation, int iErrorCode)
+EnHandleResult CClientDlg::OnClose(IUdpClient* pSender, CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
-	iErrorCode == SE_OK ? ::PostOnClose(pClient->GetConnectionID())		:
-	::PostOnError(pClient->GetConnectionID(), enOperation, iErrorCode)	;
+	iErrorCode == SE_OK ? ::PostOnClose(dwConnID)		:
+	::PostOnError(dwConnID, enOperation, iErrorCode)	;
 
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnConnect(IClient* pClient)
+EnHandleResult CClientDlg::OnConnect(IUdpClient* pSender, CONNID dwConnID)
 {
-	::LogOnConnect2(pClient->GetConnectionID());
+	::PostOnConnect3(dwConnID);
 	return HR_OK;
 }

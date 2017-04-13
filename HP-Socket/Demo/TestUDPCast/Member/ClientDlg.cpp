@@ -253,47 +253,47 @@ LRESULT CClientDlg::OnUserInfoMsg(WPARAM wp, LPARAM lp)
 	return 0;
 }
 
-EnHandleResult CClientDlg::OnPrepareConnect(IClient* pClient, SOCKET socket)
+EnHandleResult CClientDlg::OnPrepareConnect(IUdpCast* pSender, CONNID dwConnID, SOCKET socket)
 {
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnConnect(IClient* pClient)
+EnHandleResult CClientDlg::OnConnect(IUdpCast* pSender, CONNID dwConnID)
 {
 	TCHAR szAddress[40];
 	int iAddressLen = sizeof(szAddress) / sizeof(TCHAR);
 	USHORT usPort;
 
-	pClient->GetLocalAddress(szAddress, iAddressLen, usPort);
+	pSender->GetLocalAddress(szAddress, iAddressLen, usPort);
 
-	::PostOnConnect(pClient->GetConnectionID(), szAddress, usPort);
+	::PostOnConnect(dwConnID, szAddress, usPort);
 	SetAppState(ST_STARTED);
 
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnSend(IClient* pClient, const BYTE* pData, int iLength)
+EnHandleResult CClientDlg::OnSend(IUdpCast* pSender, CONNID dwConnID, const BYTE* pData, int iLength)
 {
-	::PostOnSend(pClient->GetConnectionID(), pData, iLength);
+	::PostOnSend(dwConnID, pData, iLength);
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnReceive(IClient* pClient, const BYTE* pData, int iLength)
+EnHandleResult CClientDlg::OnReceive(IUdpCast* pSender, CONNID dwConnID, const BYTE* pData, int iLength)
 {
 	TCHAR szAddress[40];
 	int iAddressLen = sizeof(szAddress) / sizeof(TCHAR);
 	USHORT usPort;
 
-	((IUdpCast*)pClient)->GetRemoteAddress(szAddress, iAddressLen, usPort);
+	(pSender)->GetRemoteAddress(szAddress, iAddressLen, usPort);
 
-	::PostOnReceiveCast(pClient->GetConnectionID(), szAddress, usPort, pData, iLength);
+	::PostOnReceiveCast(dwConnID, szAddress, usPort, pData, iLength);
 	return HR_OK;
 }
 
-EnHandleResult CClientDlg::OnClose(IClient* pClient, EnSocketOperation enOperation, int iErrorCode)
+EnHandleResult CClientDlg::OnClose(IUdpCast* pSender, CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
-	iErrorCode == SE_OK ? ::PostOnClose(pClient->GetConnectionID())		:
-	::PostOnError(pClient->GetConnectionID(), enOperation, iErrorCode)	;
+	iErrorCode == SE_OK ? ::PostOnClose(dwConnID)		:
+	::PostOnError(dwConnID, enOperation, iErrorCode)	;
 
 	SetAppState(ST_STOPPED);
 

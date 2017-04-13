@@ -208,25 +208,25 @@ LRESULT CServerDlg::OnUserInfoMsg(WPARAM wp, LPARAM lp)
 	return 0;
 }
 
-EnHandleResult CServerDlg::OnPrepareListen(SOCKET soListen)
+EnHandleResult CServerDlg::OnPrepareListen(IUdpServer* pSender, SOCKET soListen)
 {
 	TCHAR szAddress[40];
 	int iAddressLen = sizeof(szAddress) / sizeof(TCHAR);
 	USHORT usPort;
 
-	m_Server.GetListenAddress(szAddress, iAddressLen, usPort);
+	pSender->GetListenAddress(szAddress, iAddressLen, usPort);
 	::PostOnPrepareListen(szAddress, usPort);
 	return HR_OK;
 }
 
-EnHandleResult CServerDlg::OnAccept(CONNID dwConnID, const SOCKADDR_IN* pSockAddr)
+EnHandleResult CServerDlg::OnAccept(IUdpServer* pSender, CONNID dwConnID, UINT_PTR pSockAddr)
 {
 	BOOL bPass = TRUE;
 	TCHAR szAddress[40];
 	int iAddressLen = sizeof(szAddress) / sizeof(TCHAR);
 	USHORT usPort;
 
-	m_Server.GetRemoteAddress(dwConnID, szAddress, iAddressLen, usPort);
+	pSender->GetRemoteAddress(dwConnID, szAddress, iAddressLen, usPort);
 
 	if(!m_strAddress.IsEmpty())
 	{
@@ -239,7 +239,7 @@ EnHandleResult CServerDlg::OnAccept(CONNID dwConnID, const SOCKADDR_IN* pSockAdd
 	return bPass ? HR_OK : HR_ERROR;
 }
 
-EnHandleResult CServerDlg::OnSend(CONNID dwConnID, const BYTE* pData, int iLength)
+EnHandleResult CServerDlg::OnSend(IUdpServer* pSender, CONNID dwConnID, const BYTE* pData, int iLength)
 {
 	//static int t = 0;
 	//if(++t % 3 == 0) return HR_ERROR;
@@ -248,20 +248,20 @@ EnHandleResult CServerDlg::OnSend(CONNID dwConnID, const BYTE* pData, int iLengt
 	return HR_OK;
 }
 
-EnHandleResult CServerDlg::OnReceive(CONNID dwConnID, const BYTE* pData, int iLength)
+EnHandleResult CServerDlg::OnReceive(IUdpServer* pSender, CONNID dwConnID, const BYTE* pData, int iLength)
 {
 	//static int t = 0;
 	//if(++t % 3 == 0) return HR_ERROR;
 
 	::PostOnReceive(dwConnID, pData, iLength);
 
-	if(m_Server.Send(dwConnID, pData, iLength))
+	if(pSender->Send(dwConnID, pData, iLength))
 		return HR_OK;
 	else
 		return HR_ERROR;
 }
 
-EnHandleResult CServerDlg::OnClose(CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
+EnHandleResult CServerDlg::OnClose(IUdpServer* pSender, CONNID dwConnID, EnSocketOperation enOperation, int iErrorCode)
 {
 	iErrorCode == SE_OK ? ::PostOnClose(dwConnID)	:
 	::PostOnError(dwConnID, enOperation, iErrorCode);
@@ -269,7 +269,7 @@ EnHandleResult CServerDlg::OnClose(CONNID dwConnID, EnSocketOperation enOperatio
 	return HR_OK;
 }
 
-EnHandleResult CServerDlg::OnShutdown()
+EnHandleResult CServerDlg::OnShutdown(IUdpServer* pSender)
 {
 	::PostOnShutdown();
 	return HR_OK;
