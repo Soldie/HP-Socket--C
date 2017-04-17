@@ -1,0 +1,153 @@
+[17:40 2017/4/12]
+常规更新
+
+
+[13:43 2017/4/7]
+
+> HTTP Cookie 管理：
+-----------------
+1、新增 Cookie 管理器，可在不同连接、不同组件对象间共享 Cookie
+2、Cookie 管理器实现了标准 HTTP Cookie 功能，支持 Max-Age、expires、httpOnly、secure
+3、Cookie 管理器支持 Cookie 序列化与反序列化
+4、IHttpClient 和 IHttpAgent 组件可通过 SetUseCookie() 方法设置是否开启 Cookie 功能
+
+
+> 升级说明：
+-----------------
+1、HP-Socket v4.2.1 完全兼容 HP-Socket v4.1.4 版本，可以直接替换升级
+
+
+# ======================================== #
+HP-Socket v4.2.1 API 更新列表：
+# ======================================== #
+--------------------
+1、TCP:
+--------------------
+HP_Server_IsSecure		(增加)
+HP_Agent_IsSecure		(增加)
+HP_Client_IsSecure		(增加)
+
+--------------------
+2、HTTP Sync Client:
+--------------------
+Create_HP_HttpSyncClient		(修改：增加可选参数 pListener，如果 pListener 非空则可以监听 HttpSyncClient 的通信事件)
+Create_HP_HttpsSyncClient		(修改：增加可选参数 pListener，如果 pListener 非空则可以监听 HttpSyncClient 的通信事件)
+
+--------------------
+3、HTTP Client:
+--------------------
+HP_HttpClient_SetUseCookie		(增加)
+HP_HttpClient_IsUseCookie		(增加)
+HP_HttpClient_AddCookie			(删除)
+HP_HttpClient_DeleteCookie		(删除)
+HP_HttpClient_DeleteAllCookies	(删除)
+
+--------------------
+4、HTTP Agent:
+--------------------
+HP_HttpAgent_SetUseCookie		(增加)
+HP_HttpAgent_IsUseCookie		(增加)
+HP_HttpAgent_AddCookie			(删除)
+HP_HttpAgent_DeleteCookie		(删除)
+HP_HttpAgent_DeleteAllCookies	(删除)
+
+--------------------
+5、Cookie Management:
+--------------------
+HP_HttpCookie_MGR_LoadFromFile				(增加)
+HP_HttpCookie_MGR_SaveToFile				(增加)
+HP_HttpCookie_MGR_ClearCookies				(增加)
+HP_HttpCookie_MGR_RemoveExpiredCookies		(增加)
+HP_HttpCookie_MGR_SetCookie					(增加)
+HP_HttpCookie_MGR_DeleteCookie				(增加)
+HP_HttpCookie_MGR_SetEnableThirdPartyCookie	(增加)
+HP_HttpCookie_MGR_IsEnableThirdPartyCookie	(增加)
+HP_HttpCookie_HLP_ParseExpires				(增加)
+HP_HttpCookie_HLP_MakeExpiresStr			(增加)
+HP_HttpCookie_HLP_ToString					(增加)
+HP_HttpCookie_HLP_CurrentUTCTime			(增加)
+HP_HttpCookie_HLP_MaxAgeToExpires			(增加)
+HP_HttpCookie_HLP_ExpiresToMaxAge			(增加)
+
+增加httpCookie DEMO
+由于httpCookie在httpclient和httpagent中使用，然而我并没有写这两个组件的demo，所以就先将就着httpCookie的用吧
+
+
+
+
+[13:19 2017/3/22]
+
+> HTTP Sync Client 通信组件：
+-----------------
+1、Create_HP_HttpSyncClient 和 Create_HP_HttpsSyncClient 方法增加可选参数 pListener
+2、如果 pListener 非空则可以通过 pListener 监听 HttpSyncClient 的所有通信事件
+
+> 其它更新：
+-----------------
+1、Demo 更新：HttpProxy，TestEcho-Http (SyncClient)，TestEcho-Http-4C (SyncClient)
+2、OpenSSL 版本升级到 1.1.0e
+3、IWinHttp 增加httpclient的所有事件回调接口，可以实现上传和下载的进度显示。
+
+> 升级说明：
+-----------------
+1、HTTP Sync Client 组件：需要调整 Create_HP_HttpSyncClient 和 Create_HP_HttpsSyncClient 的调用参数
+2、其他组件：HP-Socket v4.1.4 完全兼容 HP-Socket v4.1.3 版本，可以直接替换升级
+
+
+
+
+
+
+
+[16:26 2017/1/20]
+1、IWinhttp增加 ResponseText 方法，参数为是否utf8解码
+
+
+
+[11:39 2017/1/19]
+1、模块更新，修复取连接IP地址和端口时，IP地址取不出来的问题。
+2、增加了udp的demo
+3、http大文件发送效率更高，本机测试最高能到110M/s，实际因为检测缓冲区大小造成性能损失可能只有95-100m/s。
+4、更新为最新版4.1.3 dll
+
+
+
+[11:15 2017/1/16]
+1、模块更新，修复server和agent 调用 GetAllConnectionIDs 错误问题，删除最后一个参数
+
+可直接替换更新现有4.1.2及以上版本
+
+
+
+[16:29 2017/1/12]
+1、更新为最新版4.1.3
+2、修正IWinHttp为调用open的时候创建对象
+==========================================================================================
+v4.1.3 更新：
+==========================================================================================
+
+> 代码调整：
+-----------------
+1、ITcpServer 和 ITcpAgent 组件在 SP_DIRECT 发送模式下，监听器的 OnReceive 事件内部可能触发 Onclose 事件，改为顺序触发
+2、IClient 组件优化，提高稳定性
+
+> 升级说明：
+-----------------
+1、HP-Socket v4.1.3 完全兼容 HP-Socket v4.1.2 版本，可以直接替换升级
+
+
+
+
+[16:57 2016/12/28]
+1、解决URL编码错误问题
+2、增加几个API封装命令：
+   _HP_Compress: 普通压缩
+   _HP_Uncompress: 普通解压
+   _HP_CompressEx: 高级压缩
+   _HP_UncompressEx: 高级解压
+   _HP_GZipCompress: Gzip 压缩
+   _HP_GZipUncompress: Gzip 解压
+   GetHttpDefaultStatusCodeDesc: 获取HTTP状态码文本描述
+
+3、各个组件的send方法改为指针+长度方式，新曾SendBytes来发送字节集数据
+4、dll更换为4.1.2-rc2，直接替换，完美兼容
