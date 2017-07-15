@@ -581,6 +581,8 @@ BOOL CHttpServerListenerImpl::ConnectToServer(THttpContext* pContext)
 
 		if(!m_pDlg->m_Agent->Connect(CA2T(pContext->host), pContext->port, &dwAgentID))
 		{
+			::PostOnError(dwAgentID, SO_CONNECT, ::SYS_GetLastError(), AGENT_NAME);
+
 			pContext->DecRef();
 			return FALSE;
 		}

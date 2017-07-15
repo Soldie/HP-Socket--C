@@ -668,9 +668,11 @@ EnHandleResult CTcpServerListenerImpl::ConnectToServer(THttpContext* pContext, c
 {
 	pContext->IncRef();
 
-	CONNID dwAgentID;
+	CONNID dwAgentID = 0;
 	if(!m_pDlg->m_Agent->Connect(CA2T(pContext->host), pContext->port, &dwAgentID))
 	{
+		::PostOnError(dwAgentID, SO_CONNECT, ::SYS_GetLastError(), AGENT_NAME);
+
 		pContext->DecRef();
 		return HR_ERROR;
 	}

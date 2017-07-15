@@ -78,7 +78,7 @@ void LogServerStart(LPCTSTR lpszAddress, USHORT port, LPCTSTR lpszName)
 void LogServerStartFail(DWORD code, LPCTSTR lpszDesc, LPCTSTR lpszName)
 {
 	CString msg;
-	msg.Format(_T("$ %sServer Start Fail --> %s (%d)"), SafeString(lpszName), lpszDesc, code);
+	msg.Format(_T("$ %sServer Start Fail --> %s (%d) [%d]"), SafeString(lpszName), lpszDesc, code, ::GetLastError());
 	LogMsg(msg);
 }
 
@@ -114,7 +114,7 @@ void LogClientStarting(LPCTSTR lpszAddress, USHORT port, LPCTSTR lpszName)
 void LogClientStartFail(DWORD code, LPCTSTR lpszDesc, LPCTSTR lpszName)
 {
 	CString msg;
-	msg.Format(_T("$ %sClient Start Fail --> %s (%d)"), SafeString(lpszName), lpszDesc, code);
+	msg.Format(_T("$ %sClient Start Fail --> %s (%d) [%d]"), SafeString(lpszName), lpszDesc, code, ::GetLastError());
 	LogMsg(msg);
 }
 
