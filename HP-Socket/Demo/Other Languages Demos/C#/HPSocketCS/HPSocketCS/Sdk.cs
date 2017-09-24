@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 using HPSocketCS;
-using System.Net;
+
 
 namespace HPSocketCS
 {
@@ -193,30 +193,6 @@ namespace HPSocketCS
 
     }
 
-    /// <summary>
-    /// 名称：IP 地址类型
-    /// 描述：IP 地址类型枚举值
-    /// </summary>
-    public enum IPAddrType
-    {
-        /// <summary>
-        /// 所有
-        /// </summary>
-        All = 0,
-        /// <summary>
-        /// IPv4
-        /// </summary>
-        IPV4 = 1,
-        /// <summary>
-        /// IPv6
-        /// </summary>
-        IPV6 = 2,
-        /// <summary>
-        /// 其他
-        /// </summary>
-        Other = 100,
-    }
-
     /****************************************************/
     /************** sockaddr结构体,udp服务器时OnAccept最后个参数可转化 **************/
     [StructLayout(LayoutKind.Sequential)]
@@ -249,51 +225,8 @@ namespace HPSocketCS
         public int Length;
         public IntPtr Buffer;
     }
-
-    /// <summary>
-    /// 名称：IP 地址条目结构体
-    /// 描述：IP 地址的地址簇/地址值结构体
-    /// </summary>
-    public struct IPAddr
-    {
-        public IPAddrType Type;
-        public string Address;
-        public string TypeString;
-    }
-
-
-    /// <summary>
-    /// DnsHelper
-    /// </summary>
-    public class DnsHelper
-    {
-        /// <summary>
-        /// 获取本机ipv4+ipv6地址
-        /// hp-socket可用的ip地址结构
-        /// </summary>
-        /// <returns></returns>
-        public static List<IPAddr> GetLocalHostAddressesToIPAddrList()
-        {
-            return Dns.GetHostAddresses(Dns.GetHostName()).Where(p => p.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ||
-                                                                      p.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6).
-                Select(p => new IPAddr
-                {
-                    Type = p.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ? IPAddrType.IPV4 : IPAddrType.IPV6,
-                    Address = p.ToString(),
-                }).ToList();
-        }
-
-        /// <summary>
-        /// 获取本机ipv4+ipv6地址
-        /// .net自带的ip地址结构
-        /// </summary>
-        /// <returns></returns>
-        public static IPAddress[] GetLocalHostAddresses()
-        {
-            return Dns.GetHostAddresses(Dns.GetHostName());
-        }
-    }
 }
+
 
 
 /// <summary>
@@ -2390,7 +2323,7 @@ public class Sdk
         var minor = ver[2];
         var revision = ver[1];
         var build = ver[0];*/
-
+        
         uint ver = HP_GetHPSocketVersion();
         var major = ver >> 24;
         var minor = (ver << 8) >> 24;
@@ -2550,35 +2483,8 @@ public class Sdk
     /// <param name="pusPort"></param>
     /// <returns></returns>
     [DllImport(HPSOCKET_DLL_PATH)]
-    public static extern bool SYS_GetSocketRemoteAddress(IntPtr pSocket, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpszAddress, ref int piAddressLen, ref ushort pusPort);
+    public static extern bool HP_Server_GetRemoteAddress(IntPtr pSocket, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpszAddress, ref int piAddressLen, ref ushort pusPort);
 
-
-    /// <summary>
-    /// 枚举主机 IP 地址
-    /// 不要用,未测试
-    /// 不要用,未测试
-    /// 不要用,未测试
-    /// </summary>
-    /// <param name="lpszHost"></param>
-    /// <param name="enType"></param>
-    /// <param name="lpppIPAddr"></param>
-    /// <param name="piIPAddrCount"></param>
-    /// <returns></returns>
-    [DllImport(HPSOCKET_DLL_PATH, CharSet = CharSet.Unicode)]
-    public static extern bool SYS_EnumHostIPAddresses(string lpszHost, IPAddrType enType, ref IntPtr lpppIPAddr, ref int piIPAddrCount);
-
-
-    /// <summary>
-    /// 释放 HP_LPTIPAddr
-    /// </summary>
-    /// <param name="lppIPAddr"></param>
-    /// <returns></returns>
-    [DllImport(HPSOCKET_DLL_PATH)]
-    public static extern bool SYS_FreeHostIPAddresses(IntPtr lppIPAddr);
-
-
-    /*
-     * 已删除
     /// <summary>
     /// 获取 IPv4 地址
     /// </summary>
@@ -2586,15 +2492,14 @@ public class Sdk
     /// <returns></returns>
     [DllImport(HPSOCKET_DLL_PATH, CharSet = CharSet.Unicode)]
     public static extern uint SYS_GetIPv4InAddr(string lpszAddress);
-    */
+
     /// <summary>
     /// 检查字符串是否符合 IP 地址格式
     /// </summary>
     /// <param name="lpszAddress"></param>
-    /// <param name="penType"></param>
     /// <returns></returns>
     [DllImport(HPSOCKET_DLL_PATH, CharSet = CharSet.Unicode)]
-    public static extern bool SYS_IsIPAddress(string lpszAddress, ref IPAddrType penType);
+    public static extern bool SYS_IsIPAddress(string lpszAddress);
 
     /// <summary>
     /// 通过主机名获取 IP 地址
@@ -2602,13 +2507,10 @@ public class Sdk
     /// <param name="lpszHost"></param>
     /// <param name="lpszIP"></param>
     /// <param name="piIPLenth"></param>
-    /// <param name="penType"></param>
     /// <returns></returns>
     [DllImport(HPSOCKET_DLL_PATH, CharSet = CharSet.Unicode)]
-    public static extern bool SYS_GetIPAddress(string lpszHost, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpszIP, ref int piIPLenth, ref IPAddrType penType);
+    public static extern bool SYS_GetIPAddress(string lpszHost, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpszIP, ref int piIPLenth);
 
-    /*
-     * 已删除
     /// <summary>
     /// 通过主机名获取最优的 IP 地址
     /// </summary>
@@ -2617,7 +2519,6 @@ public class Sdk
     /// <returns></returns>
     [DllImport(HPSOCKET_DLL_PATH, CharSet = CharSet.Unicode)]
     public static extern bool SYS_GetOptimalIPByHostName(string lpszHost, ref uint pulAddr);
-    */
 
     /// <summary>
     /// 64 位网络字节序转主机字节序

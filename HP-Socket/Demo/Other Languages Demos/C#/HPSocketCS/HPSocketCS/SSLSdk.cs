@@ -216,95 +216,6 @@ namespace HPSocketCS
         public static extern void Destroy_HP_SSLPackClient(IntPtr pObj);
 
         /************************ SSL 初始化方法 ****************************/
-
-        /// <summary>
-        /// 名称：初始化通信组件 SSL 环境参数
-        /// 描述：SSL 环境参数必须在 SSL 通信组件启动前完成初始化，否则启动失败
-        /// </summary>
-        /// <param name="pAgent"></param>
-        /// <param name="iVerifyMode">SSL 验证模式（参考 EnSSLVerifyMode）</param>
-        /// <param name="lpszPemCertFile">证书文件（客户端可选）</param>
-        /// <param name="lpszPemKeyFile">私钥文件（客户端可选）</param>
-        /// <param name="lpszKeyPasswod">私钥密码（没有密码则为空）</param>
-        /// <param name="lpszCAPemCertFileOrPath"> CA 证书文件或目录（单向验证或客户端可选）</param>
-        /// <returns>TRUE.成功 FALSE.失败，可通过 SYS_GetLastError() 获取失败原因</returns>
-        [DllImport(HPSOCKET_SSL_DLL_PATH, CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern bool HP_SSLAgent_SetupSSLContext(IntPtr pAgent, SSLVerifyMode verifyMode, string lpszPemCertFile, string lpszPemKeyFile, string lpszKeyPasswod, string lpszCAPemCertFileOrPath);
-
-        /// <summary>
-        /// 名称：初始化通信组件 SSL 环境参数
-        /// 描述：SSL 环境参数必须在 SSL 通信组件启动前完成初始化，否则启动失败
-        /// </summary>
-        /// <param name="pClient"></param>
-        /// <param name="iVerifyMode">SSL 验证模式（参考 EnSSLVerifyMode）</param>
-        /// <param name="lpszPemCertFile">证书文件（客户端可选）</param>
-        /// <param name="lpszPemKeyFile">私钥文件（客户端可选）</param>
-        /// <param name="lpszKeyPasswod">私钥密码（没有密码则为空）</param>
-        /// <param name="lpszCAPemCertFileOrPath"> CA 证书文件或目录（单向验证或客户端可选）</param>
-        /// <returns>TRUE.成功 FALSE.失败，可通过 SYS_GetLastError() 获取失败原因</returns>
-        [DllImport(HPSOCKET_SSL_DLL_PATH, CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern bool HP_SSLClient_SetupSSLContext(IntPtr pClient, SSLVerifyMode verifyMode, string lpszPemCertFile, string lpszPemKeyFile, string lpszKeyPasswod, string lpszCAPemCertFileOrPath);
-
-        /// <summary>
-        /// 名称：初始化通信组件 SSL 环境参数
-        /// 描述：SSL 环境参数必须在 SSL 通信组件启动前完成初始化，否则启动失败
-        /// </summary>
-        /// <param name="pServer"></param>
-        /// <param name="iVerifyMode">SSL 验证模式（参考 EnSSLVerifyMode）</param>
-        /// <param name="lpszPemCertFile">证书文件（客户端可选）</param>
-        /// <param name="lpszPemKeyFile">私钥文件（客户端可选）</param>
-        /// <param name="lpszKeyPasswod">私钥密码（没有密码则为空）</param>
-        /// <param name="lpszCAPemCertFileOrPath"> CA 证书文件或目录（单向验证或客户端可选）</param>
-        /// <param name="fnServerNameCallback">SNI 回调函数指针（可选）</param>
-        /// <returns>TRUE.成功 FALSE.失败，可通过 SYS_GetLastError() 获取失败原因</returns>
-        [DllImport(HPSOCKET_SSL_DLL_PATH, CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern bool HP_SSLServer_SetupSSLContext(IntPtr pServer, SSLVerifyMode verifyMode, string lpszPemCertFile, string lpszPemKeyFile, string lpszKeyPasswod, string lpszCAPemCertFileOrPath, SNIServerNameCallback fnServerNameCallback);
- 
-        /// <summary>
-        /// 名称：初始化通信组件 SSL 环境参数
-        /// 描述：SSL 环境参数必须在 SSL 通信组件启动前完成初始化，否则启动失败
-        /// </summary>
-        /// <param name="pServer"></param>
-        /// <param name="iVerifyMode">SSL 验证模式（参考 EnSSLVerifyMode）</param>
-        /// <param name="lpszPemCertFile">证书文件（客户端可选）</param>
-        /// <param name="lpszPemKeyFile">私钥文件（客户端可选）</param>
-        /// <param name="lpszKeyPasswod">私钥密码（没有密码则为空）</param>
-        /// <param name="lpszCAPemCertFileOrPath"> CA 证书文件或目录（单向验证或客户端可选）</param>
-        /// <returns>TRUE.成功 FALSE.失败，可通过 SYS_GetLastError() 获取失败原因</returns>
-        [DllImport(HPSOCKET_SSL_DLL_PATH, CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern int HP_SSLServer_AddSSLContext(IntPtr pServer, SSLVerifyMode verifyMode, string lpszPemCertFile, string lpszPemKeyFile, string lpszKeyPasswod, string lpszCAPemCertFileOrPath);
-
-        /// <summary>
-        /// 名称：清理通信组件 SSL 运行环境
-        /// 描述：清理通信组件 SSL 运行环境，回收 SSL 相关内存
-        ///	1、通信组件析构时会自动调用本方法
-        ///	2、当要重新设置通信组件 SSL 环境参数时，需要先调用本方法清理原先的环境参数
-        /// </summary>
-        /// <param name="pAgent"></param>
-        [DllImport(HPSOCKET_SSL_DLL_PATH)]
-        public static extern void HP_SSLAgent_CleanupSSLContext(IntPtr pAgent);
-
-        /// <summary>
-        /// 名称：清理通信组件 SSL 运行环境
-        /// 描述：清理通信组件 SSL 运行环境，回收 SSL 相关内存
-        ///	1、通信组件析构时会自动调用本方法
-        ///	2、当要重新设置通信组件 SSL 环境参数时，需要先调用本方法清理原先的环境参数
-        /// </summary>
-        /// <param name="pClient"></param>
-        [DllImport(HPSOCKET_SSL_DLL_PATH)]
-        public static extern void HP_SSLClient_CleanupSSLContext(IntPtr pClient);
-
-        /// <summary>
-        /// 名称：清理通信组件 SSL 运行环境
-        /// 描述：清理通信组件 SSL 运行环境，回收 SSL 相关内存
-        ///	1、通信组件析构时会自动调用本方法
-        ///	2、当要重新设置通信组件 SSL 环境参数时，需要先调用本方法清理原先的环境参数
-        /// </summary>
-        /// <param name="pServer"></param>
-        [DllImport(HPSOCKET_SSL_DLL_PATH)]
-        public static extern void HP_SSLServer_CleanupSSLContext(IntPtr pServer);
-
-        /*已删除
         /// <summary>
         /// 名称：初始化 SSL 全局环境参数
         /// 描述：SSL 全局环境参数必须在 SSL 通信组件启动前完成初始化，否则启动失败
@@ -319,9 +230,7 @@ namespace HPSocketCS
         /// <returns></returns>
         [DllImport(HPSOCKET_SSL_DLL_PATH, CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern bool HP_SSL_Initialize(SSLSessionMode sessionMode, SSLVerifyMode verifyMode, string lpszPemCertFile, string lpszPemKeyFile, string lpszKeyPasswod, string lpszCAPemCertFileOrPath, SSLSdk.SNIServerNameCallback fnServerNameCallback);
-        */
-        /*
-         * 已删除
+
         /// <summary>
         /// 清理 SSL 全局运行环境
         /// 描述：清理 SSL 全局运行环境，回收 SSL 相关内存
@@ -330,7 +239,7 @@ namespace HPSocketCS
         /// </summary>
         [DllImport(HPSOCKET_SSL_DLL_PATH)]
         public static extern void HP_SSL_Cleanup();
-        */
+
 
         /// <summary>
         /// 清理线程局部环境 SSL 资源
@@ -342,14 +251,28 @@ namespace HPSocketCS
         [DllImport(HPSOCKET_SSL_DLL_PATH)]
         public static extern void HP_SSL_RemoveThreadLocalState();
 
-        /*
-         * 已删除
         /// <summary>
         /// 检查 SSL 全局运行环境是否初始化完成
         /// </summary>
         /// <returns></returns>
         [DllImport(HPSOCKET_SSL_DLL_PATH)]
         public static extern bool HP_SSL_IsValid();
-        */
+        
+
+        /// <summary>
+        /// 名称：增加 SNI 主机证书（只用于服务端）
+        /// 描述：SSL 服务端在 Initialize() 成功后可以调用本方法增加多个 SNI 主机证书
+        /// 成功：正数, 返回 SNI 主机证书对应的索引，该索引用于在 SNI 回调函数中定位 SNI 主机
+        /// 失败：负数, 可通过 SYS_GetLastError() 获取失败原因
+        /// </summary>
+        /// <param name="iVerifyMode">SSL 验证模式（参考 EnSSLVerifyMode）</param>
+        /// <param name="lpszPemCertFile">证书文件</param>
+        /// <param name="lpszPemKeyFile">私钥文件</param>
+        /// <param name="lpszKeyPasswod">私钥密码（没有密码则为空）</param>
+        /// <param name="lpszCAPemCertFileOrPath">CA 证书文件或目录（单向验证可选）</param>
+        /// <returns></returns>
+        [DllImport(HPSOCKET_SSL_DLL_PATH, CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern int HP_SSL_AddServerContext(SSLVerifyMode verifyMode, string lpszPemCertFile, string lpszPemKeyFile, string lpszKeyPasswod /* nullptr */, string lpszCAPemCertFileOrPath /* nullptr */);
+
     }
 }

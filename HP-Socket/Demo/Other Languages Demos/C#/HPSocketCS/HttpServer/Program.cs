@@ -1,5 +1,4 @@
-﻿using HPSocketCS;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,18 +12,6 @@ namespace HttpServerDemo
         {
             try
             {
-                /*
-                // 获取本机所有ip地址
-                //var list = DnsHelper.GetLocalHostAddresses(); // 第一种方法
-                var list = DnsHelper.GetLocalHostAddressesToIPAddrList();// 第二种方法
-                foreach (var item in list)
-                {
-                    //Console.WriteLine($"类型:{item.AddressFamily}, 地址:{item.ToString()}");// 第一种方法
-                    Console.WriteLine($"类型:{item.Type}, 地址:{item.Address}");// 第二种方法
-                }
-                */
-                
-
                 ushort port = 8081;
                 Console.Title = port.ToString();
                 // http server

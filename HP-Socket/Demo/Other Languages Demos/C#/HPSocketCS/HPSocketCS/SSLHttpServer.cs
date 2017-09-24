@@ -111,17 +111,17 @@ namespace HPSocketCS
         {
             lock (SSLInitLock)
             {
-                //if (SSLSdk.HP_SSL_IsValid() == false)
+                if (SSLSdk.HP_SSL_IsValid() == false)
                 {
                     PemCertFile = string.IsNullOrWhiteSpace(PemCertFile) ? null : PemCertFile;
                     PemKeyFile = string.IsNullOrWhiteSpace(PemKeyFile) ? null : PemKeyFile;
                     KeyPasswod = string.IsNullOrWhiteSpace(KeyPasswod) ? null : KeyPasswod;
                     CAPemCertFileOrPath = string.IsNullOrWhiteSpace(CAPemCertFileOrPath) ? null : CAPemCertFileOrPath;
                     
-                    return SSLSdk.HP_SSLServer_SetupSSLContext(pServer, VerifyMode, PemCertFile, PemKeyFile, KeyPasswod, CAPemCertFileOrPath, SNIServerNameCallback);
+                    return SSLSdk.HP_SSL_Initialize(SSLSessionMode.Server, VerifyMode, PemCertFile, PemKeyFile, KeyPasswod, CAPemCertFileOrPath, SNIServerNameCallback);
                 }
 
-                //return true;
+                return true;
             }
         }
 
@@ -132,15 +132,15 @@ namespace HPSocketCS
         {
             if (Interlocked.Decrement(ref ObjectReferer) == 0)
             {
-                SSLSdk.HP_SSLServer_CleanupSSLContext(pServer);
+                SSLSdk.HP_SSL_Cleanup();
             }
         }
 
         public new bool Start()
         {
-            if (Initialize() == false)
+            if (SSLSdk.HP_SSL_IsValid() == false && Initialize() == false)
             {
-                throw new Exception("初始化SSL环境失败!");
+                throw new Exception("法初始化SSL环境失败!");
             }
             return base.Start();
         }
@@ -165,9 +165,9 @@ namespace HPSocketCS
 
         /// <summary>
         /// 名称：增加 SNI 主机证书（只用于服务端）
-        /// 描述：SSL 服务端在 SetupSSLContext() 成功后可以调用本方法增加多个 SNI 主机证书
-        /// 返回值：正数		-- 成功，并返回 SNI 主机证书对应的索引，该索引用于在 SNI 回调函数中定位 SNI 主机
-        /// 返回值：负数		-- 失败，可通过 SYS_GetLastError() 获取失败原因
+        /// 描述：SSL 服务端在 Initialize() 成功后可以调用本方法增加多个 SNI 主机证书
+        /// 成功：正数, 返回 SNI 主机证书对应的索引，该索引用于在 SNI 回调函数中定位 SNI 主机
+        /// 失败：负数, 可通过 SYS_GetLastError() 获取失败原因
         /// </summary>
         /// <param name="verifyMode">SSL 验证模式（参考 EnSSLVerifyMode）</param>
         /// <param name="pemCertFile">证书文件</param>
@@ -177,10 +177,10 @@ namespace HPSocketCS
         /// <returns></returns>
         public int AddServerContext(SSLVerifyMode verifyMode, string pemCertFile, string pemKeyFile, string keyPasswod, string caPemCertFileOrPath)
         {
-            /*if (SSLSdk.HP_SSL_IsValid() == false)
+            if (SSLSdk.HP_SSL_IsValid() == false)
             {
                 throw new InvalidOperationException("请先调用Initialize()方法初始化SSL环境");
-            }*/
+            }
 
             if (string.IsNullOrWhiteSpace(pemCertFile))
             {
@@ -193,7 +193,7 @@ namespace HPSocketCS
             keyPasswod = string.IsNullOrWhiteSpace(keyPasswod) ? null : keyPasswod;
             caPemCertFileOrPath = string.IsNullOrWhiteSpace(caPemCertFileOrPath) ? null : caPemCertFileOrPath;
 
-            return SSLSdk.HP_SSLServer_AddSSLContext(pServer, verifyMode, pemCertFile, pemKeyFile, KeyPasswod, caPemCertFileOrPath);
+            return SSLSdk.HP_SSL_AddServerContext(verifyMode, pemCertFile, pemKeyFile, KeyPasswod, caPemCertFileOrPath);
         }
     }
 }

@@ -97,7 +97,7 @@ namespace HPSocketCS
         {
             lock (SSLInitLock)
             {
-                //if (SSLSdk.HP_SSL_IsValid() == false)
+                if (SSLSdk.HP_SSL_IsValid() == false)
                 {
 
                     PemCertFile = string.IsNullOrWhiteSpace(PemCertFile) ? null : PemCertFile;
@@ -106,8 +106,8 @@ namespace HPSocketCS
                     CAPemCertFileOrPath = string.IsNullOrWhiteSpace(CAPemCertFileOrPath) ? null : CAPemCertFileOrPath;
 
 
-                    var ret = SSLSdk.HP_SSLAgent_SetupSSLContext(pAgent, VerifyMode, PemCertFile, PemKeyFile, KeyPasswod, CAPemCertFileOrPath);
-                    System.Diagnostics.Trace.WriteLine($"ssl Initialize : {ret}");
+                    return SSLSdk.HP_SSL_Initialize(SSLSessionMode.Client, VerifyMode, PemCertFile, PemKeyFile, KeyPasswod, CAPemCertFileOrPath, null);
+
                 }
 
                 return true;
@@ -121,7 +121,7 @@ namespace HPSocketCS
         {
             if (Interlocked.Decrement(ref ObjectReferer) == 0)
             {
-                SSLSdk.HP_SSLAgent_CleanupSSLContext(pAgent);
+                SSLSdk.HP_SSL_Cleanup();
             }
         }
 
