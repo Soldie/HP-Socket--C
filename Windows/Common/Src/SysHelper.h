@@ -23,6 +23,20 @@
 
 #pragma once
 
+/* 最大工作线程数 */
+#define MAX_WORKER_THREAD_COUNT			500
+#define DEFAULT_BUFFER_SIZE				(GetDefaultBufferSize())
+#define DEFAULT_WORKER_THREAD_COUNT		(GetDefaultWorkerThreadCount())
+#define SELF_PROCESS_ID					(::GetCurrentProcessId())
+#define SELF_THREAD_ID					(::GetCurrentThreadId())
+#define IsSameThread(tid1, tid2)		((tid1) == (tid2))
+#define IsSelfThread(tid)				IsSameThread((tid), SELF_THREAD_ID)
+#define IsSameProcess(pid1, pid2)		((pid1) == (pid2))
+#define IsSelfProcess(pid)				IsSameProcess((pid), SELF_PROCESS_ID)
+
+DWORD GetDefaultBufferSize();
+DWORD GetDefaultWorkerThreadCount();
+
 // 获取系统信息
 VOID SysGetSystemInfo(LPSYSTEM_INFO pInfo);
 // 获取 CPU 核数

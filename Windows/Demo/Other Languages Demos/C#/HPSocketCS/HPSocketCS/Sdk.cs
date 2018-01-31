@@ -447,6 +447,15 @@ public class Sdk
 
 
     /// <summary>
+    /// 创建 HP_UdpCast 对象
+    /// </summary>
+    /// <param name="pListener"></param>
+    /// <returns></returns>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern IntPtr Create_HP_UdpCast(IntPtr pListener);
+
+
+    /// <summary>
     /// 销毁 TcpServer 对象
     /// </summary>
     /// <param name="pServer"></param>
@@ -532,6 +541,14 @@ public class Sdk
     [DllImport(HPSOCKET_DLL_PATH)]
     public static extern void Destroy_HP_UdpClient(IntPtr pClient);
 
+    /// <summary>
+    /// 销毁 HP_UdpCast 对象
+    /// </summary>
+    /// <param name="pCast"></param>
+    /// <returns></returns>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern void Destroy_HP_UdpCast(IntPtr pCast);
+
 
     /// <summary>
     /// 创建 TcpServerListener 对象
@@ -609,6 +626,14 @@ public class Sdk
     /// <returns></returns>
     [DllImport(HPSOCKET_DLL_PATH)]
     public static extern IntPtr Create_HP_UdpClientListener();
+
+    /// <summary>
+    /// 创建 HP_UdpCastListener 对象
+    /// </summary>
+    /// <returns></returns>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern IntPtr Create_HP_UdpCastListener();
+
 
 
     /// <summary>
@@ -699,6 +724,13 @@ public class Sdk
     /// <returns></returns>
     [DllImport(HPSOCKET_DLL_PATH)]
     public static extern void Destroy_HP_UdpClientListener(IntPtr pListener);
+
+    /// <summary>
+    /// 销毁 HP_UdpCastListener 对象
+    /// </summary>
+    /// <param name="pListener"></param>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern void Destroy_HP_UdpCastListener(IntPtr pListener);
 
 
     /**********************************************************************************/
@@ -1719,6 +1751,101 @@ public class Sdk
     /// <returns></returns>
     [DllImport(HPSOCKET_DLL_PATH)]
     public static extern uint HP_UdpClient_GetDetectInterval(IntPtr pClient);
+
+
+    /**********************************************************************************/
+    /****************************** UDP Cast 属性访问方法 ******************************/
+    
+    /// <summary>
+    /// 设置数据报文最大长度（建议在局域网环境下不超过 1472 字节，在广域网环境下不超过 548 字节
+    /// </summary>
+    /// <param name="pCast"></param>
+    /// <param name="dwMaxDatagramSize"></param>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern void HP_UdpCast_SetMaxDatagramSize(IntPtr pCast, uint dwMaxDatagramSize);
+
+    /// <summary>
+    /// 获取数据报文最大长度
+    /// </summary>
+    /// <param name="pCast"></param>
+    /// <returns></returns>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern uint HP_UdpCast_GetMaxDatagramSize(IntPtr pCast);
+    
+    /// <summary>
+    /// 获取当前数据报的远程地址信息（通常在 OnReceive 事件中调用）
+    /// </summary>
+    /// <param name="pCast"></param>
+    /// <param name="lpszAddress"></param>
+    /// <param name="piAddressLen"></param>
+    /// <param name="pusPort"></param>
+    /// <returns></returns>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern bool HP_UdpCast_GetRemoteAddress(IntPtr pCast, [MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpszAddress, int piAddressLen, ref ushort pusPort);
+
+    /// <summary>
+    /// 设置是否启用地址重用机制（默认：不启用）
+    /// </summary>
+    /// <param name="pCast"></param>
+    /// <param name="bReuseAddress"></param>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern void HP_UdpCast_SetReuseAddress(IntPtr pCast, bool bReuseAddress);
+
+    /// <summary>
+    /// 检测是否启用地址重用机制
+    /// </summary>
+    /// <param name="pCast"></param>
+    /// <returns></returns>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern bool HP_UdpCast_IsReuseAddress(IntPtr pCast);
+
+    /// <summary>
+    /// 设置传播模式（组播或广播）
+    /// </summary>
+    /// <param name="pCast"></param>
+    /// <param name="enCastMode"></param>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern void HP_UdpCast_SetCastMode(IntPtr pCast, CastMode enCastMode);
+
+    /// <summary>
+    /// 获取传播模式
+    /// </summary>
+    /// <param name="pCast"></param>
+    /// <returns></returns>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern CastMode HP_UdpCast_GetCastMode(IntPtr pCast);
+
+    /// <summary>
+    /// 设置组播报文的 TTL（0 - 255）
+    /// </summary>
+    /// <param name="pCast"></param>
+    /// <param name="iMCTtl"></param>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern void HP_UdpCast_SetMultiCastTtl(IntPtr pCast, int iMCTtl);
+
+    /// <summary>
+    /// 获取组播报文的 TTL
+    /// </summary>
+    /// <param name="pCast"></param>
+    /// <returns></returns>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern int HP_UdpCast_GetMultiCastTtl(IntPtr pCast);
+
+    /// <summary>
+    /// 设置是否启用组播环路（TRUE or FALSE）
+    /// </summary>
+    /// <param name="pCast"></param>
+    /// <param name="bMCLoop"></param>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern void HP_UdpCast_SetMultiCastLoop(IntPtr pCast, bool bMCLoop);
+
+    /// <summary>
+    /// 检测是否启用组播环路
+    /// </summary>
+    /// <param name="pCast"></param>
+    /// <returns></returns>
+    [DllImport(HPSOCKET_DLL_PATH)]
+    public static extern bool HP_UdpCast_IsMultiCastLoop(IntPtr pCast);
 
     /**************************************************************************/
     /***************************** Agent 操作方法 *****************************/

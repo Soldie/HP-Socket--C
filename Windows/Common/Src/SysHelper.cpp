@@ -25,6 +25,22 @@
 #include "SysHelper.h"
 #include "GeneralHelper.h"
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+DWORD GetDefaultWorkerThreadCount()
+{
+	static DWORD s_dwtc = min((::SysGetNumberOfProcessors() * 2 + 2), MAX_WORKER_THREAD_COUNT);
+	return s_dwtc;
+}
+
+DWORD GetDefaultBufferSize()
+{
+	static DWORD s_dtsbs = ::SysGetPageSize();
+	return s_dtsbs;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 VOID SysGetSystemInfo(LPSYSTEM_INFO pInfo)
 {
 	ASSERT(pInfo != nullptr);

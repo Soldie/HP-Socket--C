@@ -23,140 +23,134 @@
  
 #pragma once
 
-#include "GeneralHelper.h"
+#define FPRINTLN(fd, fmt, ...)			fprintf((fd), fmt "\n", ##__VA_ARGS__)
+#define PRINTLN(fmt, ...)				FPRINTLN(stdout, fmt, ##__VA_ARGS__)
 
-#include <tlhelp32.h>
-#include <malloc.h>
+#define IS_OK(rs)						((BOOL)(rs))
+#define IS_NOT_OK(rs)					(!IS_OK(rs))
 
-enum EnCodePage
-{
-	XCP_ACP		= CP_ACP,
-	XCP_GB2312	= 936,
-#ifdef _WIN32_WCE
-	XCP_BIG5	= CP_ACP,
+#define HAS_ERROR						-1
+#define CHECK_IS_OK(expr)				{if(IS_NOT_OK(expr)) return FALSE;}
+#define CHECK_ERROR_FD(fd)				{if(IS_INVALID_FD(fd)) return FALSE;}
+#define CHECK_ERROR_INVOKE(expr)		{if(!IS_NO_ERROR(expr)) return FALSE;}
+#define CHECK_ERROR_CODE(rs)			{if(!IS_NO_ERROR(rs)) {::SetLastError(rs); return FALSE;}}
+#define CHECK_ERROR(expr, code)			{if(!(expr)) {::SetLastError(code); return FALSE;}}
+#define CHECK_EINVAL(expr)				CHECK_ERROR(expr, ERROR_INVALID_PARAMETER)
+#define ASSERT_CHECK_ERROR(expr, code)	{ASSERT(expr); CHECK_ERROR(expr, code);}
+#define ASSERT_CHECK_EINVAL(expr)		{ASSERT(expr); CHECK_EINVAL(expr);}
+
+#define CHECK_IS_ERROR(code)			(::GetLastError() == code)
+#define CONTINUE_IF_ERROR(code)			{if(CHECK_IS_ERROR(code)) continue;}
+#define BREAK_IF_ERROR(code)			{if(CHECK_IS_ERROR(code)) break;}
+
+#define IS_WOULDBLOCK_ERROR()			CHECK_IS_ERROR(WSAEWOULDBLOCK)
+#define CONTINUE_WOULDBLOCK_ERROR()		CONTINUE_IF_ERROR(WSAEWOULDBLOCK)
+#define BREAK_WOULDBLOCK_ERROR()		BREAK_IF_ERROR(WSAEWOULDBLOCK)
+#define IS_IO_PENDING_ERROR()			CHECK_IS_ERROR(ERROR_IO_PENDING)
+#define CONTINUE_IO_PENDING_ERROR()		CONTINUE_IF_ERROR(ERROR_IO_PENDING)
+#define BREAK_IO_PENDING_ERROR()		BREAK_IF_ERROR(ERROR_IO_PENDING)
+
+#define EqualMemory(dest, src, len)		(!memcmp((dest), (src), (len)))
+#define ZeroObject(obj)					ZeroMemory((&(obj)), sizeof(obj))
+
+#define EXECUTE_RESET_ERROR(expr)		(::SetLastError(0), (expr))
+#define EXECUTE_RESTORE_ERROR(expr)		{int __le_ = ::GetLastError(); (expr); ::SetLastError(__le_);}
+inline int ENSURE_ERROR(int def_code)	{int __le_ = ::GetLastError(); if(__le_ == 0) __le_ = (def_code);  return __le_;}
+#define ENSURE_ERROR_CANCELLED			ENSURE_ERROR(ERROR_CANCELLED)
+#define TRIGGER(expr)					EXECUTE_RESET_ERROR((expr))
+
+#define CreateLocalObjects(T, n)		((T*)alloca(sizeof(T) * n))
+#define CreateLocalObject(T)			CreateLocalObjects(T, 1)
+#define CallocObjects(T, n)				((T*)calloc((n), sizeof(T)))
+
+#define ERROR_EXIT2(code, err)			EXIT((code), (err), __FILE__, __LINE__, __FUNCTION__)
+#define ERROR__EXIT2(code, err)			_EXIT((code), (err), __FILE__, __LINE__, __FUNCTION__)
+#define ERROR_ABORT2(err)				ABORT((err), __FILE__, __LINE__, __FUNCTION__)
+
+#define ERROR_EXIT(code)				ERROR_EXIT2((code), -1)
+#define ERROR__EXIT(code)				ERROR__EXIT2((code), -1)
+#define ERROR_ABORT()					ERROR_ABORT2(-1)
+
+typedef HANDLE							FD;
+#define INVALID_FD						INVALID_HANDLE_VALUE
+#define IS_VALID_FD(fd)					((fd) != INVALID_FD)
+#define IS_INVALID_FD(fd)				(!IS_VALID_FD(fd))
+
+#define INVALID_PVOID					INVALID_HANDLE_VALUE
+#define IS_VALID_PVOID(pv)				((pv) != INVALID_PVOID)
+#define IS_INVALID_PVOID(pv)			(!IS_VALID_PVOID(pv))
+
+#define TO_PVOID(v)						((PVOID)(UINT_PTR)(v))
+#define FROM_PVOID(T, pv)				((T)(UINT_PTR)(pv))
+
+#define HEX_CHAR_TO_VALUE(c)			(c <= '9' ? c - '0' : (c <= 'F' ? c - 'A' + 0x0A : c - 'a' + 0X0A))
+#define HEX_DOUBLE_CHAR_TO_VALUE(pc)	((BYTE)(((HEX_CHAR_TO_VALUE(*(pc))) << 4) | (HEX_CHAR_TO_VALUE(*((pc) + 1)))))
+#define HEX_VALUE_TO_CHAR(n)			(n <= 9 ? n + '0' : (n <= 'F' ? n + 'A' - 0X0A : n + 'a' - 0X0A))
+#define HEX_VALUE_TO_DOUBLE_CHAR(pc, n)	{*(pc) = (BYTE)HEX_VALUE_TO_CHAR((n >> 4)); *((pc) + 1) = (BYTE)HEX_VALUE_TO_CHAR((n & 0X0F));}
+
+inline BOOL IsStrEmptyA(LPCSTR lpsz)	{return (lpsz == nullptr || lpsz[0] == 0);}
+inline BOOL IsStrEmptyW(LPCWSTR lpsz)	{return (lpsz == nullptr || lpsz[0] == 0);}
+inline LPCSTR SafeStrA(LPCSTR lpsz)		{return (lpsz != nullptr) ? lpsz : "";}
+inline LPCWSTR SafeStrW(LPCWSTR lpsz)	{return (lpsz != nullptr) ? lpsz : L"";}
+
+#ifdef _UNICODE
+	#define IsStrEmpty					IsStrEmptyW
+	#define SafeStr						SafeStrW
 #else
-	XCP_BIG5	= 950,
+	#define IsStrEmpty					IsStrEmptyA
+	#define SafeStr						SafeStrA
 #endif
-	XCP_GBK		= XCP_GB2312,
-	XCP_UTF7	= CP_UTF7,
-	XCP_UTF8	= CP_UTF8,
-};
 
-/************************************* 字符操作 *************************************/
+template<typename T> inline bool IS_HAS_ERROR(T v)
+{
+	return v == (T)HAS_ERROR;
+}
 
-// 把字符转换成其表示的值: 如字符 'F' 转换成 数值 15
-#define CHARTOVALUE(c)				(c <= '9' ? c - '0' : (c <= 'F' ? c - 'A' + 0x0A : c - 'a' + 0X0A))
-// 把双字符转换成其表示的值: 如字符 '1F' 转换成 数值 31
-#define DOUBLECHARTOVALUE(pc)		(((CHARTOVALUE(*(pc))) << 4) | (CHARTOVALUE(*(pc + 1))))
+template<typename T> inline bool IS_NO_ERROR(T v)
+{
+	return v == (T)NO_ERROR;
+}
 
-// 把数值转换成其十六进制字符: 如数值 15 转换成 字符 'F'
-#define VALUETOCHAR(n)				(n <= 9 ? n + '0' : (n <= 'F' ? n + 'A' - 0X0A : n + 'a' - 0X0A))
-// 把数值字符转换成其两个十六进制字符: 如数值 11 转换成 字符 '0B'
-#define VALUETODOUBLECHAR(pc, n)	{*(pc) = VALUETOCHAR((n >> 4)); *((pc) + 1) = VALUETOCHAR((n & 0X0F));}
+template<typename T1, typename T2> inline void CopyPlainObject(T1* p1, const T2* p2)
+{
+	CopyMemory(p1, p2, sizeof(T1));
+}
 
-// 把双字符转换成其表示的值: 如字符 '1F' 转换成 数值 31
-BYTE DoubleCharToByte(LPCTSTR psValue);
-// 把数值字符转换成其两个十六进制字符: 如数值 11 转换成 字符 '0B'
-LPTSTR ByteToDoubleChar(BYTE b, LPTSTR des);
-// 把十六进制转换成其表示的值: 如字符 '601F' 转换成 数值 24607
-UINT HexStrToInt(LPCTSTR pHexText, int len = -1);
-// 把十进制转换成其表示的值: 如字符 '0000024607' 转换成 数值 24607
-UINT DecStrToInt(LPCTSTR pDecText, int len = -1);
-// 把数值换成其十六进制字符串表示的值: 如数值 24607 转换成 字符 '601F'
-CString& IntToHexStr(CString& dest, UINT v, int len = -1);
-// 把数值换成其十进制字符串表示的值: 如数值 24607 转换成 字符 '24607'
-CString& IntToDecStr(CString& dest, UINT v, int len = -1);
-// 把十六进制表示的地址改为十进制表示的地址: 如 "000C35CE" 转换成 '0000800236'
-CString& HexAddrToDecAddr(CString& dest, LPCTSTR src, int destlen = 10, int srclen = -1);
-// 把十进制表示的地址改为十六进制表示的地址: 如 "0000800236" 转换成 '000C35CE'
-CString& DecAddrToHexAddr(CString& dest, LPCTSTR src, int destlen = 8, int srclen = -1);
+void EXIT(int iExitCode = 0, int iErrno = -1, LPCSTR lpszFile = nullptr, int iLine = 0, LPCSTR lpszFunc = nullptr, LPCSTR lpszTitle = nullptr);
+void _EXIT(int iExitCode = 0, int iErrno = -1, LPCSTR lpszFile = nullptr, int iLine = 0, LPCSTR lpszFunc = nullptr, LPCSTR lpszTitle = nullptr);
+void ABORT(int iErrno = -1, LPCSTR lpszFile = nullptr, int iLine = 0, LPCSTR lpszFunc = nullptr, LPCSTR lpszTitle = nullptr);
 
-// Code Page Name -> Code Page Value
-EnCodePage GetCodePageByName(LPCTSTR lpszCodePageName);
-
-// MBCS -> UNICODE
-BOOL MbcsToUnicode(const char* pszInString, WCHAR** ptrOutWStr, int& nSizeCount);
-// UNICODE -> MBCS
-BOOL UnicodeToMbcs(const WCHAR* pwzInString, char** ptrOutStr, int& nSizeCount);
-// UTF8 -> UNICODE
-BOOL Utf8ToUnicode(const char* pszInString, WCHAR** ptrOutWStr, int& nSizeCount);
-// UNICODE -> UTF8
-BOOL UnicodeToUtf8(const WCHAR* pwzInString, char** ptrOutStr, int& nSizeCount);
 // CP_XXX -> UNICODE
-BOOL CPToUni(const char* pszInString, WCHAR** ptrOutWStr, unsigned int nCodePage, int& nSizeCount);
+BOOL CodePageToUnicode(int iCodePage, const char szSrc[], WCHAR szDest[], int& iDestLength);
 // UNICODE -> CP_XXX
-BOOL UniToCP(const WCHAR* pwzInString, char** ptrOutStr, unsigned int nCodePage, int& nSizeCount);
+BOOL UnicodeToCodePage(int iCodePage, const WCHAR szSrc[], char szDest[], int& iDestLength);
+// GBK -> UNICODE
+BOOL GbkToUnicode(const char szSrc[], WCHAR szDest[], int& iDestLength);
+// UNICODE -> GBK
+BOOL UnicodeToGbk(const WCHAR szSrc[], char szDest[], int& iDestLength);
+// UTF8 -> UNICODE
+BOOL Utf8ToUnicode(const char szSrc[], WCHAR szDest[], int& iDestLength);
+// UNICODE -> UTF8
+BOOL UnicodeToUtf8(const WCHAR szSrc[], char szDest[], int& iDestLength);
+// GBK -> UTF8
+BOOL GbkToUtf8(const char szSrc[], char szDest[], int& iDestLength);
+// UTF8 -> GBK
+BOOL Utf8ToGbk(const char szSrc[], char szDest[], int& iDestLength);
 
-// 把字节数组转换成16进制字符串
-int BytesToHex(const BYTE* pBytes, int nLength, LPTSTR* lpszDest);
-// 把16进制字符串转换成字节数组
-int HexToBytes(LPCTSTR lpszHex, BYTE** ppBytes, int* pnLength);
+// 计算 Base64 编码后长度
+DWORD GuessBase64EncodeBound(DWORD dwSrcLen);
+// 计算 Base64 解码后长度
+DWORD GuessBase64DecodeBound(const BYTE* lpszSrc, DWORD dwSrcLen);
+// Base64 编码（返回值：0 -> 成功，-3 -> 输入数据不正确，-5 -> 输出缓冲区不足）
+int Base64Encode(const BYTE* lpszSrc, DWORD dwSrcLen, BYTE* lpszDest, DWORD& dwDestLen);
+// Base64 解码（返回值：0 -> 成功，-3 -> 输入数据不正确，-5 -> 输出缓冲区不足）
+int Base64Decode(const BYTE* lpszSrc, DWORD dwSrcLen, BYTE* lpszDest, DWORD& dwDestLen);
 
-// 把普通字符串转换成16进制字符串
-CString& StrToHex(const TCHAR* src, CString& des);
-// 把16进制字符串转换成普通字符串
-CString& HexToStr(const TCHAR* src, CString& des);
-// 把普通字符串转换成UTF8字符串, 然后再把该UTF8字符串转换成16进制字符串
-CString& StrToUtf8Hex(const TCHAR* src, CString& strDec);
-// 把16进制字符串转换成UTF8字符串, 然后再把该UTF8字符串转换成普通字符串
-CString& HexUtf8ToStr(const TCHAR* src, CString& strDec);
-
-// 取得系统错误代码的描述信息
-CString GetSystemErrorDesc(DWORD dwCode);
-
-// 分隔字符串
-BOOL SplitStr(LPCTSTR pszSrc, vector<CString>& vtItem, LPCTSTR pszSepectors = nullptr, LPCTSTR pszQMarks = nullptr);
-
-// 提取文件名称
-CString ExtractFileName(LPCTSTR lpszFullFileName);
-// 提取文件路径
-CString ExtractPath(LPCTSTR lpszFullFileName);
-// 提取文件路径
-CString ExtractPath(LPCTSTR lpszFullFileName);
-// 提取当前模块路径
-CString ExtractModulePath(HMODULE hModule = nullptr);
-
-// 启动进程
-BOOL RunProcess(LPCTSTR sFileName, LPCTSTR cmdline = nullptr, BOOL bHide = TRUE, LPCTSTR dir = nullptr, BOOL bWait = TRUE, DWORD dwWaitTime = INFINITE);
-BOOL ShellRunExe(LPCTSTR lpszPath, LPCTSTR lpszParams = nullptr, int iShow = SW_SHOWNORMAL, HANDLE* phProcess = nullptr, BOOL bWait = FALSE, DWORD dwWaitTime = INFINITE);
-
-// 查找进程
-BOOL FindProcess(LPCTSTR pszProcessName);
-
-// 查找进程句柄
-HANDLE FindProcessHandle(LPCTSTR pszProcessName, DWORD dwDesiredAccess = PROCESS_QUERY_INFORMATION, BOOL bInheritHandle = FALSE);
-
-typedef map<DWORD, PROCESSENTRY32*>									ProcessInfos;
-typedef MapWrapper<ProcessInfos, PtrMap_Cleaner<ProcessInfos>>		ProcessInfoMap;
-
-// 查找当前运行的信息
-BOOL FindRunningProcessesInfo(ProcessInfoMap& infoMap);
-
-// 查找进程的主窗口
-HWND FindProcessMainWindow(DWORD dwProcID, LPCTSTR lpszClassName = nullptr);
-// 查找进程的主窗口
-HWND FindProcessMainWindow(HANDLE hProcess, LPCTSTR lpszClassName = nullptr);
-
-BOOL TerminateProcessFairily(HANDLE hProcess, DWORD dwWait = INFINITE);
-
-// 简单记录日志
-void WriteLog(LPCTSTR pszLogFileName, LPCTSTR pszLog);
-
-#ifndef _WIN32_WCE
-	// 设置当前路径
-	BOOL SetCurrentPathToModulePath(HMODULE hModule = nullptr);
-	// 查找进程
-	BOOL FindProcessEx(LPCTSTR pszProcessName);
-	// 读取 INI 配置
-	CString GetIniString(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpFileName, DWORD dwSize);
-#endif
-
-#ifdef _AFX
-	// 秒转换成时间字符串
-	CString SecondToTimeStr(DWORD dwSeconds, BOOL bDayOnly = FALSE);
-#endif
-
-// 设置注册表项
-BOOL GetRegistryValue(HKEY hRoot, LPCTSTR wcSubKey, LPCTSTR wcName, LPBYTE pValue, DWORD* pdwSize, DWORD* pdwType);
-// 获取注册表项
-BOOL SetRegistryValue(HKEY hRoot, LPCTSTR wcSubKey, LPCTSTR wcName, LPBYTE pValue, DWORD dwSize, DWORD dwType);
+// 计算 URL 编码后长度
+DWORD GuessUrlEncodeBound(const BYTE* lpszSrc, DWORD dwSrcLen);
+// 计算 URL 解码后长度
+DWORD GuessUrlDecodeBound(const BYTE* lpszSrc, DWORD dwSrcLen);
+// URL 编码（返回值：0 -> 成功，-3 -> 输入数据不正确，-5 -> 输出缓冲区不足）
+int UrlEncode(BYTE* lpszSrc, DWORD dwSrcLen, BYTE* lpszDest, DWORD& dwDestLen);
+// URL 解码（返回值：0 -> 成功，-3 -> 输入数据不正确，-5 -> 输出缓冲区不足）
+int UrlDecode(BYTE* lpszSrc, DWORD dwSrcLen, BYTE* lpszDest, DWORD& dwDestLen);

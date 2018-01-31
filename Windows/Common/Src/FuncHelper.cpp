@@ -22,967 +22,413 @@
  */
  
 #include "stdafx.h"
+#include "SysHelper.h"
 #include "FuncHelper.h"
-#include "WaitFor.h"
 
-#ifndef _WIN32_WCE
-	#define CloseToolhelp32Snapshot(h)	CloseHandle(h)
-
-	#include <psapi.h>
-	#include <Shellapi.h>
-
-	#pragma comment(lib, "Psapi")
-#else
-	#pragma comment(lib, "Toolhelp")
-#endif
-
-#define PATH_SEPARATOR				_T("\\")
-#define PATH_SEPARATOR_CHAR			_T('\\')
-#define FILE_EXTEND_SEPARATOR		_T(".")
-#define FILE_EXTEND_SEPARATOR_CHAR	_T('.')
-#define DISK_SYMBLE					_T(":")
-#define DISK_SYMBLE_CHAR			_T(':')
-#define EXE_FILE_EXTEND_NAME		_T(".exe")
-
-BYTE DoubleCharToByte(LPCTSTR psValue)
-{ 
-	return (BYTE)DOUBLECHARTOVALUE(psValue);
-}
-
-LPTSTR ByteToDoubleChar(BYTE b, LPTSTR des)
+void __EXIT_FN_(void (*fn)(int), LPCSTR lpszFnName, int* lpiExitCode, int iErrno, LPCSTR lpszFile, int iLine, LPCSTR lpszFunc, LPCSTR lpszTitle)
 {
-	VALUETODOUBLECHAR(des, b);
-	return des;
-}
-
-UINT HexStrToInt(LPCTSTR pHexText, int len)
-{
-	LPTSTR pTemp	= (LPTSTR)pHexText;
-	int Val			= 0;
-	int iLen		= lstrlen(pHexText);
-	if(len > 0 && len < iLen)
-		iLen = len;
-	if(iLen % 2)
-	{
-		pTemp = (TCHAR*)_alloca(sizeof(TCHAR) * ((++iLen) + 1));
-		lstrcpyn(pTemp+1, pHexText, iLen);
-		pTemp[0] = '0';
-	}
-
-	for(int i = 0; i < iLen; i+=2)
-		Val += (DOUBLECHARTOVALUE(&pTemp[i]) << ((iLen - i)/2 - 1) * 8);
-
-	return Val;
-}
-
-UINT DecStrToInt(LPCTSTR pDecText, int len)
-{
-	int Val = 0;
-	int iLen = lstrlen(pDecText);
-	if(len > 0 && len < iLen)
-	{
-		++len;
-		CString text;
-		LPTSTR ptext = text.GetBuffer(len);
-		lstrcpyn(ptext, pDecText, len);
-		Val = _ttol(ptext);
-		text.ReleaseBuffer();
-	}
+	if(iErrno >= 0)
+		SetLastError(iErrno);
 	else
-		Val = _ttol(pDecText);
-	return Val;
-}
+		iErrno = GetLastError();
 
-CString& IntToHexStr(CString& dest, UINT v, int len)
-{
-	if(len > 0)
+	if(!lpszTitle)
 	{
-		CString format;
-		format.Format(_T("%%0%uX"), len);
-		dest.Format(format, v);
-		if(dest.GetLength() > len)
-			dest = dest.Right(len);
-	}
-	else
-		dest.Format(_T("%X"), v);
-	return dest;
-}
+		lpszTitle = CreateLocalObjects(char, 50);
 
-CString& IntToDecStr(CString& dest, UINT v, int len)
-{
-	if(len > 0)
-	{
-		CString format;
-		format.Format(_T("%%0%uu"), len);
-		dest.Format(format, v);
-		if(dest.GetLength() > len)
-			dest = dest.Right(len);
-	}
-	else
-		dest.Format(_T("%u"), v);
-	return dest;
-}
-
-CString& HexAddrToDecAddr(CString& dest, LPCTSTR src, int destlen, int srclen)
-{
-	return IntToDecStr(dest, HexStrToInt(src, srclen), destlen);
-}
-CString& DecAddrToHexAddr(CString& dest, LPCTSTR src, int destlen, int srclen)
-{
-	return IntToHexStr(dest, DecStrToInt(src, srclen), destlen);
-}
-
-
-//-----------------------------MultiByte字符和Unicode字符之间的转换-----------------------------//
-
-EnCodePage GetCodePageByName(LPCTSTR lpszCodePageName)
-{
-	if(!lpszCodePageName || !*lpszCodePageName)
-		return XCP_ACP;
-	else if(_tcsicmp(lpszCodePageName, _T("GB2312")) == 0)
-		return XCP_GB2312;
-	else if(_tcsicmp(lpszCodePageName, _T("GBK")) == 0)
-		return XCP_GBK;
-	else if(_tcsicmp(lpszCodePageName, _T("UTF-8")) == 0)
-		return XCP_UTF8;
-	else if(_tcsicmp(lpszCodePageName, _T("UTF-7")) == 0)
-		return XCP_UTF7;
-	else if(_tcsicmp(lpszCodePageName, _T("BIG5")) == 0)
-		return XCP_BIG5;
-
-	return XCP_ACP;
-}
-
-BOOL MbcsToUnicode(const char* pszInString, WCHAR** ptrOutWStr, int& nSizeCount)
-{
-	return CPToUni(pszInString, ptrOutWStr, CP_ACP, nSizeCount);
-}
-
-BOOL UnicodeToMbcs(const WCHAR* pwzInString, char** ptrOutStr, int& nSizeCount)
-{
-	return UniToCP(pwzInString, ptrOutStr, CP_ACP, nSizeCount);
-}
-
-BOOL Utf8ToUnicode(const char* pszInString, WCHAR** ptrOutWStr, int& nSizeCount)
-{
-	return CPToUni(pszInString, ptrOutWStr, CP_UTF8, nSizeCount);
-}
-
-BOOL UnicodeToUtf8(const WCHAR* pwzInString, char** ptrOutStr, int& nSizeCount)
-{
-	return UniToCP(pwzInString, ptrOutStr, CP_UTF8, nSizeCount);
-}
-
-BOOL CPToUni(const char* pszInString, WCHAR** ptrOutWStr, unsigned int nCodePage, int& nSizeCount)
-{
-	nSizeCount = 0 ;
-	if( pszInString == nullptr || ptrOutWStr == nullptr )
-		return FALSE ;
-
-	nSizeCount = MultiByteToWideChar( nCodePage, 0, pszInString, -1, nullptr, 0 ) ;
-	if( 0 == nSizeCount )
-		return FALSE ;
-
-	(*ptrOutWStr) = new WCHAR[nSizeCount] ;
-	if( nullptr == (*ptrOutWStr) )
-		return FALSE ;
-
-	if( 0 == MultiByteToWideChar( nCodePage, 0, pszInString, -1, (*ptrOutWStr), nSizeCount ) )
-	{
-		delete[] (*ptrOutWStr);
-		return FALSE ;
-	}
-
-	return TRUE;
-}
-
-BOOL UniToCP(const WCHAR* pwzInString, char** ptrOutStr, unsigned int nCodePage, int& nSizeCount)
-{
-	nSizeCount = 0 ;
-	if( pwzInString == nullptr || ptrOutStr == nullptr )
-		return FALSE ;
-
-	nSizeCount = WideCharToMultiByte( nCodePage, 0, pwzInString, -1, nullptr, 0, nullptr, nullptr) ;
-	if( 0 == nSizeCount )
-		return FALSE ;
-
-	(*ptrOutStr) = new char[nSizeCount] ;
-	if( nullptr == (*ptrOutStr) )
-		return FALSE ;
-
-	if(0 == WideCharToMultiByte( nCodePage, 0, pwzInString, -1, (*ptrOutStr), nSizeCount, nullptr, nullptr))
-	{
-		delete[] (*ptrOutStr);
-		return FALSE ;
-	}
-
-	return TRUE;
-}
-
-int BytesToHex(const BYTE* pBytes, int nLength, LPTSTR* lpszDest)
-{
-	int des_length	= nLength * 2;
-
-	if(des_length > 0)
-	{
-		LPTSTR dest = new TCHAR[des_length + 1];
-		dest[des_length] = '\0';
-
-		TCHAR chs[3] = {0};
-		for(int i = 0; i < nLength; i++)
-		{
-			ByteToDoubleChar(pBytes[i], chs);
-			dest[2 * i] = chs[0];
-			dest[2 * i + 1] = chs[1];
-		}
-
-		*lpszDest = dest;
-	}
-	else
-		*lpszDest = nullptr;
-
-	return des_length;
-}
-
-int HexToBytes(LPCTSTR lpszHex, BYTE** ppBytes, int* pnLength)
-{
-	int src_length = lstrlen(lpszHex);
-	int des_length = src_length / 2;
-
-	*pnLength = des_length;
-
-	if(des_length > 0)
-	{
-		BYTE* pBytes = new BYTE[des_length];
-
-		for(int i = 0; i < des_length; i++)
-			pBytes[i] = DoubleCharToByte(&lpszHex[2 * i]);
-
-		*ppBytes = pBytes;
-	}
-	else
-		*ppBytes = nullptr;
-
-	return des_length;
-}
-
-CString& StrToHex(const TCHAR* src, CString& strDec)
-{
-	BYTE* t = (BYTE*)src;
-	int src_length = lstrlen(src) * sizeof(TCHAR);
-	strDec.Empty();
-
-#ifdef UNICODE
-	char* temp = nullptr;
-	UnicodeToMbcs(src, &temp, src_length);
-
-	src_length -= 1;
-	t = (BYTE*)temp;
-#else
-	t = (BYTE*)src;
-	src_length = lstrlen(src);
-#endif
-
-	for(int i = 0; i < src_length; ++i, ++t)
-	{
-		TCHAR tc[3] = {0, 0, 0};
-		VALUETODOUBLECHAR(tc, *t);
-		strDec += tc;
-	}
-
-#ifdef UNICODE
-	delete[] temp;
-#endif
-
-	return strDec;
-}
-
-CString& HexToStr(const TCHAR* src, CString& strDec)
-{
-	char* temp		= nullptr;
-	int src_length	= 0;
-
-	strDec.Empty();
-
-#ifdef UNICODE
-	char* temp1 = new char[(src_length = lstrlen(src)) +1];
-	temp = temp1;
-	while(*(temp1++) = (char)*(src++));
-#else
-	temp = (char*)src;
-	src_length = lstrlen(src);
-	//t = strDec.GetBuffer(src_length/2 + 1);
-#endif
-	int i=0;
-	for(; i < src_length / 2; ++i)
-	{
-		temp[i] = DOUBLECHARTOVALUE(temp + 2 * i);
-	}
-	temp[i] = 0;
-
-#ifdef UNICODE
-	int iLen	= 0;
-	WCHAR* wh	= nullptr;
-
-	MbcsToUnicode(temp, &wh, iLen);
-
-	strDec = wh;
-	delete[] wh;
-	delete[] temp;
-#else
-	strDec.ReleaseBuffer();
-#endif
-
-	return strDec;
-}
-
-CString& StrToUtf8Hex(const TCHAR* src, CString& strDec)
-{
-	char* t			= nullptr;
-	WCHAR* temp		= nullptr;
-	int src_length	= 0;
-
-	strDec.Empty();
-
-#ifndef UNICODE
-	MbcsToUnicode(src, &temp, src_length);
-#else
-	temp = (TCHAR*)src;
-#endif
-
-	UnicodeToUtf8(temp, &t, src_length);
-	src_length -= 1;
-
-	for(int i = 0; i < src_length; ++i)
-	{
-		TCHAR tc[3] = {0, 0, 0};
-		VALUETODOUBLECHAR(tc, t[i]);
-		strDec += tc;
-	}
-
-#ifndef UNICODE
-	delete[] temp;
-#endif
-	delete[] t;
-
-	return strDec;
-}
-
-CString& HexUtf8ToStr(const TCHAR* src, CString& strDec)
-{
-	char* temp		= nullptr;
-	WCHAR* pwsz		= nullptr;
-	int iLen		= 0;
-	int src_length	= 0;
-
-	strDec.Empty();
-
-#ifdef UNICODE
-	char* temp1	= new char[(src_length = lstrlen(src)) +1];
-	temp		= temp1;
-
-	while(*(temp1++) = (char)*(src++));
-#else
-	temp		= (char*)src;
-	src_length	= lstrlen(src);
-#endif
-	int i=0;
-	for(; i < src_length / 2; ++i)
-	{
-		temp[i] = DOUBLECHARTOVALUE(temp + 2*i);
-	}
-
-	temp[i] = 0;
-
-	Utf8ToUnicode(temp, &pwsz, iLen);
-
-#ifdef UNICODE
-	strDec = pwsz;
-	delete[] temp;
-#else
-	char* psz = nullptr;
-	UnicodeToMbcs(pwsz, &psz, iLen);
-
-	strDec = psz;
-	delete[] psz;
-#endif
-	delete[] pwsz;
-
-	return strDec;
-}
-
-CString GetSystemErrorDesc(DWORD dwCode)
-{
-	CString msg;
-	LPTSTR lpMsgBuf;
-
-	if(::FormatMessage(
-							FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-							nullptr,
-							dwCode,
-							MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-							(LPTSTR)&lpMsgBuf,
-							0,
-							nullptr
-						))
-	{
-		msg = lpMsgBuf;
-		::LocalFree(lpMsgBuf);
-	}
-
-	return msg;
-}
-
-BOOL SplitStr(LPCTSTR pszSrc, vector<CString>& vtItem, LPCTSTR pszSepectors, LPCTSTR pszQMarks)
-{
-	vtItem.clear();
-
-	CString strQMarks		= pszQMarks;
-	CString strSepectors	= pszSepectors;
-
-	if(strSepectors.IsEmpty())
-		strSepectors = _T(" ");
-
-	if(!strQMarks.IsEmpty())
-		if(strQMarks.FindOneOf(strSepectors) != -1)
-			return FALSE;
-
-	BOOL bRetVal	= TRUE;
-	CString strSrc	= pszSrc;
-
-	while(!strSrc.Trim(strSepectors).IsEmpty())
-	{
-		CString strItem;
-
-		int iSrcLen	= strSrc.GetLength();
-		int iPos1	= strSrc.FindOneOf(strSepectors);
-		int iPos2	= !strQMarks.IsEmpty() ? strSrc.FindOneOf(strQMarks) : -1;
-		int iPos3	= -1;
-
-		if(iPos1 == -1 && iPos2 == -1)
-			strItem = strSrc;
-		else if(iPos1 != -1 && (iPos1 < iPos2 || iPos2 == -1))
-			strItem = strSrc.Left(iPos1);
-		else	// (iPos1 > iPos2 || iPos1 == -1)
-		{
-			TCHAR tc	= strSrc[iPos2];
-			iPos3		= strSrc.Find(tc, iPos2 + 1);
-			if(iPos3 != -1)
-				strItem = strSrc.Mid(iPos2 + 1, iPos3 - iPos2 - 1);
-			else
-			{
-				vtItem.clear();
-				bRetVal = FALSE;
-				break;
-			}
-		}
-
-		vtItem.push_back(strItem);
-
-		strSrc = strSrc.Right(iPos3 == -1 ? (iSrcLen - (iPos1 == -1 ? strItem.GetLength() : iPos1 + 1)) : (iSrcLen - iPos3 - 1));
-	}
-
-	return bRetVal;
-}
-
-CString ExtractFileName(LPCTSTR lpszFullFileName)
-{
-	CString strPath = lpszFullFileName;
-	strPath.Trim();
-
-	if(!strPath.IsEmpty())
-	{
-		int iLen		= strPath.GetLength();
-		int iLastSep	= strPath.ReverseFind(PATH_SEPARATOR_CHAR);
-
-		if(iLastSep != -1)
-			strPath		= strPath.Right(iLen - 1 - iLastSep);
-	}
-	
-	return strPath;
-}
-
-CString ExtractPath(LPCTSTR lpszFullFileName)
-{
-	CString strPath = lpszFullFileName;
-	strPath.Trim();
-
-	if(strPath.IsEmpty())
-		return PATH_SEPARATOR;
-
-	int iLen		= strPath.GetLength();
-	int iLastSep	= strPath.ReverseFind(PATH_SEPARATOR_CHAR);
-	int iLastDot	= strPath.ReverseFind(FILE_EXTEND_SEPARATOR_CHAR);
-
-	if(iLastSep == -1 && iLastDot == -1)
-		strPath.Append(PATH_SEPARATOR);
-	else if(iLastSep == -1 && iLastDot != -1)
-		strPath = PATH_SEPARATOR;
-	else if(iLastSep > iLastDot)
-	{
-		if(iLastSep < iLen)
-			strPath.Append(PATH_SEPARATOR);
-	}
-	else
-	{
-		strPath = strPath.Left(iLastSep + 1);
-	}
-
-	return strPath;
-}
-
-CString ExtractModulePath(HMODULE hModule)
-{
-	CString strCurPath;
-	LPTSTR lpszCurPath = strCurPath.GetBuffer(MAX_PATH);
-
-	BOOL isOK = ::GetModuleFileName(hModule, lpszCurPath, MAX_PATH);
-	strCurPath.ReleaseBuffer();
-
-	if(isOK)
-	{
-		strCurPath = ::ExtractPath(strCurPath);
-		ASSERT(!strCurPath.IsEmpty());
-	}
-
-	return strCurPath;
-}
-
-BOOL RunProcess(LPCTSTR szFileName, LPCTSTR cmdline/* = nullptr*/, BOOL bHide /* = TRUE */, LPCTSTR dir /* =  nullptr*/, BOOL bWait /* = TRUE */, DWORD dwWaitTime /* = INFINITE */)
-{
-	LPCTSTR process_dir;
-	if (dir == nullptr || _tcslen(dir) == 0)
-		process_dir = nullptr;
-	else
-		process_dir = dir;
-
-	LPCTSTR process_name;
-	if (szFileName == nullptr || _tcslen(szFileName) == 0)
-		process_name = nullptr;
-	else
-		process_name = szFileName;
-
-	STARTUPINFO si;
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-
-	DWORD dwCreationFlags = 0;
-	if (bHide)
-	{
-		si.wShowWindow = SW_HIDE;
-#ifndef _WIN32_WCE
-		dwCreationFlags = CREATE_NO_WINDOW;
-#endif
-	}
-
-	PROCESS_INFORMATION pi;
-	ZeroMemory(&pi, sizeof(pi));
-
-	// Start the child process
-	CString strCmd(cmdline);
-	LPTSTR pszcmd = (LPTSTR)(LPCTSTR)strCmd;
-
-	BOOL bRet = CreateProcess(
-								process_name,
-								pszcmd,					// Command line. 
-								nullptr,				// Process handle not inheritable. 
-								nullptr,				// Thread handle not inheritable. 
-								FALSE,					// Set handle inheritance to FALSE. 
-								dwCreationFlags,		// No creation flags. 
-								nullptr,				// Use parent's environment block. 
-								(LPTSTR)process_dir,	// Use parent's starting directory. 
-								&si,					// Pointer to STARTUPINFO structure.
-								&pi
-							);
-
-	if(bRet)
-	{
-		if(bWait)
-			bRet = (::WaitForSingleObject(pi.hProcess, dwWaitTime) != WAIT_FAILED) ? TRUE : FALSE;
-
-		::CloseHandle(pi.hProcess);
-		::CloseHandle(pi.hThread);
-	}
-
-	return bRet;
-}
-
-BOOL ShellRunExe(LPCTSTR lpszPath, LPCTSTR lpszParams, int iShow, HANDLE* phProcess, BOOL bWait, DWORD dwWaitTime)
-{
-	CString strPath = lpszPath;
-	strPath.Trim();
-
-	ASSERT(strPath.GetLength() > 4 && strPath.Right(4).CompareNoCase(EXE_FILE_EXTEND_NAME) == 0);
-
-#ifdef _WIN32_WCE
-	if(strPath.GetAt(0) != PATH_SEPARATOR_CHAR)
-#else
-	if(strPath.GetAt(1) != DISK_SYMBLE_CHAR)
-#endif
-	{
-		CString strCurPath = ExtractModulePath();
-		strPath = strCurPath + strPath;
-	}
-
-	SHELLEXECUTEINFO info = {0};
-
-	info.cbSize			= sizeof(SHELLEXECUTEINFO);
-	info.lpFile			= strPath;
-	info.fMask			= SEE_MASK_FLAG_NO_UI;
-	info.nShow			= iShow;
-	info.lpParameters	= lpszParams;
-	
-	if(phProcess || bWait)
-		info.fMask		|= SEE_MASK_NOCLOSEPROCESS;
-
-	BOOL isOK = FALSE;
-
-	if(::ShellExecuteEx(&info))
-	{
-		if(phProcess)
-			*phProcess = info.hProcess;
-
-		if(bWait)
-		{
-			isOK = (::WaitForSingleObject(info.hProcess, dwWaitTime) != WAIT_FAILED) ? TRUE : FALSE;
-			::CloseHandle(info.hProcess);
-		}
+		if(lpiExitCode)
+			sprintf((LPSTR)lpszTitle, "(#%d, %u) > %s(%d) [%d]", SELF_PROCESS_ID, SELF_THREAD_ID, lpszFnName, *lpiExitCode, iErrno);
 		else
-			isOK = TRUE;
+			sprintf((LPSTR)lpszTitle, "(#%d, %u) > %s() [%d]", SELF_PROCESS_ID, SELF_THREAD_ID, lpszFnName, iErrno);
 	}
 
-	return isOK;
-}
-
-void WriteLog(LPCTSTR pszLogFileName, LPCTSTR pszLog)
-{
-#ifdef _UNICODE
-	USES_CONVERSION;
-#endif
-
-	HANDLE hLogFile = ::CreateFile(pszLogFileName, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-	if(hLogFile != INVALID_HANDLE_VALUE)
-		::SetFilePointer(hLogFile, 0, 0, FILE_END);
+	if(lpszFile && iLine > 0)
+		FPRINTLN(stderr, "%s : %s\n    -> %s (%d) : %s", lpszTitle, strerror(iErrno), lpszFile, iLine, lpszFunc ? lpszFunc : "");
 	else
-		return;
+		FPRINTLN(stderr, "%s : %s", lpszTitle, strerror(iErrno));
 
-	DWORD dwSize;
-	SYSTEMTIME st;
-	GetLocalTime(&st);
-	CString strLog;
-	strLog.Format(_T("[%02d-%02d %02d:%02d:%02d.%03d]  %s\r\n"), st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, pszLog);
-
-#ifdef _UNICODE
-	LPSTR lpszLog = T2A((LPTSTR)(LPCTSTR)strLog);
-	::WriteFile(hLogFile, lpszLog, (DWORD)::strlen(lpszLog), &dwSize, nullptr);
-#else
-	::WriteFile(hLogFile, strLog, strLog.GetLength(), &dwSize, nullptr);
-#endif
-
-	::CloseHandle(hLogFile);
-}
-
-BOOL FindProcess(LPCTSTR pszProcessName)
-{
-	BOOL isOK		= FALSE;
-	HANDLE hTool	= ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-
-	if(hTool != INVALID_HANDLE_VALUE)
-	{
-		PROCESSENTRY32 pe32;
-		pe32.dwSize = sizeof(PROCESSENTRY32);
-
-		if(::Process32First(hTool, &pe32))
-		{
-			do
-			{
-				if(_tcsicmp(pszProcessName, pe32.szExeFile) == 0)
-				{
-					isOK = TRUE;
-					break;
-				}
-
-			} while(::Process32Next(hTool, &pe32));
-		}
-
-		VERIFY(::CloseToolhelp32Snapshot(hTool));
-	}
-
-	return isOK;
-}
-
-HANDLE FindProcessHandle(LPCTSTR pszProcessName, DWORD dwDesiredAccess, BOOL bInheritHandle)
-{
-	HANDLE hProc	= nullptr;
-	HANDLE hTool	= ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-
-	if(hTool != INVALID_HANDLE_VALUE)
-	{
-		PROCESSENTRY32 pe32;
-		pe32.dwSize = sizeof(PROCESSENTRY32);
-
-		if(::Process32First(hTool, &pe32))
-		{
-			do
-			{
-				if(_tcsicmp(pszProcessName, pe32.szExeFile) == 0)
-				{
-					hProc = ::OpenProcess(dwDesiredAccess, bInheritHandle, pe32.th32ProcessID);
-					break;
-				}
-
-			} while(::Process32Next(hTool, &pe32));
-		}
-
-		VERIFY(::CloseToolhelp32Snapshot(hTool));
-	}
-
-	return hProc;
-}
-
-BOOL FindRunningProcessesInfo(ProcessInfoMap& infoMap)
-{
-	infoMap.Clear();
-
-	HANDLE hProc	= nullptr;
-	HANDLE hTool	= ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-
-	if(hTool != INVALID_HANDLE_VALUE)
-	{
-		PROCESSENTRY32 pe32;
-		pe32.dwSize = sizeof(PROCESSENTRY32);
-
-		if(::Process32First(hTool, &pe32))
-		{
-			do
-			{
-				PROCESSENTRY32* ppe32 = new PROCESSENTRY32;
-				memcpy(ppe32, &pe32, sizeof(PROCESSENTRY32));
-				infoMap[pe32.th32ProcessID] = ppe32;
-			} while(::Process32Next(hTool, &pe32));
-		}
-
-		VERIFY(::CloseToolhelp32Snapshot(hTool));
-	}
+	if(lpiExitCode)
+		fn(*lpiExitCode);
 	else
+		((void (*)())fn)();
+}
+
+void EXIT(int iExitCode, int iErrno, LPCSTR lpszFile, int iLine, LPCSTR lpszFunc, LPCSTR lpszTitle)
+{
+	__EXIT_FN_(exit, "exit", &iExitCode, iErrno, lpszFile, iLine, lpszFunc, lpszTitle);
+}
+
+void _EXIT(int iExitCode, int iErrno, LPCSTR lpszFile, int iLine, LPCSTR lpszFunc, LPCSTR lpszTitle)
+{
+	__EXIT_FN_(_exit, "_exit", &iExitCode, iErrno, lpszFile, iLine, lpszFunc, lpszTitle);
+}
+
+void ABORT(int iErrno, LPCSTR lpszFile, int iLine, LPCSTR lpszFunc, LPCSTR lpszTitle)
+{
+	__EXIT_FN_((void (*)(int))abort, "abort", nullptr, iErrno, lpszFile, iLine, lpszFunc, lpszTitle);
+}
+
+BOOL CodePageToUnicode(int iCodePage, const char szSrc[], WCHAR szDest[], int& iDestLength)
+{
+	ASSERT(szSrc);
+
+	int iSize = ::MultiByteToWideChar(iCodePage, 0, szSrc, -1, nullptr, 0);
+
+	if(iSize == 0 || iSize > iDestLength || !szDest || iDestLength == 0)
+	{
+		iDestLength = iSize;
 		return FALSE;
+	}
 
-	return TRUE;
+	if(::MultiByteToWideChar(iCodePage, 0, szSrc, -1, szDest, iSize) != 0)
+		iDestLength = iSize;
+	else
+		iDestLength = 0;
+
+	return iDestLength != 0;
 }
 
-#ifndef _WIN32_WCE
-BOOL FindProcessEx(LPCTSTR pszProcessName)
+BOOL UnicodeToCodePage(int iCodePage, const WCHAR szSrc[], char szDest[], int& iDestLength)
 {
-	BOOL bRet = FALSE;
+	ASSERT(szSrc);
 
-	DWORD aProcesses[1024], cbNeeded, cProcesses;
+	int iSize = ::WideCharToMultiByte(iCodePage, 0, szSrc, -1, nullptr, 0, nullptr, nullptr);
 
-	if (::EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded))
+	if(iSize == 0 || iSize > iDestLength || !szDest || iDestLength == 0)
 	{
-		cProcesses = cbNeeded / sizeof(DWORD);
+		iDestLength = iSize;
+		return FALSE;
+	}
 
-		for (DWORD i = 0; i < cProcesses; i++)
+	if(::WideCharToMultiByte(iCodePage, 0, szSrc, -1, szDest, iSize, nullptr, nullptr) != 0)
+		iDestLength = iSize;
+	else
+		iDestLength = 0;
+
+	return iDestLength != 0;
+}
+
+BOOL GbkToUnicode(const char szSrc[], WCHAR szDest[], int& iDestLength)
+{
+	return CodePageToUnicode(CP_ACP, szSrc, szDest, iDestLength);
+}
+
+BOOL UnicodeToGbk(const WCHAR szSrc[], char szDest[], int& iDestLength)
+{
+	return UnicodeToCodePage(CP_ACP, szSrc, szDest, iDestLength);
+}
+
+BOOL Utf8ToUnicode(const char szSrc[], WCHAR szDest[], int& iDestLength)
+{
+	return CodePageToUnicode(CP_UTF8, szSrc, szDest, iDestLength);
+}
+
+BOOL UnicodeToUtf8(const WCHAR szSrc[], char szDest[], int& iDestLength)
+{
+	return UnicodeToCodePage(CP_UTF8, szSrc, szDest, iDestLength);
+}
+
+BOOL GbkToUtf8(const char szSrc[], char szDest[], int& iDestLength)
+{
+	int iMiddleLength = 0;
+	GbkToUnicode(szSrc, nullptr, iMiddleLength);
+
+	if(iMiddleLength == 0)
+	{
+		iDestLength = 0;
+		return FALSE;
+	}
+
+	unique_ptr<WCHAR[]> p(new WCHAR[iMiddleLength]);
+	VERIFY(GbkToUnicode(szSrc, p.get(), iMiddleLength));
+
+	return UnicodeToUtf8(p.get(), szDest, iDestLength);
+}
+
+BOOL Utf8ToGbk(const char szSrc[], char szDest[], int& iDestLength)
+{
+	int iMiddleLength = 0;
+	Utf8ToUnicode(szSrc, nullptr, iMiddleLength);
+
+	if(iMiddleLength == 0)
+	{
+		iDestLength = 0;
+		return FALSE;
+	}
+
+	unique_ptr<WCHAR[]> p(new WCHAR[iMiddleLength]);
+	VERIFY(Utf8ToUnicode(szSrc, p.get(), iMiddleLength));
+
+	return UnicodeToGbk(p.get(), szDest, iDestLength);
+}
+
+DWORD GuessBase64EncodeBound(DWORD dwSrcLen)
+{
+	return 4 * ((dwSrcLen + 2) / 3);
+}
+
+DWORD GuessBase64DecodeBound(const BYTE* lpszSrc, DWORD dwSrcLen)
+{
+	if(dwSrcLen < 2)
+		return 0;
+
+	if(lpszSrc[dwSrcLen - 2] == '=')
+		dwSrcLen -= 2;
+	else if(lpszSrc[dwSrcLen - 1] == '=')
+			--dwSrcLen;
+
+	DWORD dwMod = dwSrcLen % 4;
+	DWORD dwAdd = dwMod == 2 ? 1 : (dwMod == 3 ? 2 : 0);
+
+	return 3 * (dwSrcLen / 4) + dwAdd;
+}
+
+int Base64Encode(const BYTE* lpszSrc, DWORD dwSrcLen, BYTE* lpszDest, DWORD& dwDestLen)
+{
+	static const BYTE CODES[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+	DWORD dwRealLen = GuessBase64EncodeBound(dwSrcLen);
+
+	if(lpszDest == nullptr || dwDestLen < dwRealLen)
+	{
+		dwDestLen = dwRealLen;
+		return -5;
+	}
+
+	BYTE* p		= lpszDest;
+	DWORD leven	= 3 * (dwSrcLen / 3);
+	DWORD i		= 0;
+
+	for (; i < leven; i += 3)
+	{
+		*p++ = CODES[lpszSrc[0] >> 2];
+		*p++ = CODES[((lpszSrc[0] & 3) << 4) + (lpszSrc[1] >> 4)];
+		*p++ = CODES[((lpszSrc[1] & 0xf) << 2) + (lpszSrc[2] >> 6)];
+		*p++ = CODES[lpszSrc[2] & 0x3f];
+
+		lpszSrc += 3;
+	}
+
+	if(i < dwSrcLen)
+	{
+		BYTE a = lpszSrc[0];
+		BYTE b = (i + 1 < dwSrcLen) ? lpszSrc[1] : 0;
+
+		*p++ = CODES[a >> 2];
+		*p++ = CODES[((a & 3) << 4) + (b >> 4)];
+		*p++ = (i + 1 < dwSrcLen) ? CODES[((b & 0xf) << 2)] : '=';
+		*p++ = '=';
+	}  
+
+	ASSERT(dwRealLen == (DWORD)(p - lpszDest));
+
+	if(dwDestLen > dwRealLen)
+	{
+		*p			= 0;
+		dwDestLen	= dwRealLen;
+	}
+
+	return 0;  
+}
+
+int Base64Decode(const BYTE* lpszSrc, DWORD dwSrcLen, BYTE* lpszDest, DWORD& dwDestLen)
+{
+	static const BYTE MAP[256]	=
+	{ 
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 253, 255,
+		255, 253, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 253, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255,  62, 255, 255, 255,  63,
+		 52,  53,  54,  55,  56,  57,  58,  59,  60,  61, 255, 255,
+		255, 254, 255, 255, 255,   0,   1,   2,   3,   4,   5,   6,
+		  7,   8,   9,  10,  11,  12,  13,  14,  15,  16,  17,  18,
+		 19,  20,  21,  22,  23,  24,  25, 255, 255, 255, 255, 255,
+		255,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,
+		 37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,
+		 49,  50,  51, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255
+	};
+
+	DWORD dwRealLen = GuessBase64DecodeBound(lpszSrc, dwSrcLen);
+
+	if(lpszDest == nullptr || dwDestLen < dwRealLen)
+	{
+		dwDestLen = dwRealLen;
+		return -5;
+	}
+
+	BYTE c;
+	int g = 3;
+	DWORD i, x, y, z;
+
+	for(i = x = y = z = 0; i < dwSrcLen || x != 0;)
+	{
+		c = i < dwSrcLen ? MAP[lpszSrc[i++]] : 254;
+
+		if(c == 255) {dwDestLen = 0; return -3;}
+		else if(c == 254) {c = 0; g--;}
+		else if(c == 253) continue;
+
+		z = (z << 6) | c;
+
+		if(++x == 4)
 		{
-			HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, aProcesses[i]);
+			lpszDest[y++] = (BYTE)((z >> 16) & 255);
+			if (g > 1) lpszDest[y++] = (BYTE)((z >> 8) & 255);
+			if (g > 2) lpszDest[y++] = (BYTE)(z & 255);
 
-			if (hProcess)
-			{
-				HMODULE	hMod;
-				DWORD	cbNeeded;
-				if (::EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded))
-				{
-					TCHAR szProcessName[MAX_PATH] = {0};
-					if(::GetModuleBaseName(hProcess, hMod, szProcessName, sizeof(szProcessName)))
-					{
-						if(_tcsicmp(szProcessName, pszProcessName) == 0)
-						{
-							DWORD dwExitCode = 0;
-							if(::GetExitCodeProcess(hProcess, &dwExitCode) && dwExitCode == STILL_ACTIVE)
-							{
-								bRet = TRUE;
-								break;
-							}
-						}
-					}
-				}
-				::CloseHandle( hProcess );
-			}
+			x = z = 0;
 		}
 	}
 
-	return bRet;
-}
-
-CString GetIniString(LPCTSTR lpAppName, LPCTSTR lpKeyName, LPCTSTR lpFileName, DWORD dwSize)
-{
-	CString strValue;
-	LPTSTR pszBuffer = strValue.GetBuffer(dwSize);
-	::GetPrivateProfileString(lpAppName, lpKeyName, _T(""), pszBuffer, dwSize, lpFileName);
-	strValue.ReleaseBuffer();
-	strValue.Trim();
-	return strValue;
-}
-
-BOOL SetCurrentPathToModulePath(HMODULE hModule)
-{
-	TCHAR szPath[MAX_PATH];
-	if(::GetModuleFileName(hModule, szPath, MAX_PATH))
-	{
-		TCHAR drive[MAX_PATH], dir[MAX_PATH], fname[MAX_PATH], ext[MAX_PATH];
-		_tsplitpath(szPath, drive, dir, fname, ext);
-		lstrcpy(szPath, drive);
-		lstrcat(szPath, dir);
-
-		return ::SetCurrentDirectory(szPath);
-	}
-
-	return FALSE;
-}
-#endif
-
-struct TProcWnd
-{
-	DWORD	dwProcID;
-	LPCTSTR lpszClassName;
-	HWND	hWnd;
-};
-
-BOOL CALLBACK ProcessMainWindowEnumFunc(HWND hwnd, LPARAM lParam)
-{
-	TProcWnd* ppw = (TProcWnd*)lParam;
-
-	DWORD dwProcID;
-	::GetWindowThreadProcessId(hwnd, &dwProcID);
-
-	if(dwProcID == ppw->dwProcID)
-	{
-		while(TRUE)
-		{
-			HWND hwParent = ::GetParent(hwnd);
-
-			if(hwParent == nullptr)
-			{
-				if(ppw->lpszClassName == nullptr)
-				{
-					ppw->hWnd = hwnd;
-					return FALSE;
-				}
-				else
-				{
-					int nMaxCount = MAX_PATH - 1;
-					TCHAR szName[MAX_PATH] = {0};
-
-					if(::GetClassName(hwnd, szName, nMaxCount))
-					{
-						if(_tcscmp(szName, ppw->lpszClassName) == 0)
-						{
-							ppw->hWnd = hwnd;
-							return FALSE;
-						}
-					}
-				}
-
-				break;
-			}
-			else
-				hwnd = hwParent;
-		}
-	}
-
-	return TRUE;
-}
-
-HWND FindProcessMainWindow(DWORD dwProcID, LPCTSTR lpszWndClassName)
-{
-	if(dwProcID == 0)
-		dwProcID = ::GetCurrentProcessId();
-
-	ASSERT(dwProcID != 0);
-
-	TProcWnd pw;
-	pw.dwProcID			= dwProcID;
-	pw.lpszClassName	= lpszWndClassName;
-	pw.hWnd				= nullptr;
-
-	::EnumWindows(ProcessMainWindowEnumFunc, (LPARAM)&pw);
-
-	return pw.hWnd;
-}
-
-HWND FindProcessMainWindow(HANDLE hProcess, LPCTSTR lpszWndClassName)
-{
-	DWORD dwProcID = (hProcess == nullptr) ? ::GetCurrentProcessId() : ::GetProcessId(hProcess);
-
-	if(dwProcID != 0)
-		return FindProcessMainWindow(dwProcID, lpszWndClassName);
-
-	return nullptr;
-}
-
-BOOL CALLBACK CloseWindowEnumFunc(HWND hwnd, LPARAM lParam)
-{
-	DWORD dwProcID;
-	::GetWindowThreadProcessId(hwnd, &dwProcID);
-
-	if(dwProcID == (DWORD)lParam)
-		::PostMessage(hwnd, WM_CLOSE, 0, 0);
-
-	return TRUE;
-}
-
-BOOL TerminateProcessFairily(HANDLE hProcess, DWORD dwWait)
-{
-	DWORD dwProcID = ::GetProcessId(hProcess);
-
-	if(dwProcID != 0)
-	{
-		VERIFY(::EnumWindows(CloseWindowEnumFunc, (LPARAM)dwProcID));
-
-		if(!::MsgWaitForSingleObject(hProcess, dwWait))
-			return ::TerminateProcess(hProcess, -1);
-
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
-#ifdef _AFX
-CString SecondToTimeStr(DWORD dwSeconds, BOOL bDayOnly)
-{
-	CTime tm(dwSeconds);
-	LPCTSTR pszFormat = bDayOnly ? _T("%Y-%m-%d") : _T("%Y-%m-%d %H:%M:%S");
-	return tm.Format(pszFormat);
-}
-#endif
-
-BOOL GetRegistryValue(HKEY hRoot, LPCTSTR wcSubKey, LPCTSTR wcName, LPBYTE pValue, DWORD* pdwSize, DWORD* pdwType)
-{
-	CRegKey reg;
-	DWORD result = reg.Open(hRoot, wcSubKey, KEY_READ);
-
-	if(result == ERROR_SUCCESS)
-		result = reg.QueryValue(wcName, pdwType, pValue, pdwSize);
-
-	BOOL isOK = (result == ERROR_SUCCESS);
+	BOOL isOK = (y == dwRealLen);
 
 	if(!isOK)
+		dwDestLen = 0;
+	else
 	{
-		*pValue		= 0;
-		*pdwSize	= 0;
-		*pdwType	= REG_NONE;
+		if(dwDestLen > dwRealLen)
+		{
+			lpszDest[dwRealLen]	= 0;
+			dwDestLen			= dwRealLen;
+		}
 	}
 
-	return isOK;
+	return isOK ? 0 : -3;
 }
 
-BOOL SetRegistryValue(HKEY hRoot, LPCTSTR wcSubKey, LPCTSTR wcName, LPBYTE pValue, DWORD dwSize, DWORD dwType)
+DWORD GuessUrlEncodeBound(const BYTE* lpszSrc, DWORD dwSrcLen)
 {
-	CRegKey reg;
-	DWORD result = reg.Create(hRoot, wcSubKey);
+	DWORD dwAdd = 0;
 
-	if(result == ERROR_SUCCESS)
-		result = reg.SetValue(wcName, dwType, pValue, dwSize);
+	for(DWORD i = 0; i < dwSrcLen; i++)
+	{
+		BYTE c	= lpszSrc[i];
 
-	return (result == ERROR_SUCCESS);
+		if(!(isalnum(c) || c == ' ' || c == '.' || c == '-' || c == '_' || c == '*'))
+			dwAdd += 2;
+	}
+
+	return dwSrcLen + dwAdd;
+}
+
+DWORD GuessUrlDecodeBound(const BYTE* lpszSrc, DWORD dwSrcLen)
+{
+	DWORD dwPercent = 0;
+
+	for(DWORD i = 0; i < dwSrcLen; i++)
+	{
+		if(lpszSrc[i] == '%')
+		{
+			++dwPercent;
+			i += 2;
+		}
+	}
+
+	DWORD dwSub = dwPercent * 2;
+
+	if(dwSrcLen < dwSub)
+		return 0;
+
+	return dwSrcLen - dwSub;
+}
+
+int UrlEncode(BYTE* lpszSrc, DWORD dwSrcLen, BYTE* lpszDest, DWORD& dwDestLen)
+{
+	if(lpszDest == nullptr || dwDestLen == 0)
+		goto ERROR_DEST_LEN;
+
+	BYTE c;
+	DWORD j = 0;
+
+	for(DWORD i = 0; i < dwSrcLen; i++)
+	{
+		if(j >= dwDestLen)
+			goto ERROR_DEST_LEN;
+
+		c = lpszSrc[i];
+
+		if (isalnum(c) || c == '.' || c == '-' || c == '_' || c == '*')
+			lpszDest[j++] = c;
+		else if(c == ' ')
+			lpszDest[j++] = '+';
+		else
+		{
+			if(j + 3 >= dwDestLen)
+				goto ERROR_DEST_LEN;
+
+			lpszDest[j++] = '%';
+			HEX_VALUE_TO_DOUBLE_CHAR(lpszDest + j, c);
+			j += 2;
+			
+		}
+	}
+
+	if(dwDestLen > j)
+	{
+		lpszDest[j]	= 0;
+		dwDestLen	= j;
+	}
+
+	return 0;
+
+ERROR_DEST_LEN:
+	dwDestLen = GuessUrlEncodeBound(lpszSrc, dwSrcLen);
+	return -5;
+}
+
+int UrlDecode(BYTE* lpszSrc, DWORD dwSrcLen, BYTE* lpszDest, DWORD& dwDestLen)
+{
+	if(lpszDest == nullptr || dwDestLen == 0)
+		goto ERROR_DEST_LEN;
+
+	char c;
+	DWORD j = 0;
+
+	for(DWORD i = 0; i < dwSrcLen; i++)
+	{
+		if(j >= dwDestLen)
+			goto ERROR_DEST_LEN;
+
+		c = lpszSrc[i];
+
+		if(c == '+')
+			lpszDest[j++] = ' ';
+		else if(c != '%')
+			lpszDest[j++] = c;
+		else
+		{
+			if(i + 2 >= dwSrcLen)
+				goto ERROR_SRC_DATA;
+
+			lpszDest[j++] = HEX_DOUBLE_CHAR_TO_VALUE(lpszSrc + i + 1);
+			i += 2;
+		}
+	}
+
+	if(dwDestLen > j)
+	{
+		lpszDest[j]	= 0;
+		dwDestLen	= j;
+	}
+
+	return 0;
+
+ERROR_SRC_DATA:
+	dwDestLen = 0;
+	return -3;
+
+ERROR_DEST_LEN:
+	dwDestLen = GuessUrlDecodeBound(lpszSrc, dwSrcLen);
+	return -5;
 }

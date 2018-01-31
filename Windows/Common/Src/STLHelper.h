@@ -758,14 +758,14 @@ template<class T, class H> struct str_nc_hash_func_t
 
 };
 
-typedef str_hash_func_t<LPCSTR, char_comparator<LPCSTR>>			str_hash_func;
-typedef str_hash_func_t<LPCWSTR, wchar_comparator<LPCWSTR>>			wstr_hash_func;
-typedef str_hash_func_t<CStringA, cstring_comparator<CStringA>>		cstringa_hash_func;
-typedef str_hash_func_t<CStringW, cstring_comparator<CStringW>>		cstringw_hash_func;
-typedef str_nc_hash_func_t<LPCSTR, char_comparator<LPCSTR>>			str_nc_hash_func;
-typedef str_nc_hash_func_t<LPCWSTR, wchar_comparator<LPCWSTR>>		wstr_nc_hash_func;
-typedef str_nc_hash_func_t<CStringA, cstring_comparator<CStringA>>	cstringa_nc_hash_func;
-typedef str_nc_hash_func_t<CStringW, cstring_comparator<CStringW>>	cstringw_nc_hash_func;
+typedef str_hash_func_t<LPCSTR, char_comparator<LPCSTR>>				str_hash_func;
+typedef str_hash_func_t<LPCWSTR, wchar_comparator<LPCWSTR>>				wstr_hash_func;
+typedef str_hash_func_t<CStringA, cstring_comparator<CStringA>>			cstringa_hash_func;
+typedef str_hash_func_t<CStringW, cstring_comparator<CStringW>>			cstringw_hash_func;
+typedef str_nc_hash_func_t<LPCSTR, char_nc_comparator<LPCSTR>>			str_nc_hash_func;
+typedef str_nc_hash_func_t<LPCWSTR, wchar_nc_comparator<LPCWSTR>>		wstr_nc_hash_func;
+typedef str_nc_hash_func_t<CStringA, cstring_nc_comparator<CStringA>>	cstringa_nc_hash_func;
+typedef str_nc_hash_func_t<CStringW, cstring_nc_comparator<CStringW>>	cstringw_nc_hash_func;
 
 #ifdef _UNICODE
 	typedef cstringw_hash_func		cstring_hash_func;

@@ -66,9 +66,9 @@ namespace HPSocketCS
         /// <summary>
         /// HPSocket的文件路径
         /// </summary>
-        public const string HPSOCKET_SSL_DLL_PATH = "HPSocket4C-SSL_U.dll";
+        public const string HPSOCKET_SSL_DLL_PATH = "HPSocket4C_U.dll";
 
-        /**************** HPSocket4C-SSL 导出函数 ****************/
+        /**************** HPSocket4C 导出函数 ****************/
         /// <summary>
         /// 创建 HP_SSLServer 对象
         /// </summary>
