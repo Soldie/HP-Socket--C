@@ -35,6 +35,9 @@ Desc:
 #include "RingBuffer.h"
 #include "PrivateHeap.h"
 
+#pragma warning(push)
+#pragma warning(disable: 4458)
+
 struct TItem
 {
 	template<typename T> friend struct	TSimpleList;
@@ -680,3 +683,5 @@ private:
 	TBufferList		m_lsFreeBuffer;
 	TBufferQueue	m_lsGCBuffer;
 };
+
+#pragma warning(pop)

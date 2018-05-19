@@ -33,6 +33,9 @@ Desc:
 #include "SysHelper.h"
 #include "WaitFor.h"
 
+#pragma warning(push)
+#pragma warning(disable: 4458)
+
 const DWORD TItem::DEFAULT_ITEM_CAPACITY			= ::SysGetPageSize();
 const DWORD CBufferPool::DEFAULT_MAX_CACHE_SIZE		= 0;
 const DWORD CBufferPool::DEFAULT_ITEM_CAPACITY		= CItemPool::DEFAULT_ITEM_CAPACITY;
@@ -434,3 +437,5 @@ void CBufferPool::Clear()
 	m_itPool.Clear();
 	m_heap.Reset();
 }
+
+#pragma warning(pop)

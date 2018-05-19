@@ -55,7 +55,6 @@
 
 using namespace std;
 using namespace stdext;
-using namespace std::tr1;
 
 typedef	wstring		CStdStringW;
 typedef string		CStdStringA;
