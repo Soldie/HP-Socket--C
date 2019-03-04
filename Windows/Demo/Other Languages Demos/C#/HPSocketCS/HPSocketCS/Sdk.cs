@@ -1993,12 +1993,42 @@ public class Sdk
     /// <param name="lpszRemoteAddress">服务端地址</param>
     /// <param name="usPort">服务端端口</param>
     /// <param name="pdwConnID">连接 ID（默认：nullptr，不获取连接 ID）</param>
+    /// <param name="lpszLocalAddress">本地地址（默认：nullptr，使用 Start() 方法中绑定的地址）</param>
+    /// <returns>失败，可通过函数 SYS_GetLastError() 获取 Windows 错误代码</returns>
+    [DllImport(HPSOCKET_DLL_PATH, CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern bool HP_Agent_ConnectWithLocalAddress(IntPtr pAgent, string lpszRemoteAddress, ushort usPort, ref IntPtr pdwConnID, string lpszLocalAddress);
+
+
+    /// <summary>
+    /// 名称：连接服务器
+    /// 描述：连接服务器，连接成功后 IAgentListener 会接收到 OnConnect() / OnHandShake() 事件
+    /// </summary>
+    /// <param name="pAgent"></param>
+    /// <param name="lpszRemoteAddress">服务端地址</param>
+    /// <param name="usPort">服务端端口</param>
+    /// <param name="pdwConnID">连接 ID（默认：nullptr，不获取连接 ID）</param>
     /// <param name="pExtra">连接附加数据（默认：nullptr）</param>
     /// <param name="usLocalPort">本地端口（默认：0）</param>
     /// <returns></returns>
     [DllImport(HPSOCKET_DLL_PATH, CharSet = CharSet.Unicode, SetLastError = true)]
     public static extern bool HP_Agent_ConnectWithExtraAndLocalPort(IntPtr pAgent, string lpszRemoteAddress, ushort usPort, ref IntPtr pdwConnID, IntPtr pExtra, ushort usLocalPort);
- 
+
+
+    /// <summary>
+    /// 名称：连接服务器
+    /// 描述：连接服务器，连接成功后 IAgentListener 会接收到 OnConnect() / OnHandShake() 事件
+    /// </summary>
+    /// <param name="pAgent"></param>
+    /// <param name="lpszRemoteAddress">服务端地址</param>
+    /// <param name="usPort">服务端端口</param>
+    /// <param name="pdwConnID">连接 ID（默认：nullptr，不获取连接 ID）</param>
+    /// <param name="pExtra">连接附加数据（默认：nullptr）</param>
+    /// <param name="usLocalPort">本地端口（默认：0）</param>
+    /// <param name="lpszLocalAddress">本地地址（默认：nullptr，使用 Start() 方法中绑定的地址）</param>
+    /// <returns></returns>
+    [DllImport(HPSOCKET_DLL_PATH, CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern bool HP_Agent_ConnectWithExtraAndLocalAddressPort(IntPtr pAgent, string lpszRemoteAddress, ushort usPort, ref IntPtr pdwConnID, IntPtr pExtra, ushort usLocalPort, string lpszLocalAddress);
+
 
     /// <summary>
     /// 发送数据

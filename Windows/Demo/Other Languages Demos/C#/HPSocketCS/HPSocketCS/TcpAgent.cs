@@ -202,6 +202,19 @@ namespace HPSocketCS
             return Sdk.HP_Agent_Stop(pAgent);
         }
 
+        public IntPtr Connect(string address, ushort port)
+        {
+            IntPtr connId = IntPtr.Zero;
+            Sdk.HP_Agent_Connect(pAgent, address, port, ref connId);
+            return connId;
+        }
+
+        public IntPtr Connect(EndPoint endpoint)
+        {
+            IntPtr connId = IntPtr.Zero;
+            Sdk.HP_Agent_Connect(pAgent, endpoint.Address, endpoint.Port, ref connId);
+            return connId;
+        }
 
         /// <summary>
         /// 连接服务器，连接成功后 IAgentListener 会接收到 OnConnect() 事件
@@ -228,18 +241,31 @@ namespace HPSocketCS
             return Sdk.HP_Agent_ConnectWithLocalPort(pAgent, address, port, ref connId, usLocalPort);
         }
 
-        public IntPtr Connect(string address, ushort port)
+        /// <summary>
+        /// 连接服务器，连接成功后 IAgentListener 会接收到 OnConnect() 事件
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="port"></param>
+        /// <param name="connId"></param>
+        /// <param name="localAddress">本地地址（默认：nullptr，使用 Start() 方法中绑定的地址）</param>
+        /// <returns></returns>
+        public bool Connect(string address, ushort port, ref IntPtr connId, string localAddress)
         {
-            IntPtr connId = IntPtr.Zero;
-            Sdk.HP_Agent_Connect(pAgent, address, port, ref connId);
-            return connId;
+            return Sdk.HP_Agent_ConnectWithLocalAddress(pAgent, address, port, ref connId, localAddress);
         }
 
-        public IntPtr Connect(EndPoint endpoint)
+        /// <summary>
+        /// 连接服务器，连接成功后 IAgentListener 会接收到 OnConnect() 事件
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="port"></param>
+        /// <param name="connId"></param>
+        /// <param name="localAddress">本地地址（默认：nullptr，使用 Start() 方法中绑定的地址）</param>
+        /// <param name="usLocalPort">本地端口</param>
+        /// <returns></returns>
+        public bool Connect(string address, ushort port, ref IntPtr connId, string localAddress, ushort usLocalPort)
         {
-            IntPtr connId = IntPtr.Zero;
-            Sdk.HP_Agent_Connect(pAgent, endpoint.Address, endpoint.Port, ref connId);
-            return connId;
+            return Sdk.HP_Agent_ConnectWithExtraAndLocalAddressPort(pAgent, address, port, ref connId, IntPtr.Zero, usLocalPort, localAddress);
         }
 
         /// <summary>
@@ -253,7 +279,6 @@ namespace HPSocketCS
         {
             return Sdk.HP_Agent_Send(pAgent, connId, bytes, size);
         }
-
 
         /// <summary>
         /// 发送数据

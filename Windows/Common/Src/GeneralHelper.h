@@ -138,12 +138,16 @@ _WIN32_WINNT_WIN10		0x0A00
 	#if defined (_WIN64)
 		#define _WIN32_WINNT	_WIN32_WINNT_WIN7
 	#else
-		#define _WIN32_WINNT	_WIN32_WINNT_WINXP
+		#if _MSC_VER >= 1900
+			#define _WIN32_WINNT	_WIN32_WINNT_WIN7
+		#else
+			#define _WIN32_WINNT	_WIN32_WINNT_WINXP
+		#endif
 	#endif
 #endif
 
 #ifndef WINVER
-	#define WINVER	_WIN32_WINNT
+	//#define WINVER	_WIN32_WINNT
 #endif
 
 #if _MSC_VER >= 1600

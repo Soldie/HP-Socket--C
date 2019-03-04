@@ -1,5 +1,5 @@
-修改记录：
+Modifications
 --------------------
-1、enum state 移动到 http_parser.h
-2、http_parser.h 禁止 4005 警告
-3、http_parser.c 禁止 4018,4244 警告
+1. move 'enum state' from http_parser.cpp to http_parser.h
+2. http_parser.h ignore warning: 4005
+2. http_parser.cpp ignore warning: 4018,4456

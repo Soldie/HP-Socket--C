@@ -94,15 +94,25 @@ typedef HANDLE							FD;
 
 inline BOOL IsStrEmptyA(LPCSTR lpsz)	{return (lpsz == nullptr || lpsz[0] == 0);}
 inline BOOL IsStrEmptyW(LPCWSTR lpsz)	{return (lpsz == nullptr || lpsz[0] == 0);}
+inline BOOL IsStrNotEmptyA(LPCSTR lpsz)	{return !IsStrEmptyA(lpsz);}
+inline BOOL IsStrNotEmptyW(LPCWSTR lpsz){return !IsStrEmptyW(lpsz);}
 inline LPCSTR SafeStrA(LPCSTR lpsz)		{return (lpsz != nullptr) ? lpsz : "";}
 inline LPCWSTR SafeStrW(LPCWSTR lpsz)	{return (lpsz != nullptr) ? lpsz : L"";}
 
 #ifdef _UNICODE
-	#define IsStrEmpty					IsStrEmptyW
-	#define SafeStr						SafeStrW
+	#define IsStrEmpty(lpsz)			IsStrEmptyW(lpsz)
+	#define IsStrNotEmpty(lpsz)			IsStrNotEmptyW(lpsz)
+	#define SafeStr(lpsz)				SafeStrW(lpsz)
 #else
-	#define IsStrEmpty					IsStrEmptyA
-	#define SafeStr						SafeStrA
+	#define IsStrEmpty(lpsz)			IsStrEmptyA(lpsz)
+	#define IsStrNotEmpty(lpsz)			IsStrNotEmptyA(lpsz)
+	#define SafeStr(lpsz)				SafeStrA(lpsz)
+#endif
+
+#define ARRAY_SIZE(arr)					_countof(arr)
+
+#ifndef __countof
+	#define __countof(arr)				ARRAY_SIZE(arr)
 #endif
 
 template<typename T> inline bool IS_HAS_ERROR(T v)
